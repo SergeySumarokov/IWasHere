@@ -106,6 +106,7 @@ namespace Primitives
         /// <param name="unit">Единица измерения</param>
         public Temperature(double value, Units unit)
         {
+            this.Value = 0.0;
             switch (unit)
             {
                 case Units.K:

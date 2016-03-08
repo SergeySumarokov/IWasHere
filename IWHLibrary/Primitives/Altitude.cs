@@ -118,6 +118,7 @@ namespace Primitives
         /// <param name="unit">Единица измерения</param>
         public Altitude(double value, Altitude.Unit unit)
         {
+            this.Value = 0.0;
             switch (unit)
             {
                 case Unit.Meters:

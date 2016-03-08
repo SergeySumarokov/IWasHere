@@ -86,7 +86,7 @@ namespace Primitives
         /// <param name="value">Значение угловой скорости (рад/с)</param>
         private AngularVelocity(double value)
         {
-            this.RadiansPerSecond = value;
+            this.Value = value;
         }
 
         /// <summary>
@@ -96,6 +96,7 @@ namespace Primitives
         /// <param name="unit">Единица измерения</param>
         public AngularVelocity(double value, AngularVelocity.Unit unit)
         {
+            this.Value = 0.0;
             switch (unit)
             {
                 case Unit.RadiansPerSecond:

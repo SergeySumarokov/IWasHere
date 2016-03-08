@@ -49,7 +49,7 @@ namespace Primitives
         {
             this.Latitude = Angle.FromDegrees(latitudeDeg);
             this.Longitude = Angle.FromDegrees(longitudeDeg);
-            this.Altitude = Primitives.Altitude.FromMeters(altitudeMt);
+            this.Altitude = Altitude.FromMeters(altitudeMt);
         }
 
         /// <summary>

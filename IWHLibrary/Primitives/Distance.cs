@@ -154,8 +154,7 @@ namespace Primitives
         /// <param name="value">Значение расстояния (рад)</param>
         private Distance(double value)
         {
-            value = 0;
-            this.Radians = value;
+            this.Value = value;
         }
 
         /// <summary>
@@ -165,6 +164,7 @@ namespace Primitives
         /// <param name="unit">Единица измерения</param>
         public Distance(double value, Unit unit)
         {
+            this.Value = 0.0;
             this.SetValue(value, unit);
         }
 

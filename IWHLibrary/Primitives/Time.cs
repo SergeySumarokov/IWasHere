@@ -165,7 +165,7 @@ namespace Primitives
         /// <param name="value">Количество секунд</param>
         private Time(double value)
         {
-            this.Seconds = value;
+            this.Value = value;
         }
 
         /// <summary>
@@ -175,6 +175,7 @@ namespace Primitives
         /// <param name="unit">Единица измерения</param>
         public Time(double value, Unit unit)
         {
+            this.Value = 0.0;
             switch (unit)
             {
                 case Unit.Milliseconds:

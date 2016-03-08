@@ -142,7 +142,7 @@ namespace Primitives
         /// <param name="value">Значение скорости (м/с)</param>
         private Speed(double value)
         {
-            this.MetersPerSecond = value;
+            this.Value = value;
         }
 
         /// <summary>
@@ -152,6 +152,7 @@ namespace Primitives
         /// <param name="unit">Единица измерения</param>
         public Speed(double value, Unit unit)
         {
+            this.Value = 0.0;
             switch (unit)
             {
                 case Unit.MetersPerSecond:

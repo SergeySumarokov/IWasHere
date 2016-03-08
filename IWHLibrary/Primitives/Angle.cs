@@ -131,6 +131,7 @@ namespace Primitives
         /// <param name="value">Значение угла (рад)</param>
         private Angle(double value)
         {
+            this.Value = 0.0;
             this.Radians = value;
         }
 
@@ -141,6 +142,7 @@ namespace Primitives
         /// <param name="unit">Единица измерения</param>
         public Angle(double value, Angle.Unit unit)
         {
+            this.Value = 0.0;
             switch (unit)
             {
                 case Unit.Radians:

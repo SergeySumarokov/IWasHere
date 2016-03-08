@@ -141,6 +141,7 @@ namespace Primitives
         /// <param name="unit">Единица измерения</param>
         public Pressure(double value, Unit unit)
         {
+            this.Value = 0.0;
             switch (unit)
             {
                 case Unit.Pa:

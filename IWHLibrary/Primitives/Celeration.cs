@@ -133,7 +133,7 @@ namespace Primitives
         /// <param name="value">Значение ускорения (м/с2)</param>
         private Celeration(double value)
         {
-            this.MetersPerSecondSquared = value;
+            this.Value = value;
         }
 
         /// <summary>
@@ -143,6 +143,7 @@ namespace Primitives
         /// <param name="unit">Единица измерения</param>
         public Celeration(double value, Unit unit)
         {
+            this.Value = 0.0;
             switch (unit)
             {
                 case Unit.MetersPerSecondSquared:
