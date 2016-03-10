@@ -8,10 +8,8 @@ namespace OSM
     /// A node represents a specific point on the earth's surface defined by its latitude and longitude.
     /// </summary>
     /// <remarks>64-bit integer number ≥ 1</remarks>
-    class Node
+    public class Node
     {
-        Dictionary<string, string> _tags;
-
         /// <summary>
         /// Node ids are unique between nodes.
         /// </summary>
@@ -50,14 +48,11 @@ namespace OSM
         /// See Map Features for tagging guidelines.
         /// </summary>
         /// <remarks>A set of key/value pairs, with unique key.</remarks>
-        public Dictionary<string,string> Tags
-        {
-            get { return _tags; }
-        }
+        public Dictionary<string, string> Tags { get; private set; }
 
         public Node()
         {
-            _tags = new Dictionary<string, string>();
+            Tags = new Dictionary<string, string>();
         }
 
     }

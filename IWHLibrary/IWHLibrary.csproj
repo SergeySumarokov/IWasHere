@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="OpenStreetMap\Attributes.cs" />
     <Compile Include="OpenStreetMap\Node.cs" />
     <Compile Include="OpenStreetMap\Way.cs" />
     <Compile Include="Primitives\Altitude.cs" />
