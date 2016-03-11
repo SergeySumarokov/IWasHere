@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Xml;
 using Primitives;
 
 namespace OSM
@@ -10,6 +11,7 @@ namespace OSM
     /// <remarks>64-bit integer number ≥ 1</remarks>
     public class Node
     {
+
         /// <summary>
         /// Node ids are unique between nodes.
         /// </summary>
@@ -50,10 +52,103 @@ namespace OSM
         /// <remarks>A set of key/value pairs, with unique key.</remarks>
         public Dictionary<string, string> Tags { get; private set; }
 
+        /// <summary>
+        /// Инициализирует новый пустной экземпляр класса.
+        /// </summary>
         public Node()
         {
             Tags = new Dictionary<string, string>();
         }
 
+        /// <summary>
+        /// Инициализирует новый экземпляр класса, определяя поле Id.
+        /// </summary>
+        public Node(Int64 Id):this()
+        {
+            this.Id = Id;
+        }
+
+        private static IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-US");
+
+        /// <summary>
+        /// Загружает данные в поля экземпляра класса из фрагмента xml-кода.
+        /// </summary>
+        /// <param name="xmlString"></param>
+        /// <returns></returns>
+        public void LoadXml(string xmlString)
+        {
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml(xmlString);
+            XmlNode n = xmlDoc.SelectSingleNode("node");
+            Id = Int64.Parse(n.Attributes["id"].Value, xmlFormatProvider);
+            Lat = double.Parse(n.Attributes["lat"].Value, xmlFormatProvider);
+            Lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
+            Tags.Clear();
+            foreach (XmlNode t in xmlDoc.SelectNodes("/node/tag"))
+            {
+                Tags.Add(t.Attributes["k"].Value, t.Attributes["v"].Value);
+            }
+        }
+
+        /// <summary>
+        /// Возвращает новый экземпляр класса с данными, загруженными из фрагмента xml-кода.
+        /// </summary>
+        /// <param name="xmlString"></param>
+        /// <returns></returns>
+        public static Node FromXml(string xmlString)
+        {
+            Node newNode = new Node();
+            newNode.LoadXml(xmlString);
+            return newNode;
+        }
+
     }
+
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class Nodes
+    {
+
+        Dictionary<Int64, Node> _nodes;
+
+        public Nodes()
+        {
+            _nodes = new Dictionary<Int64, Node>();
+        }
+
+        public int Count
+        {
+            get { return _nodes.Count; }
+        }
+
+        public bool ContainId(Int64 Id)
+        {
+            return _nodes.ContainsKey(Id);
+        }
+
+        public Node GetById(Int64 Id)
+        {
+            return _nodes[Id];
+        }
+        
+        public void Clear()
+        {
+            _nodes.Clear();
+        }
+
+        public void Add(Node node)
+        {
+            _nodes.Add(node.Id, node);
+        }
+
+        public void Remove(Node node)
+        {
+            _nodes.Remove(node.Id);
+        }
+
+    }
+        
 }

@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Xml;
 
 namespace OSM
 {
     /// <summary>
     /// Common attributes within the OSM database.
     /// </summary>
-    class Attributes
+    public class Attributes
     {
         /// <summary>
         /// Used for identifying the element.
@@ -48,6 +49,15 @@ namespace OSM
         /// The changeset in which the object was created or updated. 
         /// </summary>
         public Int64 Changeset;
-   
+
+        public static Attributes Parse(XmlNode node)
+        {
+            Attributes attr = new Attributes();
+            attr.Id = Int64.Parse(node.Attributes["id"].Value);
+            return attr;
+
+        }
+
+
     }
 }
