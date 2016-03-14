@@ -6,7 +6,7 @@ namespace OSM
     /// <summary>
     /// Common attributes within the OSM database.
     /// </summary>
-    public class Attributes
+    public struct Attributes
     {
         /// <summary>
         /// Used for identifying the element.
@@ -50,10 +50,22 @@ namespace OSM
         /// </summary>
         public Int64 Changeset;
 
-        public static Attributes Parse(XmlNode node)
+        private static IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-US");
+
+        /// <summary>
+        /// Возвращает структуру с данными, загруженными из xml-узла.
+        /// </summary>
+        public static Attributes FromXmlNode(XmlNode node)
         {
             Attributes attr = new Attributes();
-            attr.Id = Int64.Parse(node.Attributes["id"].Value);
+            attr.Id = Int64.Parse(node.Attributes["id"].Value, xmlFormatProvider);
+            attr.UserName = node.Attributes["user"].Value;
+            attr.UserId = Int64.Parse(node.Attributes["uid"].Value, xmlFormatProvider);
+            attr.TimeStamp = DateTime.Parse(node.Attributes["timestamp"].Value, xmlFormatProvider);
+            // Аттрибут Visible может быть не указан?
+            //attr.Visible = Boolean.Parse(node.Attributes["visible"].Value);
+            attr.Version = Int64.Parse(node.Attributes["version"].Value, xmlFormatProvider);
+            attr.Changeset = Int64.Parse(node.Attributes["changeset"].Value, xmlFormatProvider);
             return attr;
 
         }
