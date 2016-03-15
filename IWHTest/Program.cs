@@ -1,5 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Xml;
+using System.Xml.Serialization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,7 +13,7 @@ namespace IWHTest
     {
         static void Main(string[] args)
         {
-            //string osmFileName = "P:/Обменник/OSM/RU-SPE.osm";
+            //string osmFileName = "/Projects/IWasHere/Resources/RU-SPE.osm";
             string osmFileName = "/Projects/IWasHere/Resources/ExampleOSM.xml";
             IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-US");
             OSM.Ways ways = new OSM.Ways();
@@ -96,6 +98,40 @@ namespace IWHTest
                 }
                 Console.WriteLine("Nodes.count={0}", nodes.Count);
             }
+
+            // Готовим массив для записи трека
+            List<GPS.Track> tracks = new List<GPS.Track>();
+            GPS.Track newTrack;
+            GPS.TrackSegment newTrackSegment;
+            GPS.TrackPoint newTrackPoint;
+            foreach (OSM.Way way in ways.Values)
+            {
+                newTrack = new GPS.Track();
+                //newTrack.Name = "";
+                newTrackSegment = new GPS.TrackSegment();
+                foreach (OSM.Node node in nodes.Values)
+                {
+                    newTrackPoint = new GPS.TrackPoint();
+                    newTrackPoint.Coordinates = node.Coordinates;
+                    newTrackSegment.Points.Add(newTrackPoint);
+                }
+                newTrack.Segments.Add(newTrackSegment);
+                tracks.Add(newTrack);
+            }
+
+            // Выгружаем
+            XmlSerializer formatter = new XmlSerializer(typeof(GPS.Track));
+            using (FileStream fs = new FileStream("/Projects/IWasHere/Resources/Track_out.gpx", FileMode.Create))
+            {
+                foreach (GPS.Track track in tracks)
+                {
+                    formatter.Serialize(fs, track);
+                }
+            }
+
+
+            // Конец
+            Console.WriteLine( "Done. Press [Enter] to exit.");
             Console.ReadLine();
         }
     }
