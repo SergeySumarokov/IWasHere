@@ -33,26 +33,34 @@ namespace IWHTest
                         XmlNode n = xmlDoc.SelectSingleNode("way");
                         newWay.Id = Int64.Parse(n.Attributes["id"].Value, xmlFormatProvider);
                         newWay.Attributes = OSM.Attributes.FromXmlNode(n);
-                        /// Загрузка идентификаторов узлов
-                        foreach (XmlNode nd in xmlDoc.SelectNodes("/way/nd"))
-                        {
-                            Int64 id = Int64.Parse(nd.Attributes["ref"].Value, xmlFormatProvider);
-                            OSM.Node newNode = new OSM.Node();
-                            newNode.Id = id;
-                            newWay.Nodes.Add(newNode);
-                        }
                         /// Загрузка тэгов
                         foreach (XmlNode tag in xmlDoc.SelectNodes("/way/tag"))
                         {
                             newWay.Tags.Add(tag.Attributes["k"].Value, tag.Attributes["v"].Value);
                         }
                         /// Сохраняем только нужные линии
+                        var highwayList = new List<string> { "motorway","motorway_link","trunk","trunk_link","primary","primary_link","secondary","secondary_link"};
                         if (newWay.Tags.ContainsKey("highway"))
                         {
-                            string highway = newWay.Tags["highway"];
-                            if (highway == "motorway" || highway == "trunk" || highway == "primary" || highway == "secondary")
+                            if (highwayList.Contains(newWay.Tags["highway"]))
                             {
                                 ways.Add(newWay.Id, newWay);
+                                /// Загрузка идентификаторов узлов
+                                foreach (XmlNode nd in xmlDoc.SelectNodes("/way/nd"))
+                                {
+                                    Int64 id = Int64.Parse(nd.Attributes["ref"].Value, xmlFormatProvider);
+                                    OSM.Node newNode;
+                                    if (nodes.ContainsKey(id))
+                                    {
+                                        newNode = nodes[id];
+                                    }
+                                    else
+                                    {
+                                        newNode = new OSM.Node() { Id = id };
+                                        nodes.Add(newNode.Id, newNode);
+                                    }
+                                    newWay.Nodes.Add(newNode);
+                                }
                                 foreach (OSM.Node node in newWay.Nodes)
                                 {
                                     if (!nodes.ContainsKey(node.Id))
@@ -99,36 +107,55 @@ namespace IWHTest
                 Console.WriteLine("Nodes.count={0}", nodes.Count);
             }
 
+            // Удаляем из линий точки без координат
+            var wayList = ways.Values.ToList();
+            foreach (var way in wayList)
+            {
+                var nodeList = way.Nodes.ToList();
+                foreach (var node in nodeList)
+                {
+                    if (node.Coordinates.IsEmpty)
+                    {
+                        way.Nodes.Remove(node);
+                    }
+                }
+                if (way.Nodes.Count<2)
+                {
+                    ways.Remove(way.Id);
+                }
+
+            }
+
             // Готовим массив для записи трека
-            List<GPS.Track> tracks = new List<GPS.Track>();
+            GPS.Gpx gpx = new GPS.Gpx();
             GPS.Track newTrack;
             GPS.TrackSegment newTrackSegment;
             GPS.TrackPoint newTrackPoint;
             foreach (OSM.Way way in ways.Values)
             {
                 newTrack = new GPS.Track();
-                //newTrack.Name = "";
+                if (way.Tags.ContainsKey("name"))
+                {newTrack.Name = way.Tags["name"];}
+                else
+                {newTrack.Name = "<noname>"; }
+                newTrack.Name += " (" + way.Tags["highway"] + " " + way.Id.ToString() + ")";
                 newTrackSegment = new GPS.TrackSegment();
-                foreach (OSM.Node node in nodes.Values)
+                foreach (OSM.Node node in way.Nodes)
                 {
                     newTrackPoint = new GPS.TrackPoint();
                     newTrackPoint.Coordinates = node.Coordinates;
                     newTrackSegment.Points.Add(newTrackPoint);
                 }
                 newTrack.Segments.Add(newTrackSegment);
-                tracks.Add(newTrack);
+                gpx.Tracks.Add(newTrack);
             }
 
             // Выгружаем
-            XmlSerializer formatter = new XmlSerializer(typeof(GPS.Track));
+            XmlSerializer formatter = new XmlSerializer(typeof(GPS.Gpx));
             using (FileStream fs = new FileStream("/Projects/IWasHere/Resources/Track_out.gpx", FileMode.Create))
             {
-                foreach (GPS.Track track in tracks)
-                {
-                    formatter.Serialize(fs, track);
-                }
+                formatter.Serialize(fs, gpx);
             }
-
 
             // Конец
             Console.WriteLine( "Done. Press [Enter] to exit.");
