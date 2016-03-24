@@ -56,6 +56,8 @@
     <Compile Include="Primitives\Temperature.cs" />
     <Compile Include="Primitives\Time.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Root\Node.cs" />
+    <Compile Include="Root\Way.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
