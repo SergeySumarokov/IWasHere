@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Xml;
 using Primitives;
 
 namespace OSM
@@ -13,21 +12,25 @@ namespace OSM
     {
 
         /// <summary>
-        /// Node ids are unique between nodes.
-        /// </summary>
-        /// <remarks>64-bit integer number ≥ 1. 
-        /// Editors may temporarily save node ids as negative to denote ids that haven't yet been saved to the server. Node ids on the server are persistent, meaning that the assigned id of an existing node will remain unchanged each time data are added or corrected. Deleted node ids must not be reused, unless a former node is now undeleted.</remarks>
-        public Int64 Id;
-
-        /// <summary>
         /// Common attributes.
         /// </summary>
         public Attributes Attributes;
 
         /// <summary>
-        /// 
+        /// Геодезические координаты точки.
         /// </summary>
         public Coordinates Coordinates;
+
+        /// <summary>
+        /// Node ids are unique between nodes.
+        /// </summary>
+        /// <remarks>64-bit integer number ≥ 1. 
+        /// Editors may temporarily save node ids as negative to denote ids that haven't yet been saved to the server. Node ids on the server are persistent, meaning that the assigned id of an existing node will remain unchanged each time data are added or corrected. Deleted node ids must not be reused, unless a former node is now undeleted.</remarks>
+        public Int64 Id
+        {
+            get { return Attributes.Id; }
+            set { Attributes.Id = value; }
+        }
 
         /// <summary>
         /// Latitude coordinate in degrees (North of equator is positive) using the standard WGS84 projection.
@@ -65,22 +68,6 @@ namespace OSM
             Tags = new Dictionary<string, string>();
         }
 
-        /// <summary>
-        /// Инициализирует новый экземпляр класса, определяя поле Id.
-        /// </summary>
-        public Node(Int64 Id):this()
-        {
-            this.Id = Id;
-        }
-
     }
-
-
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public class Nodes : Dictionary<Int64, Node>
-    { }
         
 }

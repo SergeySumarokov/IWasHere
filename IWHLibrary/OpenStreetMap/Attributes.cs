@@ -62,10 +62,14 @@ namespace OSM
             attr.UserName = node.Attributes["user"].Value;
             attr.UserId = Int64.Parse(node.Attributes["uid"].Value, xmlFormatProvider);
             attr.TimeStamp = DateTime.Parse(node.Attributes["timestamp"].Value, xmlFormatProvider);
-            // Аттрибут Visible может быть не указан?
-            //attr.Visible = Boolean.Parse(node.Attributes["visible"].Value);
             attr.Version = Int64.Parse(node.Attributes["version"].Value, xmlFormatProvider);
             attr.Changeset = Int64.Parse(node.Attributes["changeset"].Value, xmlFormatProvider);
+            // Аттрибут Visible может быть не указан?
+            XmlAttribute xmlVisible = node.Attributes["visible"];
+            if (xmlVisible == null)
+                { attr.Visible = true; }
+            else
+                { attr.Visible = Boolean.Parse(xmlVisible.Value); }
             return attr;
 
         }

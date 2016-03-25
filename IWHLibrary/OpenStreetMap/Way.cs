@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Xml;
 
 namespace OSM
 {
@@ -12,14 +11,18 @@ namespace OSM
     {
 
         /// <summary>
-        /// Way id.
-        /// </summary>
-        public Int64 Id;
-
-        /// <summary>
         /// Common attributes.
         /// </summary>
         public Attributes Attributes;
+
+        /// <summary>
+        /// Way id.
+        /// </summary>
+        public Int64 Id
+        {
+            get { return Attributes.Id; }
+            set { Attributes.Id = value; }
+        }
 
         /// <summary>
         /// Оrdered list of nodes.
@@ -41,11 +44,6 @@ namespace OSM
             Nodes = new List<Node>();
             Tags = new Dictionary<string, string>();
         }
-
-    }
-
-    public class Ways : Dictionary<Int64, Way>
-    { 
 
     }
 
