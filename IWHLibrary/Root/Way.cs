@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Primitives;
 
 namespace IWH
@@ -13,7 +14,7 @@ namespace IWH
         Secondary = 4
     }
 
-    public class Way :OSM.Way
+    public class Way
     {
 
         /// <summary>
@@ -41,12 +42,40 @@ namespace IWH
         /// </summary>
         public DateTime LastVisitedTime;
 
+        /// <summary>
+        /// Оrdered list of nodes.
+        /// </summary>
+        /// <remarks>A way can have between 2 and 2,000 nodes, although it's possible that faulty ways with zero or a single node exist.</remarks>
+        public List<Node> Nodes { get; private set; }
+
+        public Int64 OsmId;
+
+        public Int64 OsmVer;
+
+        /// <summary>
+        /// Инициализирует новый экземпляр класса.
+        /// </summary>
+        public Way()
+        {
+            Nodes = new List<Node>();
+        }
+
+        /// <summary>
+        /// Выполняет пересчет длины линии
+        /// </summary>
         public void Recalculate()
         {
-            foreach (var n in Nodes)
+            Lenght = Distance.Zero;
+            VisitedLenght = Distance.Zero;
+            for (int i = 1; i <= Nodes.Count-1; i++)
             {
-
+                Nodes[i].PartLenght = Nodes[i-1].Coordinates.OrthodromicDistance(Nodes[i].Coordinates);
+                Nodes[i].PartDirection = Nodes[i-1].Coordinates.OrthodromicBearing(Nodes[i].Coordinates);
+                Lenght += Nodes[i].PartLenght;
+                if (Nodes[i].IsVisited && Nodes[i-1].IsVisited)
+                    VisitedLenght += Nodes[i].PartLenght;
             }
+            IsVisited = Lenght.AlmostEquals(VisitedLenght);
         }
 
     }

@@ -7,18 +7,6 @@ using System.Xml.Serialization;
 namespace GPS
 {
 
-    [System.Serializable, XmlType("gpx")]
-    public class Gpx
-    {
-        [XmlElement("trk")]
-        public List<Track> Tracks;
-
-        public Gpx()
-        {
-            Tracks = new List<Track>();
-        }
-    }
-
     [System.Serializable, XmlType("trk")]
     public class Track
     {

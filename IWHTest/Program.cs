@@ -14,11 +14,18 @@ namespace IWHTest
         static void Main(string[] args)
         {
             // Формируем базу OSM
-            string osmFileName = "/Projects/IWasHere/Resources/RU-SPE.osm";
-            //string osmFileName = "/Projects/IWasHere/Resources/ExampleOSM.xml";
+            //string osmFileName = "/Projects/IWasHere/Resources/RU-SPE.osm";
+            string osmFileName = "/Projects/IWasHere/Resources/ExampleOSM.xml";
             var OsmDb = new OSM.Database();
             OsmDb.LoadFromXml(osmFileName);
 
+            Console.WriteLine("Ways.count={0}", OsmDb.Ways.Count);
+            Console.WriteLine("Nodes.count={0}", OsmDb.Nodes.Count);
+
+            // Формируем локальную базу
+            var IwhMap = new IWH.Map();
+            IwhMap.UpdateFromOsm(OsmDb);
+            
             // Готовим массив для записи трека
             GPS.Gpx gpx = new GPS.Gpx();
             GPS.Track newTrack;
@@ -28,9 +35,9 @@ namespace IWHTest
             {
                 newTrack = new GPS.Track();
                 if (way.Tags.ContainsKey("name"))
-                {newTrack.Name = way.Tags["name"];}
+                    {newTrack.Name = way.Tags["name"];}
                 else
-                {newTrack.Name = "<noname>"; }
+                    {newTrack.Name = "<noname>"; }
                 newTrack.Name += " (" + way.Tags["highway"] + " " + way.Id.ToString() + ")";
                 newTrackSegment = new GPS.TrackSegment();
                 foreach (OSM.Node node in way.Nodes)
@@ -43,12 +50,8 @@ namespace IWHTest
                 gpx.Tracks.Add(newTrack);
             }
 
-            // Выгружаем
-            XmlSerializer formatter = new XmlSerializer(typeof(GPS.Gpx));
-            using (FileStream fs = new FileStream("/Projects/IWasHere/Resources/Track_out.gpx", FileMode.Create))
-            {
-                formatter.Serialize(fs, gpx);
-            }
+            // Выгружаем в файл
+            gpx.SaveToFile("/Projects/IWasHere/Resources/Track_out.gpx");
 
             // Конец
             Console.WriteLine( "Done. Press [Enter] to exit.");

@@ -14,15 +14,18 @@ namespace IWH
         ShowPlace = 2
     }
 
-    public class Node : OSM.Node
+    public class Node
     {
 
-        public NodeType Type { get; set; }
+        /// <summary>
+        /// Геодезические координаты точки.
+        /// </summary>
+        public Coordinates Coordinates;
 
         /// <summary>
-        /// Радиус окуржности, при входе в которую точка считается посещенной.
+        /// Тип точки.
         /// </summary>
-        public Distance Range;
+        public NodeType Type { get; set; }
 
         /// <summary>
         /// Длина участка пути (удаление от предыдущей точки линии).
@@ -35,6 +38,11 @@ namespace IWH
         public Angle PartDirection;
 
         /// <summary>
+        /// Радиус окружности, при входе в которую точка считается посещенной.
+        /// </summary>
+        public Distance Range;
+
+        /// <summary>
         /// Истина, исли точка была посещена.
         /// </summary>
         public Boolean IsVisited;
@@ -43,6 +51,10 @@ namespace IWH
         /// Время последнего посещения точки.
         /// </summary>
         public DateTime LastVisitedTime;
+
+        public Int64 OsmId;
+
+        public Int64 OsmVer;
 
     }
 

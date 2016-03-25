@@ -88,8 +88,6 @@ namespace OSM
                 }
             }
             
-            Console.WriteLine("Ways.count={0}", Ways.Count);
-
             /// Вторым проходом собираем точки
             using (XmlReader xml = XmlReader.Create(osmFileName))
             {
@@ -120,8 +118,6 @@ namespace OSM
                     }
                 }
             }
-
-            Console.WriteLine("Nodes.count={0}", Nodes.Count);
 
             //
             // Здесь должно идти удаление точек вне заданной области
