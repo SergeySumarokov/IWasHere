@@ -1,5 +1,11 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
+using Primitives;
+
 
 namespace IWH
 {
@@ -7,18 +13,31 @@ namespace IWH
     /// <summary>
     /// Представляет данные приложения.
     /// </summary>
-    public class Map
+    [XmlRoot("map")]
+    public class Map : IXmlSerializable
     {
-
-        /// <summary>
-        /// Список линий.
-        /// </summary>
-        public Dictionary<Int64, Node> Nodes { get; private set; }
 
         /// <summary>
         /// Список точек.
         /// </summary>
+        public Dictionary<Int64, Node> Nodes { get; private set; }
+
+        /// <summary>
+        /// Список линий.
+        /// </summary>
         public Dictionary<Int64, Way> Ways { get; private set; }
+
+        /// <summary>
+        /// Общая протяженность линии.
+        /// </summary>
+        [XmlIgnore]
+        public Distance Lenght;
+
+        /// <summary>
+        /// Суммарная протяженность посещённых участков линии.
+        /// </summary>
+        [XmlIgnore]
+        public Distance VisitedLenght;
 
         /// <summary>
         /// Инициализирует новый пустной экземпляр класса.
@@ -36,6 +55,9 @@ namespace IWH
         public void UpdateFromOsm(OSM.Database osmDb )
         {
 
+            Lenght = Distance.Zero;
+            VisitedLenght = Distance.Zero;
+
             foreach (OSM.Way osmWay in osmDb.Ways.Values)
             {
                 Way way;
@@ -43,13 +65,17 @@ namespace IWH
                 if (Ways.ContainsKey(osmWay.Id))
                     way = Ways[osmWay.Id];
                 else
+                {
                     way = new Way();
+                    Ways.Add(osmWay.Id, way);
+                }
                 // Заполняем новую линию или обновляем существующую, если её версия меньше версии OSM
                 if (way.OsmVer == 0 || osmWay.Attributes.Version>way.OsmVer)
                 {
                     // Заполняем поля
                     way.OsmId = osmWay.Attributes.Id;
                     way.OsmVer = osmWay.Attributes.Version;
+                    // Тип
                     switch (osmWay.Tags["highway"])
                     {
                         case "motorway":
@@ -69,12 +95,17 @@ namespace IWH
                             way.Type = WayType.Secondary;
                             break;
                     }
+                    // Наименование
+                    if (osmWay.Tags.ContainsKey("name"))
+                        way.Name = osmWay.Tags["name"];
                     // Заполняем точки
                     way.Nodes.Clear();
                     foreach (OSM.Node osmNode in osmWay.Nodes)
                         way.Nodes.Add(NodeFromOsmNode(osmNode));
                     // Пересчитываем точки
                     way.Recalculate();
+                    Lenght += way.Lenght;
+                    VisitedLenght += VisitedLenght;
                 }
                 // Линия обновлена
             }
@@ -114,6 +145,77 @@ namespace IWH
             }
             return node;
         }
+
+        /// <summary>
+        /// Загружает содержимое экземпляра из xml-файла.
+        /// </summary>
+        /// <param name="fileName"></param>
+        public void ReadFromXml(string fileName)
+        {
+
+            var serializer = new XmlSerializer(typeof(IWH.Map));
+            using (var fileStream = new FileStream(fileName,FileMode.Open))
+            {
+                var map = (Map)serializer.Deserialize(fileStream);
+            }
+
+        }
+        /// <summary>
+        /// Выгружает содержимое экземпляра в xml-файл.
+        /// </summary>
+        /// <param name="fileName"></param>
+        public void WriteToXml(string fileName)
+        {
+
+            var serializer = new XmlSerializer(typeof(IWH.Map));
+            using (var fileStream = new FileStream(fileName, FileMode.Create))
+            {
+                serializer.Serialize(fileStream, this);
+            }
+
+        }
+
+
+        #region "IXmlSerializable Members"
+
+
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+
+            var waySerializer = new XmlSerializer(typeof(Way));
+
+            reader.Read();
+            if (reader.IsEmptyElement) return;
+
+            while (reader.NodeType != XmlNodeType.EndElement)
+            {
+                var way = (Way)waySerializer.Deserialize(reader);
+            }
+            reader.ReadEndElement();
+
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+
+            var waySerializer = new XmlSerializer(typeof(Way));
+            var namespaces = new XmlSerializerNamespaces();
+            namespaces.Add("", "");
+
+            foreach (Way way in Ways.Values)
+            {
+                waySerializer.Serialize(writer, way, namespaces);
+            }
+
+        }
+
+        #endregion
+
 
     }
 

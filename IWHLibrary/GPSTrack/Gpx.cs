@@ -41,7 +41,7 @@ namespace GPS
         {
 
             var serializer = new XmlSerializer(typeof(GPS.Gpx));
-            using (var fileStream = new  FileStream("/Projects/IWasHere/Resources/Track_out.gpx", FileMode.Create))
+            using (var fileStream = new  FileStream(fileName, FileMode.Create))
             {
                 serializer.Serialize(fileStream, this);
             }

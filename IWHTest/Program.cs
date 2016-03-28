@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Primitives;
 
 namespace IWHTest
 {
@@ -13,8 +14,9 @@ namespace IWHTest
     {
         static void Main(string[] args)
         {
+
             // Формируем базу OSM
-            //string osmFileName = "/Projects/IWasHere/Resources/RU-SPE.osm";
+            //string osmFileName = "/Temp/IWasHere/RU-LEN.osm";
             string osmFileName = "/Projects/IWasHere/Resources/ExampleOSM.xml";
             var OsmDb = new OSM.Database();
             OsmDb.LoadFromXml(osmFileName);
@@ -25,7 +27,17 @@ namespace IWHTest
             // Формируем локальную базу
             var IwhMap = new IWH.Map();
             IwhMap.UpdateFromOsm(OsmDb);
-            
+
+            Console.WriteLine("Map.Lenght={0}", IwhMap.Lenght);
+
+            IwhMap.WriteToXml("/Projects/IWasHere/Resources/IwhMap.xml");
+
+            Console.WriteLine("SaveToFile complete");
+
+            IwhMap.ReadFromXml("/Projects/IWasHere/Resources/IwhMap.xml");
+
+            Console.WriteLine("LoadFromFile complete");
+
             // Готовим массив для записи трека
             GPS.Gpx gpx = new GPS.Gpx();
             GPS.Track newTrack;

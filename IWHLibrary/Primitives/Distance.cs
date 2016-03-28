@@ -35,7 +35,7 @@ namespace Primitives
         }
 
         private static double[] _earthRadius = {
-            0.0,
+            1.0,
             6378137.0,
             6378.137,
             3443.918,
