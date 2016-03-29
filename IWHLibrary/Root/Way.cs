@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml;
+using System.Xml.Schema;
 using System.Xml.Serialization;
 using Primitives;
 
 namespace IWH
 {
 
+    /// <summary>
+    /// Типы линий.
+    /// </summary>
     public enum WayType : int
     {
         Unknown = 0,
@@ -16,57 +20,57 @@ namespace IWH
         Secondary = 4
     }
 
-    [System.Serializable, XmlType("way")]
-    public class Way
+    /// <summary>
+    /// Линия.
+    /// </summary>
+    [XmlRoot("way")]
+    public class Way : IXmlSerializable
     {
 
         /// <summary>
         /// Тип линии.
         /// </summary>
-        [XmlAttribute("type")]
-        public WayType Type { get; set; }
+        public WayType Type;
 
         /// <summary>
         /// Наименование линии.
         /// </summary>
-        [XmlAttribute("name")]
-        public String Name { get; set; }
+        public String Name;
 
         /// <summary>
         /// Общая протяженность линии.
         /// </summary>
-        [XmlIgnore]
         public Distance Lenght;
 
         /// <summary>
         /// Суммарная протяженность посещённых участков линии.
         /// </summary>
-        [XmlIgnore]
         public Distance VisitedLenght;
 
         /// <summary>
         /// Истина, исли вся линия была посещена.
         /// </summary>
-        [XmlIgnore]
         public Boolean IsVisited;
 
         /// <summary>
         /// Время последнего посещения любой из точек линии.
         /// </summary>
-        [XmlIgnore]
         public DateTime LastVisitedTime;
 
         /// <summary>
         /// Оrdered list of nodes.
         /// </summary>
         /// <remarks>A way can have between 2 and 2,000 nodes, although it's possible that faulty ways with zero or a single node exist.</remarks>
-        [XmlElement("node")]
         public List<Node> Nodes { get; private set; }
 
-        [XmlAttribute("id")]
+        /// <summary>
+        /// Идентификатор OSM.
+        /// </summary>
         public Int64 OsmId;
 
-        [XmlAttribute("ver")]
+        /// <summary>
+        /// Версия данных OSM.
+        /// </summary>
         public Int64 OsmVer;
 
         /// <summary>
@@ -74,6 +78,7 @@ namespace IWH
         /// </summary>
         public Way()
         {
+            Name = String.Empty;
             Nodes = new List<Node>();
         }
 
@@ -96,6 +101,38 @@ namespace IWH
             }
             IsVisited = Lenght.AlmostEquals(VisitedLenght);
         }
+
+        #region "IXmlSerializable Members"
+
+        private static IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
+
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            // Линия
+            writer.WriteAttributeString("name", Name.ToString(xmlFormatProvider));
+            writer.WriteAttributeString("type", Type.ToString());
+            writer.WriteAttributeString("id", OsmId.ToString(xmlFormatProvider));
+            writer.WriteAttributeString("ver", OsmVer.ToString(xmlFormatProvider));
+            // Точки
+            foreach (Node node in Nodes)
+            {
+                writer.WriteStartElement("ref");
+                writer.WriteAttributeString("id", node.OsmId.ToString(xmlFormatProvider));
+                writer.WriteEndElement();
+            }
+        }
+
+        #endregion
 
     }
 

@@ -30,13 +30,11 @@ namespace IWH
         /// <summary>
         /// Общая протяженность линии.
         /// </summary>
-        [XmlIgnore]
         public Distance Lenght;
 
         /// <summary>
         /// Суммарная протяженность посещённых участков линии.
         /// </summary>
-        [XmlIgnore]
         public Distance VisitedLenght;
 
         /// <summary>
@@ -150,13 +148,13 @@ namespace IWH
         /// Загружает содержимое экземпляра из xml-файла.
         /// </summary>
         /// <param name="fileName"></param>
-        public void ReadFromXml(string fileName)
+        public static Map ReadFromXml(string fileName)
         {
 
             var serializer = new XmlSerializer(typeof(IWH.Map));
             using (var fileStream = new FileStream(fileName,FileMode.Open))
             {
-                var map = (Map)serializer.Deserialize(fileStream);
+                return (Map)serializer.Deserialize(fileStream);
             }
 
         }
@@ -178,6 +176,7 @@ namespace IWH
 
         #region "IXmlSerializable Members"
 
+        private static IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
 
         public XmlSchema GetSchema()
         {
@@ -187,29 +186,63 @@ namespace IWH
         public void ReadXml(XmlReader reader)
         {
 
-            var waySerializer = new XmlSerializer(typeof(Way));
+            Nodes.Clear();
+            Ways.Clear();
 
-            reader.Read();
-            if (reader.IsEmptyElement) return;
+            var nodeSerializer = new XmlSerializer(typeof(Node));
+            var xmlDoc = new XmlDocument();
 
-            while (reader.NodeType != XmlNodeType.EndElement)
+            while (!reader.EOF)
             {
-                var way = (Way)waySerializer.Deserialize(reader);
+                if (reader.NodeType == XmlNodeType.Element && reader.Name=="way")
+                {
+                    //Линии
+                    xmlDoc.LoadXml(reader.ReadOuterXml());
+                    XmlNode xmlWay = xmlDoc.SelectSingleNode("way");
+                    var way = new Way();
+                    // Аттрибуты
+                    way.Name = xmlWay.Attributes["name"].Value;
+                    way.Type = (WayType)Enum.Parse(typeof(WayType), xmlWay.Attributes["type"].Value);
+                    way.OsmId = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
+                    way.OsmVer = Int64.Parse(xmlWay.Attributes["ver"].Value, xmlFormatProvider);
+                    // Точки
+                    foreach (XmlNode xmlRef in xmlDoc.SelectNodes("/way/ref"))
+                    {
+                        Int64 id = Int64.Parse(xmlRef.Attributes["id"].Value, xmlFormatProvider);
+                        way.Nodes.Add(Nodes[id]);
+                    }
+                    Ways.Add(way.OsmId,way);
+                }
+                else
+                {
+                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "node")
+                    {
+                        // Точки
+                        var node = (Node)nodeSerializer.Deserialize(reader);
+                        Nodes.Add(node.OsmId, node);
+                    }
+                    reader.Read();
+                }
             }
-            reader.ReadEndElement();
-
         }
 
         public void WriteXml(XmlWriter writer)
         {
 
-            var waySerializer = new XmlSerializer(typeof(Way));
-            var namespaces = new XmlSerializerNamespaces();
-            namespaces.Add("", "");
+            writer.WriteAttributeString("version", "1.0");
+            writer.WriteAttributeString("generator", "IWasHere application");
 
+            var waySerializer = new XmlSerializer(typeof(Way));
+            var nodeSerializer = new XmlSerializer(typeof(Node));
+            // Точки
+            foreach (Node node in Nodes.Values)
+            {
+                nodeSerializer.Serialize(writer, node);
+            }
+            // Линии
             foreach (Way way in Ways.Values)
             {
-                waySerializer.Serialize(writer, way, namespaces);
+                waySerializer.Serialize(writer, way);
             }
 
         }

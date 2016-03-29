@@ -16,25 +16,25 @@ namespace IWHTest
         {
 
             // Формируем базу OSM
-            //string osmFileName = "/Temp/IWasHere/RU-LEN.osm";
-            string osmFileName = "/Projects/IWasHere/Resources/ExampleOSM.xml";
+            string osmFileName = @"\Temp\IWasHere\RU-SPE.osm";
+            //string osmFileName = @"\Projects\IWasHere\Resources\ExampleOSM.xml";
             var OsmDb = new OSM.Database();
-            OsmDb.LoadFromXml(osmFileName);
+            //OsmDb.LoadFromXml(osmFileName);
 
             Console.WriteLine("Ways.count={0}", OsmDb.Ways.Count);
             Console.WriteLine("Nodes.count={0}", OsmDb.Nodes.Count);
 
             // Формируем локальную базу
             var IwhMap = new IWH.Map();
-            IwhMap.UpdateFromOsm(OsmDb);
+            //IwhMap.UpdateFromOsm(OsmDb);
 
             Console.WriteLine("Map.Lenght={0}", IwhMap.Lenght);
 
-            IwhMap.WriteToXml("/Projects/IWasHere/Resources/IwhMap.xml");
+            //IwhMap.WriteToXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
 
             Console.WriteLine("SaveToFile complete");
 
-            IwhMap.ReadFromXml("/Projects/IWasHere/Resources/IwhMap.xml");
+            IwhMap = IWH.Map.ReadFromXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
 
             Console.WriteLine("LoadFromFile complete");
 
@@ -43,16 +43,12 @@ namespace IWHTest
             GPS.Track newTrack;
             GPS.TrackSegment newTrackSegment;
             GPS.TrackPoint newTrackPoint;
-            foreach (OSM.Way way in OsmDb.Ways.Values)
+            foreach (IWH.Way way in IwhMap.Ways.Values)
             {
                 newTrack = new GPS.Track();
-                if (way.Tags.ContainsKey("name"))
-                    {newTrack.Name = way.Tags["name"];}
-                else
-                    {newTrack.Name = "<noname>"; }
-                newTrack.Name += " (" + way.Tags["highway"] + " " + way.Id.ToString() + ")";
+                newTrack.Name = way.Name + " (" + way.Type.ToString() + " " + way.OsmId.ToString() + ")";
                 newTrackSegment = new GPS.TrackSegment();
-                foreach (OSM.Node node in way.Nodes)
+                foreach (IWH.Node node in way.Nodes)
                 {
                     newTrackPoint = new GPS.TrackPoint();
                     newTrackPoint.Coordinates = node.Coordinates;
@@ -63,7 +59,7 @@ namespace IWHTest
             }
 
             // Выгружаем в файл
-            gpx.SaveToFile("/Projects/IWasHere/Resources/Track_out.gpx");
+            gpx.SaveToFile(@"\Projects\IWasHere\Resources\Track.gpx");
 
             // Конец
             Console.WriteLine( "Done. Press [Enter] to exit.");
