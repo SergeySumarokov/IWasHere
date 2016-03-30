@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Schema;
@@ -113,8 +114,18 @@ namespace IWH
         /// <summary>
         /// Удалает из Nodes точки, не используемые в Ways.
         /// </summary>
-        private void PackNodes()
+        public void PackNodes()
         {
+            foreach (Way way in Ways.Values.ToList())
+            {
+                foreach (Node node in way.Nodes.ToList())
+                {
+                    if (!Nodes.ContainsKey(node.OsmId))
+                        way.Nodes.Remove(node);
+                }
+                if (way.Nodes.Count < 2)
+                    Ways.Remove(way.OsmId);
+            }
         }
 
         /// <summary>
@@ -212,6 +223,10 @@ namespace IWH
                         way.Nodes.Add(Nodes[id]);
                     }
                     Ways.Add(way.OsmId,way);
+                    // Пересчитываем линию
+                    way.Recalculate();
+                    Lenght += way.Lenght;
+                    VisitedLenght += VisitedLenght;
                 }
                 else
                 {
