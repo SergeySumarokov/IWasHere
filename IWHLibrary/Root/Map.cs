@@ -75,6 +75,7 @@ namespace IWH
                     way.OsmId = osmWay.Attributes.Id;
                     way.OsmVer = osmWay.Attributes.Version;
                     // Тип
+                    way.IsLink = osmWay.Tags["highway"].EndsWith("_link");
                     switch (osmWay.Tags["highway"])
                     {
                         case "motorway":
@@ -104,7 +105,7 @@ namespace IWH
                     // Пересчитываем точки
                     way.Recalculate();
                     Lenght += way.Lenght;
-                    VisitedLenght += VisitedLenght;
+                    VisitedLenght += way.VisitedLenght;
                 }
                 // Линия обновлена
             }
@@ -126,6 +127,20 @@ namespace IWH
                 if (way.Nodes.Count < 2)
                     Ways.Remove(way.OsmId);
             }
+        }
+
+        public void Recalculate()
+        {
+            Lenght = Distance.Zero;
+            VisitedLenght = Distance.Zero;
+            foreach (Way way in Ways.Values)
+            {
+                // Пересчитываем линию
+                way.Recalculate();
+                Lenght += way.Lenght;
+                VisitedLenght += way.VisitedLenght;
+            }
+
         }
 
         /// <summary>
@@ -214,6 +229,7 @@ namespace IWH
                     // Аттрибуты
                     way.Name = xmlWay.Attributes["name"].Value;
                     way.Type = (WayType)Enum.Parse(typeof(WayType), xmlWay.Attributes["type"].Value);
+                    way.IsLink = Boolean.Parse(xmlWay.Attributes["link"].Value);
                     way.OsmId = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
                     way.OsmVer = Int64.Parse(xmlWay.Attributes["ver"].Value, xmlFormatProvider);
                     // Точки
@@ -221,12 +237,15 @@ namespace IWH
                     {
                         Int64 id = Int64.Parse(xmlRef.Attributes["id"].Value, xmlFormatProvider);
                         way.Nodes.Add(Nodes[id]);
+                        // Устанавливаем увеличенный радиус для точек, входящих в _link
+                        if (way.IsLink)
+                            Nodes[id].Range = new Distance(0.5, Distance.Unit.Kilometers);
                     }
                     Ways.Add(way.OsmId,way);
                     // Пересчитываем линию
                     way.Recalculate();
                     Lenght += way.Lenght;
-                    VisitedLenght += VisitedLenght;
+                    VisitedLenght += way.VisitedLenght;
                 }
                 else
                 {
@@ -234,6 +253,8 @@ namespace IWH
                     {
                         // Точки
                         var node = (Node)nodeSerializer.Deserialize(reader);
+                        if (node.Range.IsEmpty)
+                            node.Range = new Distance(0.1, Distance.Unit.Kilometers);
                         Nodes.Add(node.OsmId, node);
                     }
                     reader.Read();

@@ -53,7 +53,7 @@ namespace IWHTest
             Console.WriteLine("Ways {0}, Nodes {1}", OsmDb.Ways.Count, OsmDb.Nodes.Count);
 
             // Формируем локальную базу
-            
+
             var IwhMap = new IWH.Map();
             //IwhMap.UpdateFromOsm(OsmDb);
 
@@ -81,34 +81,118 @@ namespace IWHTest
             Console.WriteLine("LoadFromFile complete");
             Console.WriteLine("Ways {0}, Nodes {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
             Console.WriteLine("Map.Lenght={0}", IwhMap.Lenght);
+            Console.WriteLine("Map.Visited={0}", IwhMap.VisitedLenght);
 
-            // Готовим массив для записи трека
+            // Загружаем трек
 
+            GPS.Gpx gpxTrack = GPS.Gpx.FromXmlFile(@"\Projects\IWasHere\Resources\GPSTrackSample.gpx");
+
+            // Отмечаем пройденные точки
+            AnalizeGpsTrack(IwhMap.Nodes.Values.ToList(), gpxTrack.GetPointList(), new Distance(5, Distance.Unit.Kilometers));
+            Console.WriteLine("IsVisited complete");
+
+            IwhMap.Recalculate();
+            Console.WriteLine("Map.Lenght={0}", IwhMap.Lenght);
+            Console.WriteLine("Map.Visited={0}", IwhMap.VisitedLenght);
+
+            // Выгружаем треки
+
+            MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.WayType>() { IWH.WayType.Motorway, IWH.WayType.Trunk }), false, @"\Projects\IWasHere\Resources\Way_Primary.gpx");
+            MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.WayType>() { IWH.WayType.Primary, IWH.WayType.Secondary }), false, @"\Projects\IWasHere\Resources\Way_Secondary.gpx");
+            MapToGpx(IwhMap.Ways.Values.ToList(), true, @"\Projects\IWasHere\Resources\Way_Visited.gpx");
+
+            // Конец
+
+            Console.WriteLine("Done. Press [Enter] to exit.");
+            Console.ReadLine();
+        }
+
+        /// <summary>
+        /// Анализирует список точек GPS и отмечает IsVisible у точек IWH.
+        /// </summary>
+        /// <remarks>Предполагалается, что что точки в треке, как и положено, идут в порядке следования.</remarks>
+        static void AnalizeGpsTrack(List<IWH.Node> iwhNodes, List<GPS.TrackPoint> gpsPoints, Distance cacheRange)
+        {
+            var cacheNodes = new List<IWH.Node>();
+            var cacheCenter = new Coordinates();
+            foreach (var point in gpsPoints)
+            {
+                // Проверяем нахождение текущей точки трека в радиусе загруженного кеша точек
+                if (cacheCenter.IsEmpty || cacheCenter.OrthodromicDistance(point.Coordinates) > cacheRange)
+                {
+                    // Устанавливаем центр кеша на текущую точку трека
+                    cacheCenter = point.Coordinates;
+                    // Заново формируем кэш вокруг центральной точки
+                    cacheNodes.Clear();
+                    foreach (var node in iwhNodes)
+                    {
+                        if (cacheCenter.OrthodromicDistance(node.Coordinates) <= cacheRange)
+                            cacheNodes.Add(node);
+                    }
+                }
+                // Проверяем удаление точки трека только от точек в кеше
+                foreach (var node in cacheNodes)
+                {
+                    if (node.Coordinates.OrthodromicDistance(point.Coordinates) < node.Range)
+                        node.IsVisited = true;
+                }
+
+            }
+
+        }
+
+        /// <summary>
+        /// Выгружает заданный список линий в файл GPS-трекинга
+        /// </summary>
+        /// <param name="wayList"></param>
+        /// <param name="visitedOnly">Выгружать только посещенные участки линии</param>
+        /// <param name="outputFileName"></param>
+        static void MapToGpx(List<IWH.Way> wayList, Boolean visitedOnly, string outputFileName)
+        {
             GPS.Gpx gpx = new GPS.Gpx();
             GPS.Track newTrack;
             GPS.TrackSegment newTrackSegment;
             GPS.TrackPoint newTrackPoint;
-            foreach (IWH.Way way in IwhMap.Ways.Values)
+            bool goodNode;
+            // Подготавливаем данные для выгрузки
+            foreach (IWH.Way way in wayList)
             {
                 newTrack = new GPS.Track();
                 newTrack.Name = way.Name + " (" + way.Type.ToString() + " " + way.OsmId.ToString() + ")";
                 newTrackSegment = new GPS.TrackSegment();
-                foreach (IWH.Node node in way.Nodes)
+                for (int i = 0; i < way.Nodes.Count; i++)
                 {
-                    newTrackPoint = new GPS.TrackPoint();
-                    newTrackPoint.Coordinates = node.Coordinates;
-                    newTrackSegment.Points.Add(newTrackPoint);
+                    if (visitedOnly)
+                        // Выгружаем посещенную точку только если следующая или предыдущая так-же посещена
+                        goodNode = ((way.Nodes[i].IsVisited) && ((i == 0 || way.Nodes[i - 1].IsVisited) || (i == way.Nodes.Count - 1 || way.Nodes[i + 1].IsVisited)));
+                    else
+                        goodNode = true;
+                    if (goodNode)
+                    {
+                        newTrackPoint = new GPS.TrackPoint();
+                        newTrackPoint.Coordinates = way.Nodes[i].Coordinates;
+                        newTrackSegment.Points.Add(newTrackPoint);
+                    }
                 }
-                newTrack.Segments.Add(newTrackSegment);
-                gpx.Tracks.Add(newTrack);
+                if (newTrackSegment.Points.Count >= 2)
+                {
+                    newTrack.Segments.Add(newTrackSegment);
+                    gpx.Tracks.Add(newTrack);
+                }
             }
             // Выгружаем в файл
-            gpx.SaveToFile(@"\Projects\IWasHere\Resources\Track.gpx");
+            gpx.SaveToFile(outputFileName);
+        }
 
-            // Конец
-
-            Console.WriteLine( "Done. Press [Enter] to exit.");
-            Console.ReadLine();
+        static List<IWH.Way> WaysByType(List<IWH.Way> wayList, List<IWH.WayType> typeList)
+        {
+            var result = new List<IWH.Way>();
+            foreach (var way in wayList)
+            {
+                if (typeList.Contains(way.Type))
+                    result.Add(way);
+            }
+            return result;
         }
     }
 }

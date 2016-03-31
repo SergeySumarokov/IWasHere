@@ -33,6 +33,11 @@ namespace IWH
         public WayType Type;
 
         /// <summary>
+        /// Истина, если линия является link
+        /// </summary>
+        public Boolean IsLink;
+
+        /// <summary>
         /// Наименование линии.
         /// </summary>
         public String Name;
@@ -121,6 +126,7 @@ namespace IWH
             // Линия
             writer.WriteAttributeString("name", Name.ToString(xmlFormatProvider));
             writer.WriteAttributeString("type", Type.ToString());
+            writer.WriteAttributeString("link", IsLink.ToString());
             writer.WriteAttributeString("id", OsmId.ToString(xmlFormatProvider));
             writer.WriteAttributeString("ver", OsmVer.ToString(xmlFormatProvider));
             // Точки
