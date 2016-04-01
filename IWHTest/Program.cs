@@ -44,42 +44,32 @@ namespace IWHTest
                 areaLen.Points.Add(new Coordinates(lat, lon, 0));
             }
 
-            // Формируем базу OSM
-
-            //string osmFileName = @"\Temp\IWasHere\RU-SPE.osm";
-            ////string osmFileName = @"\Projects\IWasHere\Resources\ExampleOSM.xml";
-            //var OsmDb = new OSM.Database();
-            //OsmDb.LoadFromXml(osmFileName);
-            //Console.WriteLine("Ways {0}, Nodes {1}", OsmDb.Ways.Count, OsmDb.Nodes.Count);
-
             // Формируем локальную базу
 
             var IwhMap = new IWH.Map();
-            //IwhMap.UpdateFromOsm(OsmDb);
-            IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-LEN.osm");
-            Console.WriteLine("Ways {0}, Nodes {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
-
-            Console.WriteLine("Map.Lenght={0}", IwhMap.Lenght);
+            //IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-LEN.osm");
+            //Console.WriteLine("Ways {0}, Nodes {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
+            //Console.WriteLine("Map.Lenght={0}", IwhMap.Lenght);
 
             // Удаляем из локальной базы точки вне области
 
-            Console.WriteLine("Nodes before = {0}", IwhMap.Nodes.Count);
-            foreach (IWH.Node node in IwhMap.Nodes.Values.ToList())
-            {
-                if (areaSpb.HasPointInside(node.Coordinates) || !areaLen.HasPointInside(node.Coordinates))
-                    IwhMap.Nodes.Remove(node.Id);
-            }
-            IwhMap.PackNodes();
-            Console.WriteLine("Nodes after = {0}", IwhMap.Nodes.Count);
+            //Console.WriteLine("Nodes before = {0}", IwhMap.Nodes.Count);
+            //foreach (IWH.Node node in IwhMap.Nodes.Values.ToList())
+            //{
+            //    if (areaSpb.HasPointInside(node.Coordinates) || !areaLen.HasPointInside(node.Coordinates))
+            //        IwhMap.Nodes.Remove(node.Id);
+            //}
+            //IwhMap.PackNodes();
+            //Console.WriteLine("Nodes after = {0}", IwhMap.Nodes.Count);
 
-            // Записываем и считываем базу
+            // Записываем базу
 
-            IwhMap.WriteToXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
+            //IwhMap.WriteToXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
+            //Console.WriteLine("SaveToFile complete");
 
-            Console.WriteLine("SaveToFile complete");
+            // Считываем базу
 
             IwhMap = IWH.Map.ReadFromXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
-
             Console.WriteLine("LoadFromFile complete");
             Console.WriteLine("Ways {0}, Nodes {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
             Console.WriteLine("Map.Lenght={0}", IwhMap.Lenght);
@@ -197,6 +187,7 @@ namespace IWHTest
             return result;
         }
 
+        // Это было нужно, чтобы выбрать из базы ОСМ все типы тегов по дорогам и наспунктам
         static void SelectOsmAttributes(string[] args)
         {
             StreamWriter csv = new StreamWriter(new FileStream(@"\Projects\IWasHere\Resources\Attributes.csv", FileMode.Create));

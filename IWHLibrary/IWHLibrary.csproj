@@ -43,10 +43,6 @@
   <ItemGroup>
     <Compile Include="GPSTrack\Gpx.cs" />
     <Compile Include="GPSTrack\Track.cs" />
-    <Compile Include="OpenStreetMap\Attributes.cs" />
-    <Compile Include="OpenStreetMap\Database.cs" />
-    <Compile Include="OpenStreetMap\Node.cs" />
-    <Compile Include="OpenStreetMap\Way.cs" />
     <Compile Include="Primitives\Altitude.cs" />
     <Compile Include="Primitives\Angle.cs" />
     <Compile Include="Primitives\AngularVelocity.cs" />

@@ -38,7 +38,7 @@ namespace IWH
         public WayType Type;
 
         /// <summary>
-        /// Истина, если линия является link
+        /// Истина, если линия является link.
         /// </summary>
         public Boolean IsLink;
 
