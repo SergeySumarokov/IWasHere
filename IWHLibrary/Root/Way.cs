@@ -28,6 +28,11 @@ namespace IWH
     {
 
         /// <summary>
+        /// Идентификатор OSM.
+        /// </summary>
+        public Int64 Id;
+
+        /// <summary>
         /// Тип линии.
         /// </summary>
         public WayType Type;
@@ -67,16 +72,6 @@ namespace IWH
         /// </summary>
         /// <remarks>A way can have between 2 and 2,000 nodes, although it's possible that faulty ways with zero or a single node exist.</remarks>
         public List<Node> Nodes { get; private set; }
-
-        /// <summary>
-        /// Идентификатор OSM.
-        /// </summary>
-        public Int64 OsmId;
-
-        /// <summary>
-        /// Версия данных OSM.
-        /// </summary>
-        public Int64 OsmVer;
 
         /// <summary>
         /// Инициализирует новый экземпляр класса.
@@ -127,13 +122,12 @@ namespace IWH
             writer.WriteAttributeString("name", Name.ToString(xmlFormatProvider));
             writer.WriteAttributeString("type", Type.ToString());
             writer.WriteAttributeString("link", IsLink.ToString());
-            writer.WriteAttributeString("id", OsmId.ToString(xmlFormatProvider));
-            writer.WriteAttributeString("ver", OsmVer.ToString(xmlFormatProvider));
+            writer.WriteAttributeString("id", Id.ToString(xmlFormatProvider));
             // Точки
             foreach (Node node in Nodes)
             {
                 writer.WriteStartElement("ref");
-                writer.WriteAttributeString("id", node.OsmId.ToString(xmlFormatProvider));
+                writer.WriteAttributeString("id", node.Id.ToString(xmlFormatProvider));
                 writer.WriteEndElement();
             }
         }

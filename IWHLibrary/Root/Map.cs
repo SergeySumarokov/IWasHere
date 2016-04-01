@@ -48,69 +48,212 @@ namespace IWH
         }
 
         /// <summary>
-        /// Обновляет данные приложения данными OSM
+        /// Загружает данные из osm-файла.
         /// </summary>
-        /// <remarks>На начальном этапе обновление не реазовано, выполняется полная перезагрузка.</remarks>
-        public void UpdateFromOsm(OSM.Database osmDb )
+        public void LoadFromOsm(string osmFileName)
         {
+            IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-US");
 
-            Lenght = Distance.Zero;
-            VisitedLenght = Distance.Zero;
-
-            foreach (OSM.Way osmWay in osmDb.Ways.Values)
+            /// Первым проходом читаем линии и сохраняем только нужные
+            using (XmlReader xml = XmlReader.Create(osmFileName))
             {
-                Way way;
-                // Выбираем существующую линию или создаем новую
-                if (Ways.ContainsKey(osmWay.Id))
-                    way = Ways[osmWay.Id];
-                else
+                var highwayList = new List<string> { "motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link" };
+                while (xml.Read())
                 {
-                    way = new Way();
-                    Ways.Add(osmWay.Id, way);
-                }
-                // Заполняем новую линию или обновляем существующую, если её версия меньше версии OSM
-                if (way.OsmVer == 0 || osmWay.Attributes.Version>way.OsmVer)
-                {
-                    // Заполняем поля
-                    way.OsmId = osmWay.Attributes.Id;
-                    way.OsmVer = osmWay.Attributes.Version;
-                    // Тип
-                    way.IsLink = osmWay.Tags["highway"].EndsWith("_link");
-                    switch (osmWay.Tags["highway"])
+                    if (xml.NodeType == XmlNodeType.Element && xml.Name == "way")
                     {
-                        case "motorway":
-                        case "motorway_link":
-                            way.Type = WayType.Motorway;
-                            break;
-                        case "trunk":
-                        case "trunk_link":
-                            way.Type = WayType.Trunk;
-                            break;
-                        case "primary":
-                        case "primary_link":
-                            way.Type = WayType.Primary;
-                            break;
-                        case "secondary":
-                        case "secondary_link":
-                            way.Type = WayType.Secondary;
-                            break;
+                        // Создаем новую линию
+                        XmlDocument xmlDoc = new XmlDocument();
+                        xmlDoc.LoadXml(xml.ReadOuterXml());
+                        XmlNode xmlWay = xmlDoc.SelectSingleNode("way");
+                        Way newWay = new Way();
+                        // Загружаем тэги
+                        var tags = new Dictionary<string, string>();
+                        foreach (XmlNode xmlTag in xmlDoc.SelectNodes("/way/tag"))
+                            tags.Add(xmlTag.Attributes["k"].Value, xmlTag.Attributes["v"].Value);
+                        // Сохраняем только нужные линии
+                        if (tags.ContainsKey("highway") && highwayList.Contains(tags["highway"]))
+                        {
+                            // Определяем тип линии
+                            string highwayValue = tags["highway"];
+                            newWay.IsLink = highwayValue.EndsWith("_link");
+                            switch (highwayValue)
+                            {
+                                case "motorway":
+                                case "motorway_link":
+                                    newWay.Type = WayType.Motorway;
+                                    break;
+                                case "trunk":
+                                case "trunk_link":
+                                    newWay.Type = WayType.Trunk;
+                                    break;
+                                case "primary":
+                                case "primary_link":
+                                    newWay.Type = WayType.Primary;
+                                    break;
+                                case "secondary":
+                                case "secondary_link":
+                                    newWay.Type = WayType.Secondary;
+                                    break;
+                            }
+                            // Определяем другие реквизиты линии
+                            newWay.Id = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
+                            if (tags.ContainsKey("name"))
+                                newWay.Name = tags["name"];
+                            // Загружаем идентификаторы узлов
+                            Node newNode;
+                            foreach (XmlNode xmlNd in xmlDoc.SelectNodes("/way/nd"))
+                            {
+                                Int64 id = Int64.Parse(xmlNd.Attributes["ref"].Value, xmlFormatProvider);
+                                if (Nodes.ContainsKey(id))
+                                {
+                                    newNode = Nodes[id];
+                                }
+                                else
+                                {
+                                    newNode = new Node() { Id = id };
+                                    Nodes.Add(newNode.Id, newNode);
+                                }
+                                newWay.Nodes.Add(newNode);
+                            }
+                            // Сохраняем нужную линию
+                            Ways.Add(newWay.Id, newWay);
+                        }
+                        // Линия отработана
                     }
-                    // Наименование
-                    if (osmWay.Tags.ContainsKey("name"))
-                        way.Name = osmWay.Tags["name"];
-                    // Заполняем точки
-                    way.Nodes.Clear();
-                    foreach (OSM.Node osmNode in osmWay.Nodes)
-                        way.Nodes.Add(NodeFromOsmNode(osmNode));
-                    // Пересчитываем точки
-                    way.Recalculate();
-                    Lenght += way.Lenght;
-                    VisitedLenght += way.VisitedLenght;
                 }
-                // Линия обновлена
+            }
+
+            // Вторым проходом собираем точки
+            using (XmlReader xml = XmlReader.Create(osmFileName))
+            {
+                var placeList = new List<string> { "city","town", "village" };
+                while (xml.Read())
+                {
+                    if (xml.NodeType == XmlNodeType.Element && xml.Name == "node")
+                    {
+                        XmlDocument xmlDoc = new XmlDocument();
+                        xmlDoc.LoadXml(xml.ReadOuterXml());
+                        XmlNode xmlNode = xmlDoc.SelectSingleNode("node");
+                        // Загружаем аттрибуты
+                        Int64 id = Int64.Parse(xmlNode.Attributes["id"].Value, xmlFormatProvider);
+                        // Загружаем тэги
+                        var tags = new Dictionary<string, string>();
+                        foreach (XmlNode xmlTag in xmlDoc.SelectNodes("/node/tag"))
+                            tags.Add(xmlTag.Attributes["k"].Value, xmlTag.Attributes["v"].Value);
+                        // Нам нужны только точки, участвующие в сохраненных линиях, или точки заданного типа
+                        Node newNode = null;
+                        Boolean goodNode = false;
+                        if (Nodes.ContainsKey(id))
+                        {
+                            // Эта точка входит в нужную линию
+                            goodNode = true;
+                            newNode = Nodes[id];
+                            newNode.Type = NodeType.Waypoint;
+                        }
+                        if (tags.ContainsKey("place") && placeList.Contains(tags["place"]))
+                        {
+                            // Эта точка описывает населенный пункт
+                            goodNode = true;
+                            // Создаем новую и добавляем в список, если не была загружена ранее
+                            if (newNode == null)
+                            {
+                                newNode = new Node() { Id = id };
+                                Nodes.Add(id, newNode);
+                            }
+                            // Заполняем специфичные для населенного пункта данные
+                            switch (tags["place"])
+                            {
+                                case "city":
+                                    newNode.Type = NodeType.City;
+                                    break;
+                                case "town":
+                                    newNode.Type = NodeType.Town;
+                                    break;
+                                case "village":
+                                    newNode.Type = NodeType.Village;
+                                    break;
+                            }
+                            if (tags.ContainsKey("name"))
+                                newNode.Name = tags["name"];
+                        }
+                        // Заполняем общие данные для нужных точек
+                        if (goodNode)
+                        {
+                            newNode.Coordinates.Latitude.Degrees = double.Parse(xmlNode.Attributes["lat"].Value, xmlFormatProvider);
+                            newNode.Coordinates.Longitude.Degrees = double.Parse(xmlNode.Attributes["lon"].Value, xmlFormatProvider);
+                        }
+                        // Точка отработана
+                    }
+                }
             }
 
         }
+
+        ///// <summary>
+        ///// Обновляет данные приложения данными OSM
+        ///// </summary>
+        ///// <remarks>На начальном этапе обновление не реазовано, выполняется полная перезагрузка.</remarks>
+        //public void UpdateFromOsm(OSM.Database osmDb )
+        //{
+
+        //    Lenght = Distance.Zero;
+        //    VisitedLenght = Distance.Zero;
+
+        //    foreach (OSM.Way osmWay in osmDb.Ways.Values)
+        //    {
+        //        Way way;
+        //        // Выбираем существующую линию или создаем новую
+        //        if (Ways.ContainsKey(osmWay.Id))
+        //            way = Ways[osmWay.Id];
+        //        else
+        //        {
+        //            way = new Way();
+        //            Ways.Add(osmWay.Id, way);
+        //        }
+        //        // Заполняем новую линию или обновляем существующую, если её версия меньше версии OSM
+        //        if (way.OsmVer == 0 || osmWay.Attributes.Version>way.OsmVer)
+        //        {
+        //            // Заполняем поля
+        //            way.Id = osmWay.Attributes.Id;
+        //            way.OsmVer = osmWay.Attributes.Version;
+        //            // Тип
+        //            way.IsLink = osmWay.Tags["highway"].EndsWith("_link");
+        //            switch (osmWay.Tags["highway"])
+        //            {
+        //                case "motorway":
+        //                case "motorway_link":
+        //                    way.Type = WayType.Motorway;
+        //                    break;
+        //                case "trunk":
+        //                case "trunk_link":
+        //                    way.Type = WayType.Trunk;
+        //                    break;
+        //                case "primary":
+        //                case "primary_link":
+        //                    way.Type = WayType.Primary;
+        //                    break;
+        //                case "secondary":
+        //                case "secondary_link":
+        //                    way.Type = WayType.Secondary;
+        //                    break;
+        //            }
+        //            // Наименование
+        //            if (osmWay.Tags.ContainsKey("name"))
+        //                way.Name = osmWay.Tags["name"];
+        //            // Заполняем точки
+        //            way.Nodes.Clear();
+        //            foreach (OSM.Node osmNode in osmWay.Nodes)
+        //                way.Nodes.Add(NodeFromOsmNode(osmNode));
+        //            // Пересчитываем точки
+        //            way.Recalculate();
+        //            Lenght += way.Lenght;
+        //            VisitedLenght += way.VisitedLenght;
+        //        }
+        //        // Линия обновлена
+        //    }
+
+        //}
 
         /// <summary>
         /// Удалает из Nodes точки, не используемые в Ways.
@@ -121,11 +264,11 @@ namespace IWH
             {
                 foreach (Node node in way.Nodes.ToList())
                 {
-                    if (!Nodes.ContainsKey(node.OsmId))
+                    if (!Nodes.ContainsKey(node.Id))
                         way.Nodes.Remove(node);
                 }
                 if (way.Nodes.Count < 2)
-                    Ways.Remove(way.OsmId);
+                    Ways.Remove(way.Id);
             }
         }
 
@@ -143,32 +286,32 @@ namespace IWH
 
         }
 
-        /// <summary>
-        /// Возвращает экземпляр Node с данными из экземпляра osmNode, зарегистрированный в Map.Nodes
-        /// </summary>
-        /// <param name=""></param>
-        /// <returns></returns>
-        private Node NodeFromOsmNode(OSM.Node osmNode)
-        {
-            Node node;
-            // Выбираем существующую точку или создаем новую
-            if (Nodes.ContainsKey(osmNode.Id))
-                node = Nodes[osmNode.Id];
-            else
-            {
-                node = new Node() { OsmId = osmNode.Id };
-                Nodes.Add(node.OsmId, node);
-            }
-            // Заполняем новую точку или обновляем существующую, если её версия меньше версии OSM
-            if (node.OsmVer == 0 || osmNode.Attributes.Version > node.OsmVer)
-            {
-                // Заполняем поля
-                node.Coordinates = osmNode.Coordinates;
-                node.Type = NodeType.Waypoint;
-                node.OsmVer = osmNode.Attributes.Version;
-            }
-            return node;
-        }
+        ///// <summary>
+        ///// Возвращает экземпляр Node с данными из экземпляра osmNode, зарегистрированный в Map.Nodes
+        ///// </summary>
+        ///// <param name=""></param>
+        ///// <returns></returns>
+        //private Node NodeFromOsmNode(OSM.Node osmNode)
+        //{
+        //    Node node;
+        //    // Выбираем существующую точку или создаем новую
+        //    if (Nodes.ContainsKey(osmNode.Id))
+        //        node = Nodes[osmNode.Id];
+        //    else
+        //    {
+        //        node = new Node() { Id = osmNode.Id };
+        //        Nodes.Add(node.Id, node);
+        //    }
+        //    // Заполняем новую точку или обновляем существующую, если её версия меньше версии OSM
+        //    if (node.OsmVer == 0 || osmNode.Attributes.Version > node.OsmVer)
+        //    {
+        //        // Заполняем поля
+        //        node.Coordinates = osmNode.Coordinates;
+        //        node.Type = NodeType.Waypoint;
+        //        node.OsmVer = osmNode.Attributes.Version;
+        //    }
+        //    return node;
+        //}
 
         /// <summary>
         /// Загружает содержимое экземпляра из xml-файла.
@@ -184,6 +327,7 @@ namespace IWH
             }
 
         }
+
         /// <summary>
         /// Выгружает содержимое экземпляра в xml-файл.
         /// </summary>
@@ -230,8 +374,7 @@ namespace IWH
                     way.Name = xmlWay.Attributes["name"].Value;
                     way.Type = (WayType)Enum.Parse(typeof(WayType), xmlWay.Attributes["type"].Value);
                     way.IsLink = Boolean.Parse(xmlWay.Attributes["link"].Value);
-                    way.OsmId = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
-                    way.OsmVer = Int64.Parse(xmlWay.Attributes["ver"].Value, xmlFormatProvider);
+                    way.Id = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
                     // Точки
                     foreach (XmlNode xmlRef in xmlDoc.SelectNodes("/way/ref"))
                     {
@@ -241,7 +384,7 @@ namespace IWH
                         if (way.IsLink)
                             Nodes[id].Range = new Distance(0.5, Distance.Unit.Kilometers);
                     }
-                    Ways.Add(way.OsmId,way);
+                    Ways.Add(way.Id,way);
                     // Пересчитываем линию
                     way.Recalculate();
                     Lenght += way.Lenght;
@@ -255,7 +398,7 @@ namespace IWH
                         var node = (Node)nodeSerializer.Deserialize(reader);
                         if (node.Range.IsEmpty)
                             node.Range = new Distance(0.1, Distance.Unit.Kilometers);
-                        Nodes.Add(node.OsmId, node);
+                        Nodes.Add(node.Id, node);
                     }
                     reader.Read();
                 }

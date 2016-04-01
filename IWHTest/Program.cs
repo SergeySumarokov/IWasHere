@@ -12,6 +12,7 @@ namespace IWHTest
 {
     class Program
     {
+
         static void Main(string[] args)
         {
 
@@ -45,17 +46,18 @@ namespace IWHTest
 
             // Формируем базу OSM
 
-            string osmFileName = @"\Temp\IWasHere\RU-LEN.osm";
-            //string osmFileName = @"\Projects\IWasHere\Resources\ExampleOSM.xml";
-            var OsmDb = new OSM.Database();
+            //string osmFileName = @"\Temp\IWasHere\RU-SPE.osm";
+            ////string osmFileName = @"\Projects\IWasHere\Resources\ExampleOSM.xml";
+            //var OsmDb = new OSM.Database();
             //OsmDb.LoadFromXml(osmFileName);
-
-            Console.WriteLine("Ways {0}, Nodes {1}", OsmDb.Ways.Count, OsmDb.Nodes.Count);
+            //Console.WriteLine("Ways {0}, Nodes {1}", OsmDb.Ways.Count, OsmDb.Nodes.Count);
 
             // Формируем локальную базу
 
             var IwhMap = new IWH.Map();
             //IwhMap.UpdateFromOsm(OsmDb);
+            IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-LEN.osm");
+            Console.WriteLine("Ways {0}, Nodes {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
 
             Console.WriteLine("Map.Lenght={0}", IwhMap.Lenght);
 
@@ -65,14 +67,14 @@ namespace IWHTest
             foreach (IWH.Node node in IwhMap.Nodes.Values.ToList())
             {
                 if (areaSpb.HasPointInside(node.Coordinates) || !areaLen.HasPointInside(node.Coordinates))
-                    IwhMap.Nodes.Remove(node.OsmId);
+                    IwhMap.Nodes.Remove(node.Id);
             }
             IwhMap.PackNodes();
             Console.WriteLine("Nodes after = {0}", IwhMap.Nodes.Count);
 
             // Записываем и считываем базу
 
-            //IwhMap.WriteToXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
+            IwhMap.WriteToXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
 
             Console.WriteLine("SaveToFile complete");
 
@@ -158,7 +160,7 @@ namespace IWHTest
             foreach (IWH.Way way in wayList)
             {
                 newTrack = new GPS.Track();
-                newTrack.Name = way.Name + " (" + way.Type.ToString() + " " + way.OsmId.ToString() + ")";
+                newTrack.Name = way.Name + " (" + way.Type.ToString() + " " + way.Id.ToString() + ")";
                 newTrackSegment = new GPS.TrackSegment();
                 for (int i = 0; i < way.Nodes.Count; i++)
                 {
@@ -194,5 +196,53 @@ namespace IWHTest
             }
             return result;
         }
+
+        static void SelectOsmAttributes(string[] args)
+        {
+            StreamWriter csv = new StreamWriter(new FileStream(@"\Projects\IWasHere\Resources\Attributes.csv", FileMode.Create));
+            IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-US");
+
+            /// Первым проходом читаем линии и сохраняем только нужные
+            using (XmlReader xml = XmlReader.Create(@"\Temp\IWasHere\RU-LEN.osm"))
+            {
+                while (xml.Read())
+                {
+                    if (xml.NodeType == XmlNodeType.Element && (xml.Name == "way" || xml.Name == "node"))
+                    {
+                        string type = xml.Name;
+                        // Создаем новую линию
+                        XmlDocument xmlDoc = new XmlDocument();
+                        xmlDoc.LoadXml(xml.ReadOuterXml());
+                        XmlNode xmlWay = xmlDoc.SelectSingleNode("/" + type);
+                        /// Загрузка тэгов
+                        string tag = string.Empty;
+                        string value = string.Empty;
+                        string name = string.Empty;
+                        string id = string.Empty;
+                        foreach (XmlNode xmlTag in xmlDoc.SelectNodes("/" + type + "/tag"))
+                        {
+                            string key = xmlTag.Attributes["k"].Value;
+                            if (key == "highway" || key == "place")
+                            {
+                                tag = key;
+                                value = xmlTag.Attributes["v"].Value;
+                            }
+                            if (key == "name")
+                            {
+                                name = xmlTag.Attributes["v"].Value;
+                            }
+                        }
+                        /// Линия отработана
+                        if (tag == "highway" || tag == "place")
+                            csv.WriteLine("{0};{1};{2};{3};{4}", type, tag, value, xmlWay.Attributes["id"].Value, name);
+                    }
+                }
+            }
+            csv.Close();
+
+            Console.WriteLine("Done. Press [Enter] to exit.");
+            Console.ReadLine();
+        }
+
     }
 }

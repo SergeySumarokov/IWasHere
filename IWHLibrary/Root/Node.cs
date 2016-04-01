@@ -13,8 +13,10 @@ namespace IWH
     public enum NodeType : int
     {
         Waypoint = 0,
-        PopulatedPlace = 1,
-        ShowPlace = 2
+        City = 1,
+        Town = 2,
+        Village = 3,
+        ShowPlace = 4
     }
 
     /// <summary>
@@ -23,6 +25,11 @@ namespace IWH
     [XmlRoot("node")]
     public class Node : IXmlSerializable
     {
+
+        /// <summary>
+        /// Идентификатор OSM.
+        /// </summary>
+        public Int64 Id;
 
         /// <summary>
         /// Геодезические координаты точки.
@@ -65,16 +72,6 @@ namespace IWH
         public DateTime LastVisitedTime;
 
         /// <summary>
-        /// Идентификатор OSM.
-        /// </summary>
-        public Int64 OsmId;
-
-        /// <summary>
-        /// Версия данных OSM.
-        /// </summary>
-        public Int64 OsmVer;
-
-        /// <summary>
         /// Инициализирует новый экземпляр класса.
         /// </summary>
         public Node()
@@ -99,8 +96,7 @@ namespace IWH
             Coordinates.Longitude.Degrees = double.Parse(reader.GetAttribute("lon"), xmlFormatProvider);
             IsVisited = Boolean.Parse(reader.GetAttribute("visited"));
             LastVisitedTime = DateTime.Parse(reader.GetAttribute("last"), xmlFormatProvider);
-            OsmId = Int64.Parse(reader.GetAttribute("id"), xmlFormatProvider);
-            OsmVer = Int64.Parse(reader.GetAttribute("ver"), xmlFormatProvider);
+            Id = Int64.Parse(reader.GetAttribute("id"), xmlFormatProvider);
         }
 
         public void WriteXml(XmlWriter writer)
@@ -111,8 +107,7 @@ namespace IWH
             writer.WriteAttributeString("lon", Coordinates.Longitude.Degrees.ToString(xmlFormatProvider));
             writer.WriteAttributeString("visited", IsVisited.ToString(xmlFormatProvider));
             writer.WriteAttributeString("last", LastVisitedTime.ToString(xmlFormatProvider));
-            writer.WriteAttributeString("id", OsmId.ToString(xmlFormatProvider));
-            writer.WriteAttributeString("ver", OsmVer.ToString(xmlFormatProvider));
+            writer.WriteAttributeString("id", Id.ToString(xmlFormatProvider));
         }
 
         #endregion
