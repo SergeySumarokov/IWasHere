@@ -12,38 +12,63 @@ namespace IWH
     /// </summary>
     public enum NodeType : int
     {
-        Waypoint = 0,
-        City = 1,
-        Town = 2,
-        Village = 3,
-        ShowPlace = 4
+        Unknown = 0,
+        Waypoint = 1,
+        City = 2,
+        Town = 3,
+        Village = 4,
+        ShowPlace = 5
     }
 
     /// <summary>
-    /// Точка.
+    /// Узел (точка пересечения).
     /// </summary>
+    /// <remarks>
+    /// A node represents a specific point on the earth's surface defined by its latitude and longitude.
+    /// </remarks>
     [XmlRoot("node")]
     public class Node : IXmlSerializable
     {
 
+        #region "Поля и свойства"
+
         /// <summary>
-        /// Идентификатор OSM.
+        /// Идентификатор узла OSM.
         /// </summary>
+        /// <remarks>
+        /// 64-bit integer number.
+        /// Node ids are unique between nodes.
+        /// </remarks>
         public Int64 Id;
 
         /// <summary>
-        /// Геодезические координаты точки.
+        /// Геодезические координаты узла.
         /// </summary>
+        /// <remarks>
+        /// Latitude coordinate in degrees (North of equator is positive) using the standard WGS84 projection.
+        /// Decimal number ≥ −90.0000000 and ≤ 90.0000000 with 7 decimal places.
+        /// Longitude coordinate in degrees (East of Greenwich is positive) using the standard WGS84 projection.
+        /// Decimal number ≥ −180.0000000 and ≤ 180.0000000 with 7 decimal places.
+        /// </remarks>
         public Coordinates Coordinates;
 
         /// <summary>
         /// Тип точки.
         /// </summary>
+        /// <remarks>
+        /// В зависимости от тега OSM:
+        /// Waypoint для узлов, используемых в Way c тэгом Highway;
+        /// City, Town, Village для узлов с тэгом Place соотвествующего значения;
+        /// ShowPlace для точек, загружаемых из отдельного файла.
+        /// </remarks>
         public NodeType Type;
 
         /// <summary>
-        /// Наименование точки.
+        /// Наименование узла.
         /// </summary>
+        /// <remarks>
+        /// Не используется для узлов типа Waypoint.
+        /// </remarks>
         public String Name;
 
         /// <summary>
@@ -57,19 +82,23 @@ namespace IWH
         public Angle PartDirection;
 
         /// <summary>
-        /// Радиус окружности, при входе в которую точка считается посещенной.
+        /// Радиус окружности, при входе в которую узел считается посещённым.
         /// </summary>
         public Distance Range;
 
         /// <summary>
-        /// Истина, исли точка была посещена.
+        /// Истина, исли узел был посещёне.
         /// </summary>
         public Boolean IsVisited;
 
         /// <summary>
-        /// Время последнего посещения точки.
+        /// Время последнего посещения узла.
         /// </summary>
         public DateTime LastVisitedTime;
+
+        #endregion
+
+        #region "Конструкторы"
 
         /// <summary>
         /// Инициализирует новый экземпляр класса.
@@ -79,7 +108,9 @@ namespace IWH
             Name = String.Empty;
         }
 
-        #region "IXmlSerializable Members"
+        #endregion
+
+        #region "Реализация IXmlSerializable"
 
         private static IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
 

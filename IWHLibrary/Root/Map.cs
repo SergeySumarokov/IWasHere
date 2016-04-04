@@ -12,24 +12,26 @@ namespace IWH
 {
 
     /// <summary>
-    /// Представляет данные приложения.
+    /// Представляет картографические данные приложения.
     /// </summary>
     [XmlRoot("map")]
     public class Map : IXmlSerializable
     {
 
+        #region "Поля и свойства"
+
         /// <summary>
-        /// Список точек.
+        /// Индексированный список узлов.
         /// </summary>
         public Dictionary<Int64, Node> Nodes { get; private set; }
 
         /// <summary>
-        /// Список линий.
+        /// Индексированный список линий.
         /// </summary>
         public Dictionary<Int64, Way> Ways { get; private set; }
 
         /// <summary>
-        /// Общая протяженность линии.
+        /// Общая протяженность всех линий.
         /// </summary>
         public Distance Lenght;
 
@@ -37,6 +39,10 @@ namespace IWH
         /// Суммарная протяженность посещённых участков линии.
         /// </summary>
         public Distance VisitedLenght;
+
+        #endregion
+
+        #region "Конструкторы"
 
         /// <summary>
         /// Инициализирует новый пустной экземпляр класса.
@@ -47,12 +53,16 @@ namespace IWH
             Ways = new Dictionary<Int64, Way>();
         }
 
+        #endregion
+
+        #region "Методы и функции"
+
         /// <summary>
-        /// Загружает данные из osm-файла.
+        /// Загружает в экземпляр данные из osm-файла.
         /// </summary>
         public void LoadFromOsm(string osmFileName)
         {
-            IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-US");
+            IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
 
             /// Первым проходом читаем линии и сохраняем только нужные
             using (XmlReader xml = XmlReader.Create(osmFileName))
@@ -155,7 +165,7 @@ namespace IWH
                         {
                             // Эта точка описывает населенный пункт
                             goodNode = true;
-                            // Создаем новую и добавляем в список, если не была загружена ранее
+                            // Создаем новую и добавляем в список, если не была загружена ранее как узел линии
                             if (newNode == null)
                             {
                                 newNode = new Node() { Id = id };
@@ -190,10 +200,10 @@ namespace IWH
 
         }
 
-        /// <summary>
-        /// Удалает из Ways точки, не используемые в Nodes, затем удаляет пустые Ways.
-        /// </summary>
-        public void PackNodes()
+    /// <summary>
+    /// Удалает из Ways точки, не используемые в Nodes, затем удаляет пустые (содержащие менее 2-х точек) Ways.
+    /// </summary>
+    public void PackNodes()
         {
             foreach (Way way in Ways.Values.ToList())
             {
@@ -225,7 +235,7 @@ namespace IWH
         }
 
         /// <summary>
-        /// Загружает содержимое экземпляра из xml-файла.
+        /// Возвращает новый экземпляр с данными, загруженными из xml-файла.
         /// </summary>
         /// <param name="fileName"></param>
         public static Map ReadFromXml(string fileName)
@@ -240,7 +250,7 @@ namespace IWH
         }
 
         /// <summary>
-        /// Выгружает содержимое экземпляра в xml-файл.
+        /// Выгружает данные экземпляра в xml-файл.
         /// </summary>
         /// <param name="fileName"></param>
         public void WriteToXml(string fileName)
@@ -254,7 +264,9 @@ namespace IWH
 
         }
 
-        #region "IXmlSerializable Members"
+        #endregion
+
+        #region "Реализация IXmlSerializable"
 
         private static IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
 
@@ -337,7 +349,6 @@ namespace IWH
         }
 
         #endregion
-
 
     }
 

@@ -89,9 +89,11 @@ namespace IWHTest
 
             // Выгружаем треки
 
-            MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.WayType>() { IWH.WayType.Motorway, IWH.WayType.Trunk }), false, @"\Projects\IWasHere\Resources\Way_Primary.gpx");
-            MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.WayType>() { IWH.WayType.Primary, IWH.WayType.Secondary }), false, @"\Projects\IWasHere\Resources\Way_Secondary.gpx");
-            MapToGpx(IwhMap.Ways.Values.ToList(), true, @"\Projects\IWasHere\Resources\Way_Visited.gpx");
+            //MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.WayType>() { IWH.WayType.Motorway, IWH.WayType.Trunk }), false, @"\Projects\IWasHere\Resources\Way_Primary.gpx");
+            //MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.WayType>() { IWH.WayType.Primary, IWH.WayType.Secondary }), false, @"\Projects\IWasHere\Resources\Way_Secondary.gpx");
+            //MapToGpx(IwhMap.Ways.Values.ToList(), true, @"\Projects\IWasHere\Resources\Way_Visited.gpx");
+            MapToGpxByVisited(IwhMap, false, @"\Projects\IWasHere\Resources\Unvisited.gpx");
+            MapToGpxByVisited(IwhMap, true, @"\Projects\IWasHere\Resources\Visited.gpx");
 
             // Конец
 
@@ -146,7 +148,7 @@ namespace IWHTest
             GPS.TrackSegment newTrackSegment;
             GPS.TrackPoint newTrackPoint;
             bool goodNode;
-            // Подготавливаем данные для выгрузки
+            // Подготавливаем линии для выгрузки
             foreach (IWH.Way way in wayList)
             {
                 newTrack = new GPS.Track();
@@ -170,6 +172,68 @@ namespace IWHTest
                 {
                     newTrack.Segments.Add(newTrackSegment);
                     gpx.Tracks.Add(newTrack);
+                }
+            }
+            // Выгружаем в файл
+            gpx.SaveToFile(outputFileName);
+        }
+
+        /// <summary>
+        /// Выгружает линии и точки в файл GPS-трекинга
+        /// </summary>
+        /// <param name="visitedOnly">Выгружать только посещенные участки линии</param>
+        /// <param name="outputFileName"></param>
+        static void MapToGpxByVisited(IWH.Map map, Boolean visitedOnly, string outputFileName)
+        {
+            GPS.Gpx gpx = new GPS.Gpx();
+            GPS.Track newTrack;
+            GPS.TrackSegment newTrackSegment;
+            GPS.TrackPoint newTrackPoint;
+            GPS.WayPoint newWayPoint;
+            bool goodNode;
+            // Подготавливаем линии для выгрузки
+            foreach (IWH.Way way in map.Ways.Values)
+            {
+                newTrack = new GPS.Track();
+                newTrack.Name = way.Name + " (" + way.Type.ToString() + " " + way.Id.ToString() + ")";
+                newTrackSegment = new GPS.TrackSegment();
+                for (int i = 0; i < way.Nodes.Count; i++)
+                {
+                    // Выгружаем посещенную точку только если следующая или предыдущая так-же посещена
+                    if (visitedOnly)
+                        goodNode = ((way.Nodes[i].IsVisited) && ((i == 0 || way.Nodes[i - 1].IsVisited) || (i == way.Nodes.Count - 1 || way.Nodes[i + 1].IsVisited)));
+                    else
+                        goodNode = ((!way.Nodes[i].IsVisited) && ((i == 0 || !way.Nodes[i - 1].IsVisited) || (i == way.Nodes.Count - 1 || !way.Nodes[i + 1].IsVisited)));
+                    if (goodNode)
+                    {
+                        newTrackPoint = new GPS.TrackPoint();
+                        newTrackPoint.Coordinates = way.Nodes[i].Coordinates;
+                        newTrackSegment.Points.Add(newTrackPoint);
+                    }
+                }
+                if (newTrackSegment.Points.Count >= 2)
+                {
+                    newTrack.Segments.Add(newTrackSegment);
+                    gpx.Tracks.Add(newTrack);
+                }
+            }
+            // Подготавливаем точки для выгрузки
+            var goodNodeTypeList = new List<IWH.NodeType> { IWH.NodeType.City, IWH.NodeType.Town, IWH.NodeType.Village };
+            foreach (IWH.Node node in map.Nodes.Values)
+            {
+                if (goodNodeTypeList.Contains(node.Type))
+                {
+                    if (visitedOnly)
+                        goodNode = node.IsVisited;
+                    else
+                        goodNode = !node.IsVisited;
+                    if (goodNode)
+                    {
+                        newWayPoint = new GPS.WayPoint();
+                        newWayPoint.Coordinates = node.Coordinates;
+                        newWayPoint.Name = node.Name;
+                        gpx.WayPoints.Add(newWayPoint);
+                    }
                 }
             }
             // Выгружаем в файл

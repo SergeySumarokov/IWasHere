@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="GPSTrack\Gpx.cs" />
     <Compile Include="GPSTrack\Track.cs" />
+    <Compile Include="GPSTrack\WayPoint.cs" />
     <Compile Include="Primitives\Altitude.cs" />
     <Compile Include="Primitives\Angle.cs" />
     <Compile Include="Primitives\AngularVelocity.cs" />

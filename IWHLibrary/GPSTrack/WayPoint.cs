@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Serialization;
 using Primitives;
@@ -7,29 +6,8 @@ using Primitives;
 namespace GPS
 {
 
-    [System.Serializable, XmlType("trk")]
-    public class Track
-    {
-        [XmlElement("name")]
-        public string Name;
-
-        [XmlElement("trkseg")]
-        public List<TrackSegment> Segments;
-
-        public Track() {Segments = new List<TrackSegment>();}
-    }
-
-    [System.Serializable, XmlType("trkseg")]
-    public class TrackSegment
-    {
-        [XmlElement("trkpt")]
-        public List<TrackPoint> Points;
-
-        public TrackSegment() { Points = new List<TrackPoint>(); }
-    }
-
-    [System.Serializable, XmlType("trkpt")]
-    public class TrackPoint
+    [System.Serializable, XmlType("wpt")]
+    public class WayPoint
     {
         [XmlIgnore]
         public Coordinates Coordinates;
@@ -55,7 +33,12 @@ namespace GPS
             set { Coordinates.Altitude.Meters = value; }
         }
 
+        [XmlElement("name")]
+        public string Name;
+
         [XmlIgnore, XmlElement("time")]
         public DateTime Time;
+
     }
+
 }

@@ -23,9 +23,15 @@ namespace IWH
     /// <summary>
     /// Линия.
     /// </summary>
+    /// <remarks>
+    /// A way is an ordered list of nodes which normally also has at least one tag or is included within a Relation.
+    /// A way can have between 2 and 2,000 nodes, although it's possible that faulty ways with zero or a single node exist. A way can be open or closed. A closed way is one whose last node on the way is also the first on that way. A closed way may be interpreted either as a closed polyline, or an area, or both.
+    /// </remarks>
     [XmlRoot("way")]
     public class Way : IXmlSerializable
     {
+
+        #region "Поля и свойства"
 
         /// <summary>
         /// Идентификатор OSM.
@@ -35,11 +41,17 @@ namespace IWH
         /// <summary>
         /// Тип линии.
         /// </summary>
+        /// <remarks>
+        /// Определяется значением тега OSM Highway.
+        /// </remarks>
         public WayType Type;
 
         /// <summary>
         /// Истина, если линия является link.
         /// </summary>
+        /// <remarks>
+        /// Определяется значением тега OSM Highway.
+        /// </remarks>
         public Boolean IsLink;
 
         /// <summary>
@@ -48,7 +60,7 @@ namespace IWH
         public String Name;
 
         /// <summary>
-        /// Общая протяженность линии.
+        /// Общая протяжённость линии.
         /// </summary>
         public Distance Lenght;
 
@@ -68,10 +80,13 @@ namespace IWH
         public DateTime LastVisitedTime;
 
         /// <summary>
-        /// Оrdered list of nodes.
+        /// Упорядоченный список узлов (точек) линии.
         /// </summary>
-        /// <remarks>A way can have between 2 and 2,000 nodes, although it's possible that faulty ways with zero or a single node exist.</remarks>
         public List<Node> Nodes { get; private set; }
+
+        #endregion
+
+        #region "Конструкторы"
 
         /// <summary>
         /// Инициализирует новый экземпляр класса.
@@ -81,6 +96,10 @@ namespace IWH
             Name = String.Empty;
             Nodes = new List<Node>();
         }
+
+        #endregion
+
+        #region "Методы и функции"
 
         /// <summary>
         /// Выполняет пересчет параметров линии.
@@ -102,7 +121,9 @@ namespace IWH
             IsVisited = Lenght.AlmostEquals(VisitedLenght);
         }
 
-        #region "IXmlSerializable Members"
+        #endregion
+
+        #region "Реализация IXmlSerializable"
 
         private static IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
 

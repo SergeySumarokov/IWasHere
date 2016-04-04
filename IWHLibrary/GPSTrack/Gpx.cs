@@ -20,12 +20,16 @@ namespace GPS
         [XmlElement("trk")]
         public List<Track> Tracks { get; private set; }
 
+        [XmlElement("wpt")]
+        public List<WayPoint> WayPoints { get; private set; }
+
         /// <summary>
         /// Инициализирует пустой экземпляр класса.
         /// </summary>
         public Gpx()
         {
             Tracks = new List<Track>();
+            WayPoints = new List<WayPoint>();
         }
 
         /// <summary>
