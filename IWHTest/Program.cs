@@ -16,88 +16,138 @@ namespace IWHTest
         static void Main(string[] args)
         {
 
+            var stopwatch = new System.Diagnostics.Stopwatch();
+            var IwhMap = new IWH.Map();
+
             // Загружаем границы областей
 
-            IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
-            XmlDocument xml = new XmlDocument();
-            XmlNamespaceManager prefix;
-            // Питер в границах КАД
-            xml.Load(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
-            prefix = new XmlNamespaceManager(xml.NameTable);
-            prefix.AddNamespace("prfx", xml.DocumentElement.NamespaceURI);
-            var areaSpb = new Area();
-            foreach (XmlNode n in xml.SelectNodes("//prfx:gpx/prfx:rte/prfx:rtept", prefix))
-            {
-                double lat = double.Parse(n.Attributes["lat"].Value, xmlFormatProvider);
-                double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
-                areaSpb.Points.Add(new Coordinates(lat, lon, 0));
-            }
-            // Ленобласть
-            xml.Load(@"\Projects\IWasHere\Resources\RU-LEN_area.gpx");
-            prefix = new XmlNamespaceManager(xml.NameTable);
-            prefix.AddNamespace("prfx", xml.DocumentElement.NamespaceURI);
-            var areaLen = new Area();
-            foreach (XmlNode n in xml.SelectNodes("//prfx:gpx/prfx:rte/prfx:rtept", prefix))
-            {
-                double lat = double.Parse(n.Attributes["lat"].Value, xmlFormatProvider);
-                double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
-                areaLen.Points.Add(new Coordinates(lat, lon, 0));
-            }
+            //Console.WriteLine("Загрузка границ области...");
+            //stopwatch.Restart();
+            //IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
+            //XmlDocument xml = new XmlDocument();
+            //XmlNamespaceManager prefix;
+            //// Питер в границах КАД
+            //xml.Load(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
+            //prefix = new XmlNamespaceManager(xml.NameTable);
+            //prefix.AddNamespace("prfx", xml.DocumentElement.NamespaceURI);
+            //var areaSpb = new Area();
+            //foreach (XmlNode n in xml.SelectNodes("//prfx:gpx/prfx:rte/prfx:rtept", prefix))
+            //{
+            //    double lat = double.Parse(n.Attributes["lat"].Value, xmlFormatProvider);
+            //    double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
+            //    areaSpb.Points.Add(new Coordinates(lat, lon, 0));
+            //}
+            //// Ленобласть
+            //xml.Load(@"\Projects\IWasHere\Resources\RU-LEN_area.gpx");
+            //prefix = new XmlNamespaceManager(xml.NameTable);
+            //prefix.AddNamespace("prfx", xml.DocumentElement.NamespaceURI);
+            //var areaLen = new Area();
+            //foreach (XmlNode n in xml.SelectNodes("//prfx:gpx/prfx:rte/prfx:rtept", prefix))
+            //{
+            //    double lat = double.Parse(n.Attributes["lat"].Value, xmlFormatProvider);
+            //    double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
+            //    areaLen.Points.Add(new Coordinates(lat, lon, 0));
+            //}
+            //Console.WriteLine("Загрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
+            //Console.WriteLine("----------------");
 
             // Формируем локальную базу
 
-            var IwhMap = new IWH.Map();
+            //Console.WriteLine("Формирование базы по данным из OSM...");
+            //stopwatch.Restart();
             //IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-LEN.osm");
-            //Console.WriteLine("Ways {0}, Nodes {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
-            //Console.WriteLine("Map.Lenght={0}", IwhMap.Lenght);
+            //Console.WriteLine("Формирование выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
+            //Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
+            //Console.WriteLine("Длина {0}км", Math.Round(IwhMap.Lenght.Kilometers, 1));
+            //Console.WriteLine("----------------");
 
             // Удаляем из локальной базы точки вне области
 
-            //Console.WriteLine("Nodes before = {0}", IwhMap.Nodes.Count);
+            //Console.WriteLine("Удаление узлов вне границ области...");
+            //stopwatch.Restart();
+            //Console.WriteLine("Узлов до удаления {0}", IwhMap.Nodes.Count);
             //foreach (IWH.Node node in IwhMap.Nodes.Values.ToList())
             //{
             //    if (areaSpb.HasPointInside(node.Coordinates) || !areaLen.HasPointInside(node.Coordinates))
             //        IwhMap.Nodes.Remove(node.Id);
             //}
             //IwhMap.PackNodes();
-            //Console.WriteLine("Nodes after = {0}", IwhMap.Nodes.Count);
+            //Console.WriteLine("Удаление выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
+            //Console.WriteLine("Узлов после удаления {0}", IwhMap.Nodes.Count);
+            //Console.WriteLine("----------------");
 
             // Записываем базу
 
+            //Console.WriteLine("Сохранение базы данных...");
+            //stopwatch.Restart();
             //IwhMap.WriteToXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
-            //Console.WriteLine("SaveToFile complete");
+            //Console.WriteLine("Сохранение выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
+            //Console.WriteLine("----------------");
 
             // Считываем базу
 
+            Console.WriteLine("Загрузка базы данных...");
+            stopwatch.Restart();
             IwhMap = IWH.Map.ReadFromXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
-            Console.WriteLine("LoadFromFile complete");
-            Console.WriteLine("Ways {0}, Nodes {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
-            Console.WriteLine("Map.Lenght={0}", IwhMap.Lenght);
-            Console.WriteLine("Map.Visited={0}", IwhMap.VisitedLenght);
+            stopwatch.Stop();
+            Console.WriteLine("Загрузка выполнена за {0} мсек",stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
+            Console.WriteLine("Длина {0}км, Посещено {1}км ({2}%)", 
+                Math.Round(IwhMap.Lenght.Kilometers,1), 
+                Math.Round(IwhMap.VisitedLenght.Kilometers,1), 
+                Math.Round(IwhMap.VisitedLenght.Kilometers / IwhMap.Lenght.Kilometers * 100, 2));
+            Console.WriteLine("----------------");
 
+            // Удаляем НП с населением менее 2048
+            Console.WriteLine("Контроль населенных пунктов...");
+            Console.WriteLine("Узлов до удаления {0}", IwhMap.Nodes.Count);
+            stopwatch.Restart();
+            foreach (var node in IwhMap.Nodes.Values.ToList())
+            {
+                if (node.Type == IWH.NodeType.Village && node.Population < 2014)
+                    IwhMap.Nodes.Remove(node.Id);
+            }
+            Console.WriteLine("Контроль выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("Узлов после удаления {0}", IwhMap.Nodes.Count);
+            Console.WriteLine("----------------");
+
+            // Анализ трека
+
+            Console.WriteLine("Анализ GPS-трека...");
             // Загружаем трек
-
+            stopwatch.Restart();
             GPS.Gpx gpxTrack = GPS.Gpx.FromXmlFile(@"\Projects\IWasHere\Resources\GPSTrackSample.gpx");
-
+            Console.WriteLine("Загрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
             // Отмечаем пройденные точки
+            stopwatch.Restart();
             AnalizeGpsTrack(IwhMap.Nodes.Values.ToList(), gpxTrack.GetPointList(), new Distance(5, Distance.Unit.Kilometers));
-            Console.WriteLine("IsVisited complete");
-
+            Console.WriteLine("Анализ выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
+            // Пересчитываем
+            stopwatch.Restart();
             IwhMap.Recalculate();
-            Console.WriteLine("Map.Lenght={0}", IwhMap.Lenght);
-            Console.WriteLine("Map.Visited={0}", IwhMap.VisitedLenght);
+            Console.WriteLine("Пересчет выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("Длина {0}км, Посещено {1}км ({2}%)",
+                Math.Round(IwhMap.Lenght.Kilometers, 1),
+                Math.Round(IwhMap.VisitedLenght.Kilometers, 1),
+                Math.Round(IwhMap.VisitedLenght.Kilometers / IwhMap.Lenght.Kilometers * 100, 2));
+            Console.WriteLine("----------------");
 
             // Выгружаем треки
 
+            Console.WriteLine("Выгрузка GPS-трека...");
+            stopwatch.Restart();
             //MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.WayType>() { IWH.WayType.Motorway, IWH.WayType.Trunk }), false, @"\Projects\IWasHere\Resources\Way_Primary.gpx");
             //MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.WayType>() { IWH.WayType.Primary, IWH.WayType.Secondary }), false, @"\Projects\IWasHere\Resources\Way_Secondary.gpx");
             //MapToGpx(IwhMap.Ways.Values.ToList(), true, @"\Projects\IWasHere\Resources\Way_Visited.gpx");
             MapToGpxByVisited(IwhMap, false, @"\Projects\IWasHere\Resources\Unvisited.gpx");
             MapToGpxByVisited(IwhMap, true, @"\Projects\IWasHere\Resources\Visited.gpx");
+            stopwatch.Stop();
+            Console.WriteLine("Выгрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("----------------");
 
             // Конец
 
-            Console.WriteLine("Done. Press [Enter] to exit.");
+            Console.WriteLine("Работа завершена. Нажмите [Enter] для выхода.");
             Console.ReadLine();
         }
 
@@ -231,7 +281,7 @@ namespace IWHTest
                     {
                         newWayPoint = new GPS.WayPoint();
                         newWayPoint.Coordinates = node.Coordinates;
-                        newWayPoint.Name = node.Name;
+                        newWayPoint.Name = string.Format("{0} {1}K",node.Name,Math.Round(node.Population/1000.0));
                         gpx.WayPoints.Add(newWayPoint);
                     }
                 }

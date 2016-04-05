@@ -186,6 +186,8 @@ namespace IWH
                             }
                             if (tags.ContainsKey("name"))
                                 newNode.Name = tags["name"];
+                            if (tags.ContainsKey("population"))
+                                newNode.Population = Int32.Parse(tags["population"],xmlFormatProvider);
                         }
                         // Заполняем общие данные для нужных точек
                         if (goodNode)

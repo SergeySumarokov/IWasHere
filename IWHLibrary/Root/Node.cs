@@ -72,6 +72,14 @@ namespace IWH
         public String Name;
 
         /// <summary>
+        /// Население населенного пункта.
+        /// </summary>
+        /// <remarks>
+        /// Используется только для узлов типа City, Town, Village.
+        /// </remarks>
+        public Int32 Population;
+
+        /// <summary>
         /// Длина участка пути (удаление от предыдущей точки линии).
         /// </summary>
         public Distance PartLenght;
@@ -123,6 +131,7 @@ namespace IWH
         {
             Name = reader.GetAttribute("name");
             Type = (NodeType)Enum.Parse(typeof(NodeType), reader.GetAttribute("type"));
+            Population = Int32.Parse(reader.GetAttribute("pop"), xmlFormatProvider);
             Coordinates.Latitude.Degrees = double.Parse(reader.GetAttribute("lat"), xmlFormatProvider);
             Coordinates.Longitude.Degrees = double.Parse(reader.GetAttribute("lon"), xmlFormatProvider);
             IsVisited = Boolean.Parse(reader.GetAttribute("visited"));
@@ -134,6 +143,7 @@ namespace IWH
         {
             writer.WriteAttributeString("name", Name.ToString(xmlFormatProvider));
             writer.WriteAttributeString("type", Type.ToString());
+            writer.WriteAttributeString("pop", Population.ToString());
             writer.WriteAttributeString("lat", Coordinates.Latitude.Degrees.ToString(xmlFormatProvider));
             writer.WriteAttributeString("lon", Coordinates.Longitude.Degrees.ToString(xmlFormatProvider));
             writer.WriteAttributeString("visited", IsVisited.ToString(xmlFormatProvider));
