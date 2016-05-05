@@ -17,7 +17,8 @@ namespace IWH
         Motorway = 1,
         Trunk = 2,
         Primary = 3,
-        Secondary = 4
+        Secondary = 4,
+        Tertiary = 5
     }
 
     /// <summary>

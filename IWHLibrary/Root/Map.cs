@@ -67,7 +67,7 @@ namespace IWH
             /// Первым проходом читаем линии и сохраняем только нужные
             using (XmlReader xml = XmlReader.Create(osmFileName))
             {
-                var highwayList = new List<string> { "motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link" };
+                var highwayList = new List<string> { "motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "tertiary_link" };
                 while (xml.Read())
                 {
                     if (xml.NodeType == XmlNodeType.Element && xml.Name == "way")
@@ -104,6 +104,10 @@ namespace IWH
                                 case "secondary":
                                 case "secondary_link":
                                     newWay.Type = WayType.Secondary;
+                                    break;
+                                case "tertiary":
+                                case "tertiary_link":
+                                    newWay.Type = WayType.Tertiary;
                                     break;
                             }
                             // Определяем другие реквизиты линии
