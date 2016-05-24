@@ -52,7 +52,7 @@ namespace GPS
                 foreach (XmlNode nodeTrkseg in nodeTrk.SelectNodes("//prfx:trkseg", prefix))
                 {
                     var seg = new TrackSegment();
-                    foreach (XmlNode nodeTrkpt in nodeTrk.SelectNodes("//prfx:trkpt", prefix))
+                    foreach (XmlNode nodeTrkpt in nodeTrkseg.SelectNodes("//prfx:trkpt", prefix))
                     {
                         var pt = new TrackPoint();
                         pt.Lat = double.Parse(nodeTrkpt.Attributes["lat"].Value, xmlFormatProvider);
