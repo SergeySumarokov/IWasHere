@@ -45,22 +45,30 @@ namespace GPS
             xml.Load(fileName);
             prefix = new XmlNamespaceManager(xml.NameTable);
             prefix.AddNamespace("prfx", xml.DocumentElement.NamespaceURI);
+            //foreach (XmlNode nodeTrk in xml.SelectNodes("//prfx:gpx/prfx:trk", prefix))
             foreach (XmlNode nodeTrk in xml.SelectNodes("//prfx:gpx/prfx:trk", prefix))
             {
                 var trk = new Track();
-                //trk.Name = nodeTrk.  ["name"].Value;
-                foreach (XmlNode nodeTrkseg in nodeTrk.SelectNodes("//prfx:trkseg", prefix))
+                //foreach (XmlNode nodeTrkseg in nodeTrk.SelectNodes("//prfx:trkseg", prefix))
+                foreach (XmlNode nodeTrkseg in nodeTrk.ChildNodes)
                 {
-                    var seg = new TrackSegment();
-                    foreach (XmlNode nodeTrkpt in nodeTrkseg.SelectNodes("//prfx:trkpt", prefix))
+                    if (nodeTrkseg.Name=="trkseg")
                     {
-                        var pt = new TrackPoint();
-                        pt.Lat = double.Parse(nodeTrkpt.Attributes["lat"].Value, xmlFormatProvider);
-                        pt.Lon = double.Parse(nodeTrkpt.Attributes["lon"].Value, xmlFormatProvider);
-                        seg.Points.Add(pt);
+                        var seg = new TrackSegment();
+                        //foreach (XmlNode nodeTrkpt in nodeTrkseg.SelectNodes("//prfx:trkpt", prefix))
+                        foreach (XmlNode nodeTrkpt in nodeTrkseg.ChildNodes)
+                        {
+                            if (nodeTrkpt.Name == "trkpt")
+                            {
+                                var pt = new TrackPoint();
+                                pt.Lat = double.Parse(nodeTrkpt.Attributes["lat"].Value, xmlFormatProvider);
+                                pt.Lon = double.Parse(nodeTrkpt.Attributes["lon"].Value, xmlFormatProvider);
+                                pt.Time = DateTime.Parse(nodeTrkpt["time"].InnerText, xmlFormatProvider);
+                                seg.Points.Add(pt);
+                            }
+                        }
+                        trk.Segments.Add(seg);
                     }
-                    trk.Segments.Add(seg);
-
                 }
                 gpx.Tracks.Add(trk);
             }

@@ -144,6 +144,8 @@ namespace IWH
             writer.WriteAttributeString("name", Name.ToString(xmlFormatProvider));
             writer.WriteAttributeString("type", Type.ToString());
             writer.WriteAttributeString("link", IsLink.ToString());
+            writer.WriteAttributeString("visited", IsVisited.ToString(xmlFormatProvider));
+            writer.WriteAttributeString("last", LastVisitedTime.ToString(xmlFormatProvider));
             writer.WriteAttributeString("id", Id.ToString(xmlFormatProvider));
             // Точки
             foreach (Node node in Nodes)

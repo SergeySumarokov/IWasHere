@@ -206,22 +206,22 @@ namespace IWH
 
         }
 
-    /// <summary>
-    /// Удалает из Ways точки, не используемые в Nodes, затем удаляет пустые (содержащие менее 2-х точек) Ways.
-    /// </summary>
-    public void PackNodes()
-        {
-            foreach (Way way in Ways.Values.ToList())
+        /// <summary>
+        /// Удалает из Ways точки, не используемые в Nodes, затем удаляет пустые (содержащие менее 2-х точек) Ways.
+        /// </summary>
+        public void PackNodes()
             {
-                foreach (Node node in way.Nodes.ToList())
+                foreach (Way way in Ways.Values.ToList())
                 {
-                    if (!Nodes.ContainsKey(node.Id))
-                        way.Nodes.Remove(node);
+                    foreach (Node node in way.Nodes.ToList())
+                    {
+                        if (!Nodes.ContainsKey(node.Id))
+                            way.Nodes.Remove(node);
+                    }
+                    if (way.Nodes.Count < 2)
+                        Ways.Remove(way.Id);
                 }
-                if (way.Nodes.Count < 2)
-                    Ways.Remove(way.Id);
             }
-        }
 
         /// <summary>
         /// Выполняет пересчет параметров всех линий.
@@ -302,6 +302,8 @@ namespace IWH
                     way.Name = xmlWay.Attributes["name"].Value;
                     way.Type = (WayType)Enum.Parse(typeof(WayType), xmlWay.Attributes["type"].Value);
                     way.IsLink = Boolean.Parse(xmlWay.Attributes["link"].Value);
+                    way.IsVisited = Boolean.Parse(xmlWay.Attributes["visited"].Value);
+                    way.LastVisitedTime = DateTime.Parse(xmlWay.Attributes["last"].Value, xmlFormatProvider);
                     way.Id = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
                     // Точки
                     foreach (XmlNode xmlRef in xmlDoc.SelectNodes("/way/ref"))

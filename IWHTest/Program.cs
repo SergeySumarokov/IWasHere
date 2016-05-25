@@ -1,11 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Xml;
-using System.Xml.Serialization;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Primitives;
 
 namespace IWHTest
@@ -111,11 +108,12 @@ namespace IWHTest
                 Math.Round(IwhMap.VisitedLenght.Kilometers / IwhMap.Lenght.Kilometers * 100, 2));
             Console.WriteLine("----------------");
 
-            // Готовим список треков
+            // Анализируем треки
+
             DirectoryInfo trackFolder = new DirectoryInfo(@"\Projects\IWasHere\Resources\Tracks");
             FileInfo[] trackFiles;
             trackFiles = trackFolder.GetFiles("*.gpx");
-            // Анализируем треки
+            // Обрабатываем треки
             stopwatch.Restart();
             foreach (FileInfo trackFile in trackFiles)
             {
@@ -132,6 +130,14 @@ namespace IWHTest
                 Math.Round(IwhMap.Lenght.Kilometers, 1),
                 Math.Round(IwhMap.VisitedLenght.Kilometers, 1),
                 Math.Round(IwhMap.VisitedLenght.Kilometers / IwhMap.Lenght.Kilometers * 100, 2));
+            Console.WriteLine("----------------");
+
+            // Записываем базу
+
+            Console.WriteLine("Сохранение базы данных...");
+            stopwatch.Restart();
+            IwhMap.WriteToXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
+            Console.WriteLine("Сохранение выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
             Console.WriteLine("----------------");
 
             // Выгружаем треки
@@ -180,7 +186,12 @@ namespace IWHTest
                 foreach (var node in cacheNodes)
                 {
                     if (node.Coordinates.OrthodromicDistance(point.Coordinates) < node.Range)
+                    {
                         node.IsVisited = true;
+                        if (node.LastVisitedTime < point.Time)
+                            node.LastVisitedTime = point.Time;
+                    }
+
                 }
 
             }
@@ -205,6 +216,10 @@ namespace IWHTest
             {
                 newTrack = new GPS.Track();
                 newTrack.Name = way.Name + " (" + way.Type.ToString() + " " + way.Id.ToString() + ")";
+                if (way.LastVisitedTime > DateTime.MinValue)
+                {
+                    newTrack.Name += " " + way.LastVisitedTime.ToShortDateString();
+                }
                 newTrackSegment = new GPS.TrackSegment();
                 for (int i = 0; i < way.Nodes.Count; i++)
                 {
