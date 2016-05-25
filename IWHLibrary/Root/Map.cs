@@ -31,14 +31,24 @@ namespace IWH
         public Dictionary<Int64, Way> Ways { get; private set; }
 
         /// <summary>
-        /// Общая протяженность всех линий.
+        /// Общая протяженность обязательных линий.
         /// </summary>
-        public Distance Lenght;
+        public Distance TargetLenght;
 
         /// <summary>
-        /// Суммарная протяженность посещённых участков линии.
+        /// Суммарная протяженность посещённых участков обязательных линии.
         /// </summary>
-        public Distance VisitedLenght;
+        public Distance TargetVisitedLenght;
+
+        /// <summary>
+        /// Общая протяженность всех линий.
+        /// </summary>
+        public Distance TotalLenght;
+
+        /// <summary>
+        /// Суммарная протяженность посещённых участков всех линии.
+        /// </summary>
+        public Distance TotalVisitedLenght;
 
         #endregion
 
@@ -228,14 +238,20 @@ namespace IWH
         /// </summary>
         public void Recalculate()
         {
-            Lenght = Distance.Zero;
-            VisitedLenght = Distance.Zero;
+            var targetWayTypes = new List<IWH.WayType>() { IWH.WayType.Motorway, IWH.WayType.Trunk, IWH.WayType.Primary, IWH.WayType.Secondary };
+            TotalLenght = Distance.Zero;
+            TotalVisitedLenght = Distance.Zero;
             foreach (Way way in Ways.Values)
             {
                 // Пересчитываем линию
                 way.Recalculate();
-                Lenght += way.Lenght;
-                VisitedLenght += way.VisitedLenght;
+                if (targetWayTypes.Contains(way.Type))
+                {
+                    TargetLenght += way.Lenght;
+                    TargetVisitedLenght += way.VisitedLenght;
+                }
+                TotalLenght += way.Lenght;
+                TotalVisitedLenght += way.VisitedLenght;
             }
 
         }
@@ -315,10 +331,6 @@ namespace IWH
                             Nodes[id].Range = new Distance(0.5, Distance.Unit.Kilometers);
                     }
                     Ways.Add(way.Id,way);
-                    // Пересчитываем линию
-                    way.Recalculate();
-                    Lenght += way.Lenght;
-                    VisitedLenght += way.VisitedLenght;
                 }
                 else
                 {

@@ -103,9 +103,9 @@ namespace IWHTest
             Console.WriteLine("Загрузка выполнена за {0} мсек",stopwatch.ElapsedMilliseconds);
             Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
             Console.WriteLine("Длина {0}км, Посещено {1}км ({2}%)", 
-                Math.Round(IwhMap.Lenght.Kilometers,1), 
-                Math.Round(IwhMap.VisitedLenght.Kilometers,1), 
-                Math.Round(IwhMap.VisitedLenght.Kilometers / IwhMap.Lenght.Kilometers * 100, 2));
+                Math.Round(IwhMap.TotalLenght.Kilometers,1), 
+                Math.Round(IwhMap.TotalVisitedLenght.Kilometers,1), 
+                Math.Round(IwhMap.TotalVisitedLenght.Kilometers / IwhMap.TotalLenght.Kilometers * 100, 2));
             Console.WriteLine("----------------");
 
             // Анализируем треки
@@ -126,10 +126,13 @@ namespace IWHTest
             stopwatch.Restart();
             IwhMap.Recalculate();
             Console.WriteLine("Пересчет выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
-            Console.WriteLine("Длина {0}км, Посещено {1}км ({2}%)",
-                Math.Round(IwhMap.Lenght.Kilometers, 1),
-                Math.Round(IwhMap.VisitedLenght.Kilometers, 1),
-                Math.Round(IwhMap.VisitedLenght.Kilometers / IwhMap.Lenght.Kilometers * 100, 2));
+            Console.WriteLine("Всего из {0}км посещено {1}км",
+                Math.Round(IwhMap.TotalLenght.Kilometers, 1),
+                Math.Round(IwhMap.TotalVisitedLenght.Kilometers, 1));
+            Console.WriteLine("Из требуемых {0}км посещено {1}км ({2}%)",
+                Math.Round(IwhMap.TargetLenght.Kilometers, 1),
+                Math.Round(IwhMap.TargetVisitedLenght.Kilometers, 1),
+                Math.Round(IwhMap.TargetVisitedLenght.Kilometers / IwhMap.TargetLenght.Kilometers * 100, 2));
             Console.WriteLine("----------------");
 
             // Записываем базу
@@ -146,6 +149,7 @@ namespace IWHTest
             stopwatch.Restart();
             MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.WayType>() { IWH.WayType.Motorway, IWH.WayType.Trunk }), false, @"\Projects\IWasHere\Resources\Way_Primary.gpx");
             MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.WayType>() { IWH.WayType.Primary, IWH.WayType.Secondary }), false, @"\Projects\IWasHere\Resources\Way_Secondary.gpx");
+            MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.WayType>() { IWH.WayType.Tertiary }), false, @"\Projects\IWasHere\Resources\Way_Tertiary.gpx");
             MapToGpx(IwhMap.Ways.Values.ToList(), true, @"\Projects\IWasHere\Resources\Way_Visited.gpx");
             MapToGpxByVisited(IwhMap, false, @"\Projects\IWasHere\Resources\Unvisited.gpx");
             MapToGpxByVisited(IwhMap, true, @"\Projects\IWasHere\Resources\Visited.gpx");
