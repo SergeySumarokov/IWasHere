@@ -55,7 +55,7 @@ namespace IWHTest
             //IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-LEN.osm");
             //Console.WriteLine("Формирование выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
             //Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
-            //Console.WriteLine("Длина {0}км", Math.Round(IwhMap.Lenght.Kilometers, 1));
+            //Console.WriteLine("Длина {0}км", Math.Round(IwhMap.TotalLenght.Kilometers, 1));
             //Console.WriteLine("----------------");
 
             //// Удаляем из локальной базы точки вне области
@@ -119,7 +119,7 @@ namespace IWHTest
             {
                 Console.WriteLine("Анализ файла {0}", trackFile.Name);
                 GPS.Gpx gpxTrack = GPS.Gpx.FromXmlFile(trackFile.FullName);
-                AnalizeGpsTrack(IwhMap.Nodes.Values.ToList(), gpxTrack.GetPointList(), new Distance(5, Distance.Unit.Kilometers));
+                AnalizeGpsTrack(IwhMap.Nodes.Values.ToList(), gpxTrack.GetPointList(), new Distance(4, Distance.Unit.Kilometers));
             }
             Console.WriteLine("Анализ выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
             // Пересчитываем
@@ -135,13 +135,13 @@ namespace IWHTest
                 Math.Round(IwhMap.TargetVisitedLenght.Kilometers / IwhMap.TargetLenght.Kilometers * 100, 2));
             Console.WriteLine("----------------");
 
-            // Записываем базу
+            //// Записываем базу
 
-            Console.WriteLine("Сохранение базы данных...");
-            stopwatch.Restart();
-            IwhMap.WriteToXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
-            Console.WriteLine("Сохранение выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
-            Console.WriteLine("----------------");
+            //Console.WriteLine("Сохранение базы данных...");
+            //stopwatch.Restart();
+            //IwhMap.WriteToXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
+            //Console.WriteLine("Сохранение выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
+            //Console.WriteLine("----------------");
 
             // Выгружаем треки
 
@@ -171,8 +171,11 @@ namespace IWHTest
         {
             var cacheNodes = new List<IWH.Node>();
             var cacheCenter = new Coordinates();
-            foreach (var point in gpsPoints)
+            var inRangeNodes = new List<IWH.Node>();
+            GPS.TrackPoint point;
+            for (int i = 0; i < gpsPoints.Count; i++ )
             {
+                point = gpsPoints[i];
                 // Проверяем нахождение текущей точки трека в радиусе загруженного кеша точек
                 if (cacheCenter.IsEmpty || cacheCenter.OrthodromicDistance(point.Coordinates) > cacheRange)
                 {
@@ -187,19 +190,33 @@ namespace IWHTest
                     }
                 }
                 // Проверяем удаление точки трека только от точек в кеше
+                // Точки в радиусе помещаем в отдельный список
                 foreach (var node in cacheNodes)
                 {
-                    if (node.Coordinates.OrthodromicDistance(point.Coordinates) < node.Range)
+                    if (node.Coordinates.OrthodromicDistance(point.Coordinates) <= node.Range)
                     {
-                        node.IsVisited = true;
-                        if (node.LastVisitedTime < point.Time)
-                            node.LastVisitedTime = point.Time;
+                        if (!inRangeNodes.Contains(node))
+                            inRangeNodes.Add(node);
                     }
 
                 }
+                // Проверяем точки в радиусе
+                foreach (var node in inRangeNodes.ToArray())
+                {
+                    // Если точка, ранее находившаяся рядом вышла за радиус - отмечаем ее как посещённую
+                    // Так же отмечаем посещенными все точки в радиусе для последней точки трека
+                    if (node.Coordinates.OrthodromicDistance(point.Coordinates) > node.Range || i == (gpsPoints.Count - 1))
+                    {
+                        node.IsVisited = true;
+                        node.VisitedCount += 1;
+                        if (node.LastVisitedTime < point.Time)
+                            node.LastVisitedTime = point.Time;
+                        inRangeNodes.Remove(node);
+                    }
+                }
+
 
             }
-
         }
 
         /// <summary>

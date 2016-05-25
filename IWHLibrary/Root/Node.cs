@@ -95,9 +95,14 @@ namespace IWH
         public Distance Range;
 
         /// <summary>
-        /// Истина, исли узел был посещёне.
+        /// Истина, исли узел был посещён.
         /// </summary>
         public Boolean IsVisited;
+
+        /// <summary>
+        /// Количество посещений точки
+        /// </summary>
+        public Int32 VisitedCount;
 
         /// <summary>
         /// Время последнего посещения узла.
@@ -135,6 +140,7 @@ namespace IWH
             Coordinates.Latitude.Degrees = double.Parse(reader.GetAttribute("lat"), xmlFormatProvider);
             Coordinates.Longitude.Degrees = double.Parse(reader.GetAttribute("lon"), xmlFormatProvider);
             IsVisited = Boolean.Parse(reader.GetAttribute("visited"));
+            VisitedCount = Int32.Parse(reader.GetAttribute("count"), xmlFormatProvider);
             LastVisitedTime = DateTime.Parse(reader.GetAttribute("last"), xmlFormatProvider);
             Id = Int64.Parse(reader.GetAttribute("id"), xmlFormatProvider);
         }
@@ -147,6 +153,7 @@ namespace IWH
             writer.WriteAttributeString("lat", Coordinates.Latitude.Degrees.ToString(xmlFormatProvider));
             writer.WriteAttributeString("lon", Coordinates.Longitude.Degrees.ToString(xmlFormatProvider));
             writer.WriteAttributeString("visited", IsVisited.ToString(xmlFormatProvider));
+            writer.WriteAttributeString("count", VisitedCount.ToString());
             writer.WriteAttributeString("last", LastVisitedTime.ToString(xmlFormatProvider));
             writer.WriteAttributeString("id", Id.ToString(xmlFormatProvider));
         }
