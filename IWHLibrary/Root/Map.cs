@@ -101,29 +101,68 @@ namespace IWH
                             {
                                 case "motorway":
                                 case "motorway_link":
-                                    newWay.Type = WayType.Motorway;
+                                    newWay.Type = HighwayType.Motorway;
                                     break;
                                 case "trunk":
                                 case "trunk_link":
-                                    newWay.Type = WayType.Trunk;
+                                    newWay.Type = HighwayType.Trunk;
                                     break;
                                 case "primary":
                                 case "primary_link":
-                                    newWay.Type = WayType.Primary;
+                                    newWay.Type = HighwayType.Primary;
                                     break;
                                 case "secondary":
                                 case "secondary_link":
-                                    newWay.Type = WayType.Secondary;
+                                    newWay.Type = HighwayType.Secondary;
                                     break;
                                 case "tertiary":
                                 case "tertiary_link":
-                                    newWay.Type = WayType.Tertiary;
+                                    newWay.Type = HighwayType.Tertiary;
                                     break;
                             }
                             // Определяем другие реквизиты линии
                             newWay.Id = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
                             if (tags.ContainsKey("name"))
                                 newWay.Name = tags["name"];
+                            if (tags.ContainsKey("surface"))
+                            {
+                                string surfaceValue = tags["surface"];
+                                switch (surfaceValue)
+                                {
+                                    case "asphalt":
+                                        newWay.Surface = HighwaySurface.Asphalt;
+                                        break;
+                                    case "concrete":
+                                    case "concrete:lanes":
+                                    case "concrete:plates":
+                                        newWay.Surface = HighwaySurface.Concrete;
+                                        break;
+                                }
+                            }
+                            if (tags.ContainsKey("smoothness"))
+                            {
+                                string smoothnessValue = tags["smoothness"];
+                                switch (smoothnessValue)
+                                {
+                                    case "excellent":
+                                        newWay.Smoothness = HighwaySmoothness.Excellent;
+                                        break;
+                                    case "good":
+                                        newWay.Smoothness = HighwaySmoothness.Good;
+                                        break;
+                                    case "intermediate":
+                                        newWay.Smoothness = HighwaySmoothness.Intermediate;
+                                        break;
+                                    case "bad":
+                                    case "very_bad":
+                                        newWay.Smoothness = HighwaySmoothness.Bad;
+                                        break;
+                                    case "horrible":
+                                    case "very_horrible":
+                                        newWay.Smoothness = HighwaySmoothness.Horrible;
+                                        break;
+                                }
+                            }
                             // Загружаем идентификаторы узлов
                             Node newNode;
                             foreach (XmlNode xmlNd in xmlDoc.SelectNodes("/way/nd"))
@@ -238,9 +277,11 @@ namespace IWH
         /// </summary>
         public void Recalculate()
         {
-            var targetWayTypes = new List<IWH.WayType>() { IWH.WayType.Motorway, IWH.WayType.Trunk, IWH.WayType.Primary, IWH.WayType.Secondary };
+            var targetWayTypes = new List<IWH.HighwayType>() { IWH.HighwayType.Motorway, IWH.HighwayType.Trunk, IWH.HighwayType.Primary, IWH.HighwayType.Secondary };
             TotalLenght = Distance.Zero;
             TotalVisitedLenght = Distance.Zero;
+            TargetLenght = Distance.Zero;
+            TargetVisitedLenght = Distance.Zero;
             foreach (Way way in Ways.Values)
             {
                 // Пересчитываем линию
@@ -316,8 +357,10 @@ namespace IWH
                     var way = new Way();
                     // Аттрибуты
                     way.Name = xmlWay.Attributes["name"].Value;
-                    way.Type = (WayType)Enum.Parse(typeof(WayType), xmlWay.Attributes["type"].Value);
+                    way.Type = (HighwayType)Enum.Parse(typeof(HighwayType), xmlWay.Attributes["type"].Value);
                     way.IsLink = Boolean.Parse(xmlWay.Attributes["link"].Value);
+                    way.Surface = (HighwaySurface)Enum.Parse(typeof(HighwaySurface), xmlWay.Attributes["surface"].Value);
+                    way.Smoothness = (HighwaySmoothness)Enum.Parse(typeof(HighwaySmoothness), xmlWay.Attributes["smoothness"].Value);
                     way.IsVisited = Boolean.Parse(xmlWay.Attributes["visited"].Value);
                     way.LastVisitedTime = DateTime.Parse(xmlWay.Attributes["last"].Value, xmlFormatProvider);
                     way.Id = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);

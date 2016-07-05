@@ -147,9 +147,9 @@ namespace IWHTest
 
             Console.WriteLine("Выгрузка GPS-трека...");
             stopwatch.Restart();
-            MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.WayType>() { IWH.WayType.Motorway, IWH.WayType.Trunk }), false, @"\Projects\IWasHere\Resources\Way_Primary.gpx");
-            MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.WayType>() { IWH.WayType.Primary, IWH.WayType.Secondary }), false, @"\Projects\IWasHere\Resources\Way_Secondary.gpx");
-            MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.WayType>() { IWH.WayType.Tertiary }), false, @"\Projects\IWasHere\Resources\Way_Tertiary.gpx");
+            MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.HighwayType>() { IWH.HighwayType.Motorway, IWH.HighwayType.Trunk }), false, @"\Projects\IWasHere\Resources\Way_Primary.gpx");
+            MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.HighwayType>() { IWH.HighwayType.Primary, IWH.HighwayType.Secondary }), false, @"\Projects\IWasHere\Resources\Way_Secondary.gpx");
+            MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.HighwayType>() { IWH.HighwayType.Tertiary }), false, @"\Projects\IWasHere\Resources\Way_Tertiary.gpx");
             MapToGpx(IwhMap.Ways.Values.ToList(), true, @"\Projects\IWasHere\Resources\Way_Visited.gpx");
             MapToGpxByVisited(IwhMap, false, @"\Projects\IWasHere\Resources\Unvisited.gpx");
             MapToGpxByVisited(IwhMap, true, @"\Projects\IWasHere\Resources\Visited.gpx");
@@ -237,10 +237,12 @@ namespace IWHTest
             {
                 newTrack = new GPS.Track();
                 newTrack.Name = way.Name + " (" + way.Type.ToString() + " " + way.Id.ToString() + ")";
+                if (way.Surface > 0)
+                    newTrack.Name += " " + way.Surface.ToString();
+                if (way.Smoothness > 0)
+                    newTrack.Name += " " + way.Smoothness.ToString();
                 if (way.LastVisitedTime > DateTime.MinValue)
-                {
                     newTrack.Name += " " + way.LastVisitedTime.ToShortDateString();
-                }
                 newTrackSegment = new GPS.TrackSegment();
                 for (int i = 0; i < way.Nodes.Count; i++)
                 {
@@ -328,7 +330,7 @@ namespace IWHTest
             gpx.SaveToFile(outputFileName);
         }
 
-        static List<IWH.Way> WaysByType(List<IWH.Way> wayList, List<IWH.WayType> typeList)
+        static List<IWH.Way> WaysByType(List<IWH.Way> wayList, List<IWH.HighwayType> typeList)
         {
             var result = new List<IWH.Way>();
             foreach (var way in wayList)
@@ -341,6 +343,7 @@ namespace IWHTest
 
         // Это было нужно, чтобы выбрать из базы ОСМ все типы тегов по дорогам и наспунктам
         static void SelectOsmAttributes(string[] args)
+        //static void Main(string[] args)
         {
             StreamWriter csv = new StreamWriter(new FileStream(@"\Projects\IWasHere\Resources\Attributes.csv", FileMode.Create));
             IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-US");
@@ -361,6 +364,8 @@ namespace IWHTest
                         string tag = string.Empty;
                         string value = string.Empty;
                         string name = string.Empty;
+                        string surface = string.Empty;
+                        string smoothness = string.Empty;
                         string id = string.Empty;
                         foreach (XmlNode xmlTag in xmlDoc.SelectNodes("/" + type + "/tag"))
                         {
@@ -371,13 +376,15 @@ namespace IWHTest
                                 value = xmlTag.Attributes["v"].Value;
                             }
                             if (key == "name")
-                            {
                                 name = xmlTag.Attributes["v"].Value;
-                            }
+                            if (key == "surface")
+                                surface = xmlTag.Attributes["v"].Value;
+                            if (key == "smoothness")
+                                smoothness = xmlTag.Attributes["v"].Value;
                         }
                         /// Линия отработана
                         if (tag == "highway" || tag == "place")
-                            csv.WriteLine("{0};{1};{2};{3};{4}", type, tag, value, xmlWay.Attributes["id"].Value, name);
+                            csv.WriteLine("{0};{1};{2};{3};{4};{5};{6}", type, tag, value, xmlWay.Attributes["id"].Value, name, surface, smoothness);
                     }
                 }
             }

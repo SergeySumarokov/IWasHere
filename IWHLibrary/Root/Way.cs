@@ -11,7 +11,7 @@ namespace IWH
     /// <summary>
     /// Типы линий.
     /// </summary>
-    public enum WayType : int
+    public enum HighwayType : int
     {
         Unknown = 0,
         Motorway = 1,
@@ -19,6 +19,24 @@ namespace IWH
         Primary = 3,
         Secondary = 4,
         Tertiary = 5
+    }
+
+    public enum HighwaySurface : int
+    {
+        Unknown = 0,
+        Asphalt = 1,
+        Concrete = 2,
+        Other = 3
+    }
+
+    public enum HighwaySmoothness : int
+    {
+        Unknown = 0,
+        Excellent = 1,
+        Good = 2,
+        Intermediate = 3,
+        Bad = 4,
+        Horrible = 5
     }
 
     /// <summary>
@@ -45,7 +63,17 @@ namespace IWH
         /// <remarks>
         /// Определяется значением тега OSM Highway.
         /// </remarks>
-        public WayType Type;
+        public HighwayType Type;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public HighwaySurface Surface;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public HighwaySmoothness Smoothness;
 
         /// <summary>
         /// Истина, если линия является link.
@@ -144,6 +172,8 @@ namespace IWH
             writer.WriteAttributeString("name", Name.ToString(xmlFormatProvider));
             writer.WriteAttributeString("type", Type.ToString());
             writer.WriteAttributeString("link", IsLink.ToString());
+            writer.WriteAttributeString("surface", Surface.ToString());
+            writer.WriteAttributeString("smoothness", Smoothness.ToString());
             writer.WriteAttributeString("visited", IsVisited.ToString(xmlFormatProvider));
             writer.WriteAttributeString("last", LastVisitedTime.ToString(xmlFormatProvider));
             writer.WriteAttributeString("id", Id.ToString(xmlFormatProvider));
