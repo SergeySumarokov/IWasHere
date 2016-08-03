@@ -119,7 +119,19 @@ namespace IWHTest
             {
                 Console.WriteLine("Анализ файла {0}", trackFile.Name);
                 GPS.Gpx gpxTrack = GPS.Gpx.FromXmlFile(trackFile.FullName);
-                AnalizeGpsTrack(IwhMap.Nodes.Values.ToList(), gpxTrack.GetPointList(), new Distance(4, Distance.Unit.Kilometers));
+                Distance cacheRange;
+                Distance accupacy;
+                if (trackFile.Name.Contains("GpsHome"))
+                {
+                    cacheRange = new Distance(4, Distance.Unit.Kilometers);
+                    accupacy = new Distance(100, Distance.Unit.Meters);
+                }
+                else
+                {
+                    cacheRange = new Distance(4, Distance.Unit.Kilometers);
+                    accupacy = new Distance(10, Distance.Unit.Meters);
+                }
+                AnalizeGpsTrack(IwhMap.Nodes.Values.ToList(), gpxTrack.GetPointList(), cacheRange, accupacy);
             }
             Console.WriteLine("Анализ выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
             // Пересчитываем
@@ -172,7 +184,7 @@ namespace IWHTest
         /// менее значения, установленного как "зона видимости" точки.
         /// Для оптимизации работа проводится с набором точек карты, расположенном в заданном радиусе от точки трека.
         /// </remarks>
-        static void AnalizeGpsTrack(List<IWH.Node> iwhNodes, List<GPS.TrackPoint> gpsPoints, Distance cacheRange)
+        static void AnalizeGpsTrack(List<IWH.Node> iwhNodes, List<GPS.TrackPoint> gpsPoints, Distance cacheRange, Distance accuracy)
         {
             var cacheNodes = new List<IWH.Node>();
             var cacheCenter = new Coordinates();
@@ -180,9 +192,13 @@ namespace IWHTest
             for (int i = 0; i < gpsPoints.Count-1; i++ )
             {
                 point = gpsPoints[i];
-                
+
+                // Вычисляем направление и длину участка трека
+                Angle trackBearing = point.Coordinates.OrthodromicBearing(gpsPoints[i + 1].Coordinates);
+                Distance trackDistance = point.Coordinates.OrthodromicDistance(gpsPoints[i + 1].Coordinates);
+
                 // Проверяем нахождение текущей точки трека в радиусе загруженного кеша точек
-                if (cacheCenter.IsEmpty || cacheCenter.OrthodromicDistance(point.Coordinates) > cacheRange)
+                if (cacheCenter.IsEmpty || cacheCenter.OrthodromicDistance(point.Coordinates) + trackDistance+accuracy > cacheRange)
                 {
                     // Устанавливаем центр кеша на текущую точку трека
                     cacheCenter = point.Coordinates;
@@ -195,9 +211,6 @@ namespace IWHTest
                     }
                 }
 
-                // Вычисляем направление и длину участка трека
-                Angle trackBearing = point.Coordinates.OrthodromicBearing(gpsPoints[i + 1].Coordinates);
-                Distance trackDistance = point.Coordinates.OrthodromicDistance(gpsPoints[i + 1].Coordinates);
                 // Проверяем удаление от участка трека каждой точки карты в кеше
                 foreach (var node in cacheNodes)
                 {
@@ -205,7 +218,7 @@ namespace IWHTest
 
                     // Для каждой точки трека проверяем удаление точки карты от точки трека
                     Distance nodeDistance = point.Coordinates.OrthodromicDistance(node.Coordinates);
-                    if (nodeDistance <= node.Range)
+                    if (nodeDistance <= node.Range + accuracy)
                         nodeIsVisited = true;
 
                     // Для всех точек трека, кроме последней, проверяем удаление точки карты от линии трека
@@ -219,11 +232,11 @@ namespace IWHTest
                         {
                             // Если удаление точки пересечения проекции с отрезком меньше длины отрезка, то точка может подойти
                             Distance nodeProjection = nodeDistance * diffBearing.Cos();
-                            if (nodeProjection < trackDistance)
+                            if (nodeProjection < trackDistance + accuracy)
                             {
-                                // Если удаление точки от от отрезка пути меньше максимально-допустимой, то точка подходит
+                                // Если удаление точки от отрезка пути меньше максимально-допустимой, то точка подходит
                                 Distance nodeOffset = nodeDistance * diffBearing.Sin();
-                                if (nodeOffset <= node.Range)
+                                if (nodeOffset <= node.Range + accuracy)
                                     nodeIsVisited = true;
                             }
                         }

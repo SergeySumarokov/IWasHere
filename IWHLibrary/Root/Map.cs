@@ -371,7 +371,7 @@ namespace IWH
                         way.Nodes.Add(Nodes[id]);
                         // Устанавливаем увеличенный радиус для точек, входящих в _link
                         if (way.IsLink)
-                            Nodes[id].Range = new Distance(0.5, Distance.Unit.Kilometers);
+                            Nodes[id].Range = new Distance(0.2, Distance.Unit.Kilometers);
                     }
                     Ways.Add(way.Id,way);
                 }
@@ -382,7 +382,7 @@ namespace IWH
                         // Точки
                         var node = (Node)nodeSerializer.Deserialize(reader);
                         if (node.Range.IsEmpty)
-                            node.Range = new Distance(0.1, Distance.Unit.Kilometers);
+                            node.Range = new Distance(0.05, Distance.Unit.Kilometers);
                         Nodes.Add(node.Id, node);
                     }
                     reader.Read();
