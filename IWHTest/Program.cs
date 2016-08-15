@@ -78,13 +78,20 @@ namespace IWHTest
             //Console.WriteLine("Контроль населенных пунктов...");
             //Console.WriteLine("Узлов до удаления {0}", IwhMap.Nodes.Count);
             //stopwatch.Restart();
+            //Int32 VillageCount = 0;
             //foreach (var node in IwhMap.Nodes.Values.ToList())
             //{
-            //    if (node.Type == IWH.NodeType.Village && node.Population < 2014)
-            //        IwhMap.Nodes.Remove(node.Id);
+            //    if (node.Type == IWH.NodeType.Village)
+            //    {
+            //        if (node.Population < 2014)
+            //            IwhMap.Nodes.Remove(node.Id);
+            //        else
+            //            VillageCount++;
+            //    }
             //}
             //Console.WriteLine("Контроль выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
             //Console.WriteLine("Узлов после удаления {0}", IwhMap.Nodes.Count);
+            //Console.WriteLine("из них нас. пунктов {0}", VillageCount);
             //Console.WriteLine("----------------");
 
             //// Записываем базу
