@@ -240,7 +240,7 @@ namespace IWH
                             if (tags.ContainsKey("name"))
                                 newNode.Name = tags["name"];
                             if (tags.ContainsKey("population"))
-                                newNode.Population = Int32.Parse(tags["population"],xmlFormatProvider);
+                                try { newNode.Population = Int32.Parse(tags["population"], xmlFormatProvider); } catch { }
                         }
                         // Заполняем общие данные для нужных точек
                         if (goodNode)
