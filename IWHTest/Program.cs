@@ -52,7 +52,7 @@ namespace IWHTest
 
             Console.WriteLine("Формирование базы по данным из OSM...");
             stopwatch.Restart();
-            IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-SPE.osm");
+            IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-LEN.osm");
             Console.WriteLine("Формирование выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
             Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
             Console.WriteLine("Длина {0}км", Math.Round(IwhMap.TotalLenght.Kilometers, 1));
@@ -107,11 +107,11 @@ namespace IWHTest
             Console.WriteLine("Загрузка базы данных...");
             stopwatch.Restart();
             IwhMap = IWH.Map.ReadFromXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
-            Console.WriteLine("Загрузка выполнена за {0} мсек",stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("Загрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
             Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
-            Console.WriteLine("Длина {0}км, Посещено {1}км ({2}%)", 
-                Math.Round(IwhMap.TotalLenght.Kilometers,1), 
-                Math.Round(IwhMap.TotalVisitedLenght.Kilometers,1), 
+            Console.WriteLine("Длина {0}км, Посещено {1}км ({2}%)",
+                Math.Round(IwhMap.TotalLenght.Kilometers, 1),
+                Math.Round(IwhMap.TotalVisitedLenght.Kilometers, 1),
                 Math.Round(IwhMap.TotalVisitedLenght.Kilometers / IwhMap.TotalLenght.Kilometers * 100, 2));
             Console.WriteLine("----------------");
 
@@ -170,6 +170,7 @@ namespace IWHTest
             MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.HighwayType>() { IWH.HighwayType.Primary, IWH.HighwayType.Secondary }), false, @"\Projects\IWasHere\Resources\Way_Secondary.gpx");
             MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.HighwayType>() { IWH.HighwayType.Tertiary }), false, @"\Projects\IWasHere\Resources\Way_Tertiary.gpx");
             MapToGpx(IwhMap.Ways.Values.ToList(), true, @"\Projects\IWasHere\Resources\Way_Visited.gpx");
+            CrossroadsToGpx(IwhMap, @"\Projects\IWasHere\Resources\Way_Crossroads.gpx");
             MapToGpxByVisited(IwhMap, false, @"\Projects\IWasHere\Resources\Unvisited.gpx");
             MapToGpxByVisited(IwhMap, true, @"\Projects\IWasHere\Resources\Visited.gpx");
             stopwatch.Stop();
@@ -302,6 +303,10 @@ namespace IWHTest
             {
                 GPS.Track newTrack = new GPS.Track();
                 newTrack.Name = way.Name + " (" + way.Type.ToString() + " " + way.Id.ToString() + ")";
+                if (way.OneWay)
+                    newTrack.Name += " ONE_WAY ";
+                if (way.Lanes > 0)
+                    newTrack.Name += " L=" + way.Lanes.ToString();
                 if (way.Surface > 0)
                     newTrack.Name += " " + way.Surface.ToString();
                 if (way.Smoothness > 0)
@@ -423,9 +428,33 @@ namespace IWHTest
                     {
                         newWayPoint = new GPS.WayPoint();
                         newWayPoint.Coordinates = node.Coordinates;
-                        newWayPoint.Name = string.Format("{0} {1}K",node.Name,Math.Round(node.Population/1000.0));
+                        newWayPoint.Name = string.Format("{0} {1}K", node.Name, Math.Round(node.Population / 1000.0));
                         gpx.WayPoints.Add(newWayPoint);
                     }
+                }
+            }
+            // Выгружаем в файл
+            gpx.SaveToFile(outputFileName);
+        }
+
+        /// <summary>
+        /// Выгружает перекрестки в файл GPS-трекинга
+        /// </summary>
+        /// <param name="outputFileName"></param>
+        static void CrossroadsToGpx(IWH.Map map, string outputFileName)
+        {
+            GPS.Gpx gpx = new GPS.Gpx();
+            GPS.WayPoint newWayPoint;
+            // Подготавливаем точки для выгрузки
+            var goodNodeTypeList = new List<IWH.NodeType> { IWH.NodeType.City, IWH.NodeType.Town, IWH.NodeType.Village };
+            foreach (IWH.Node node in map.Nodes.Values)
+            {
+                if (node.UseCount > 2)
+                {
+                    newWayPoint = new GPS.WayPoint();
+                    newWayPoint.Coordinates = node.Coordinates;
+                    newWayPoint.Name = string.Format("{0} ({1})", node.Id, node.UseCount);
+                    gpx.WayPoints.Add(newWayPoint);
                 }
             }
             // Выгружаем в файл

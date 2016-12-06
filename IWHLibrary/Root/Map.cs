@@ -127,7 +127,7 @@ namespace IWH
                             if (tags.ContainsKey("lit"))
                                 newWay.Lighting = (tags["lit"]=="yes");
                             if (tags.ContainsKey("lanes"))
-                                newWay.Lanes = Byte.Parse(tags["lanes"]);
+                                try { newWay.Lanes = Byte.Parse(tags["lanes"]); } catch { }
                             if (tags.ContainsKey("oneway"))
                                 newWay.OneWay = (tags["oneway"]=="yes");
                             if (tags.ContainsKey("surface"))
@@ -265,18 +265,18 @@ namespace IWH
         /// Удалает из Ways точки, не используемые в Nodes, затем удаляет пустые (содержащие менее 2-х точек) Ways.
         /// </summary>
         public void PackNodes()
+        {
+            foreach (Way way in Ways.Values.ToList())
             {
-                foreach (Way way in Ways.Values.ToList())
+                foreach (Node node in way.Nodes.ToList())
                 {
-                    foreach (Node node in way.Nodes.ToList())
-                    {
-                        if (!Nodes.ContainsKey(node.Id))
-                            way.Nodes.Remove(node);
-                    }
-                    if (way.Nodes.Count < 2)
-                        Ways.Remove(way.Id);
+                    if (!Nodes.ContainsKey(node.Id))
+                        way.Nodes.Remove(node);
                 }
+                if (way.Nodes.Count < 2)
+                    Ways.Remove(way.Id);
             }
+        }
 
         /// <summary>
         /// Выполняет пересчет параметров всех линий.
@@ -374,13 +374,20 @@ namespace IWH
                     way.LastVisitedTime = DateTime.Parse(xmlWay.Attributes["last"].Value, xmlFormatProvider);
                     way.Id = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
                     // Точки
-                    foreach (XmlNode xmlRef in xmlDoc.SelectNodes("/way/ref"))
+                    XmlNodeList xmlRefs = xmlDoc.SelectNodes("/way/ref");
+                    for (int i = 0; i < xmlRefs.Count; i++)
                     {
+                        XmlNode xmlRef = xmlRefs[i];
                         Int64 id = Int64.Parse(xmlRef.Attributes["id"].Value, xmlFormatProvider);
-                        way.Nodes.Add(Nodes[id]);
+                        Node node = Nodes[id]; // Должна существовать
+                        way.Nodes.Add(node);
+                        // Увеличиваем счетчик использования существующих точек, для не первой и не последней - еще раз
+                        Nodes[node.Id].UseCount++;
+                        if (!(i == 0 || i == xmlRefs.Count-1))
+                            Nodes[node.Id].UseCount++;
                         // Устанавливаем увеличенный радиус для точек, входящих в _link
                         if (way.IsLink)
-                            Nodes[id].Range = new Distance(0.2, Distance.Unit.Kilometers);
+                            node.Range = new Distance(0.2, Distance.Unit.Kilometers);
                     }
                     Ways.Add(way.Id,way);
                 }

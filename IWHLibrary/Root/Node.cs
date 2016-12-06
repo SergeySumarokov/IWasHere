@@ -42,6 +42,11 @@ namespace IWH
         public Int64 Id;
 
         /// <summary>
+        /// Количество вхождений в линии.
+        /// </summary>
+        public Int32 UseCount;
+        
+        /// <summary>
         /// Геодезические координаты узла.
         /// </summary>
         /// <remarks>
