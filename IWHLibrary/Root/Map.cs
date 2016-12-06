@@ -124,6 +124,12 @@ namespace IWH
                             newWay.Id = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
                             if (tags.ContainsKey("name"))
                                 newWay.Name = tags["name"];
+                            if (tags.ContainsKey("lit"))
+                                newWay.Lighting = (tags["lit"]=="yes");
+                            if (tags.ContainsKey("lanes"))
+                                newWay.Lanes = Byte.Parse(tags["lanes"]);
+                            if (tags.ContainsKey("oneway"))
+                                newWay.OneWay = (tags["oneway"]=="yes");
                             if (tags.ContainsKey("surface"))
                             {
                                 string surfaceValue = tags["surface"];
@@ -361,6 +367,9 @@ namespace IWH
                     way.IsLink = Boolean.Parse(xmlWay.Attributes["link"].Value);
                     way.Surface = (HighwaySurface)Enum.Parse(typeof(HighwaySurface), xmlWay.Attributes["surface"].Value);
                     way.Smoothness = (HighwaySmoothness)Enum.Parse(typeof(HighwaySmoothness), xmlWay.Attributes["smoothness"].Value);
+                    way.Lighting = Boolean.Parse(xmlWay.Attributes["lighting"].Value);
+                    way.Lanes = Byte.Parse(xmlWay.Attributes["lanes"].Value);
+                    way.OneWay = Boolean.Parse(xmlWay.Attributes["oneway"].Value);
                     way.IsVisited = Boolean.Parse(xmlWay.Attributes["visited"].Value);
                     way.LastVisitedTime = DateTime.Parse(xmlWay.Attributes["last"].Value, xmlFormatProvider);
                     way.Id = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);

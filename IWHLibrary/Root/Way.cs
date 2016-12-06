@@ -45,6 +45,7 @@ namespace IWH
     /// <remarks>
     /// A way is an ordered list of nodes which normally also has at least one tag or is included within a Relation.
     /// A way can have between 2 and 2,000 nodes, although it's possible that faulty ways with zero or a single node exist. A way can be open or closed. A closed way is one whose last node on the way is also the first on that way. A closed way may be interpreted either as a closed polyline, or an area, or both.
+    /// Описание полей относится к линиям, представляющим дороги.
     /// </remarks>
     [XmlRoot("way")]
     public class Way : IXmlSerializable
@@ -58,53 +59,74 @@ namespace IWH
         public Int64 Id;
 
         /// <summary>
-        /// Тип линии.
+        /// Тип дороги.
         /// </summary>
         /// <remarks>
-        /// Определяется значением тега OSM Highway.
+        /// tag k=highway - важность дороги в пределах дорожной сети.
         /// </remarks>
         public HighwayType Type;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public HighwaySurface Surface;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public HighwaySmoothness Smoothness;
 
         /// <summary>
         /// Истина, если линия является link.
         /// </summary>
         /// <remarks>
-        /// Определяется значением тега OSM Highway.
+        /// tag k=highway v="*_link - связующие элементы дорог: съезды, въезды и т.п.
         /// </remarks>
         public Boolean IsLink;
 
         /// <summary>
-        /// Наименование линии.
+        /// Покрытие дороги.
+        /// </summary>
+        /// <remarks>
+        /// tag k=surface - тип покрытия дороги.
+        /// </remarks>
+        public HighwaySurface Surface;
+
+        /// <summary>
+        /// Качество дороги.
+        /// </summary>
+        /// <remarks>
+        /// tag k=smoothness - качество дорожного покрытия.
+        /// </remarks>
+        public HighwaySmoothness Smoothness;
+
+        /// <summary>
+        /// Название дороги.
         /// </summary>
         public String Name;
 
         /// <summary>
-        /// Общая протяжённость линии.
+        /// Признак наличия искусственного освещения.
+        /// </summary>
+        public Boolean Lighting;
+
+        /// <summary>
+        /// Признак одностороннего движения.
+        /// </summary>
+        public Boolean OneWay;
+
+        /// <summary>
+        /// Количество полос для движния.
+        /// </summary>
+        public Byte Lanes;
+
+        /// <summary>
+        /// Общая протяжённость дороги.
         /// </summary>
         public Distance Lenght;
 
         /// <summary>
-        /// Суммарная протяженность посещённых участков линии.
+        /// Суммарная протяженность посещённых участков дороги.
         /// </summary>
         public Distance VisitedLenght;
 
         /// <summary>
-        /// Истина, исли вся линия была посещена.
+        /// Истина, исли все сегменты дороги отмечены как посещенные?
         /// </summary>
         public Boolean IsVisited;
 
         /// <summary>
-        /// Время последнего посещения любой из точек линии.
+        /// Время последнего посещения одного из участков дороги.
         /// </summary>
         public DateTime LastVisitedTime;
 
@@ -174,6 +196,9 @@ namespace IWH
             writer.WriteAttributeString("link", IsLink.ToString());
             writer.WriteAttributeString("surface", Surface.ToString());
             writer.WriteAttributeString("smoothness", Smoothness.ToString());
+            writer.WriteAttributeString("lighting", Lighting.ToString());
+            writer.WriteAttributeString("oneway", OneWay.ToString());
+            writer.WriteAttributeString("lanes", Lanes.ToString());
             writer.WriteAttributeString("visited", IsVisited.ToString(xmlFormatProvider));
             writer.WriteAttributeString("last", LastVisitedTime.ToString(xmlFormatProvider));
             writer.WriteAttributeString("id", Id.ToString(xmlFormatProvider));
