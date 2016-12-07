@@ -52,25 +52,10 @@ namespace IWHTest
 
             Console.WriteLine("Формирование базы по данным из OSM...");
             stopwatch.Restart();
-            IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-LEN.osm");
+            IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-LEN.osm", areaLen, areaSpb);
             Console.WriteLine("Формирование выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
             Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
             Console.WriteLine("Длина {0}км", Math.Round(IwhMap.TotalLenght.Kilometers, 1));
-            Console.WriteLine("----------------");
-
-            // Удаляем из локальной базы точки вне области
-
-            Console.WriteLine("Удаление узлов вне границ области...");
-            stopwatch.Restart();
-            Console.WriteLine("Узлов до удаления {0}", IwhMap.Nodes.Count);
-            foreach (IWH.Node node in IwhMap.Nodes.Values.ToList())
-            {
-                if (areaSpb.HasPointInside(node.Coordinates) || !areaLen.HasPointInside(node.Coordinates))
-                    IwhMap.Nodes.Remove(node.Id);
-            }
-            IwhMap.PackNodes();
-            Console.WriteLine("Удаление выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
-            Console.WriteLine("Узлов после удаления {0}", IwhMap.Nodes.Count);
             Console.WriteLine("----------------");
 
             // Удаляем НП с населением менее 2048
