@@ -240,6 +240,9 @@ namespace IWH
                 LoadNodesFromOsm(xml, xmlFormatProvider);
             }
 
+            // Корректируем типы линий ??? - это очень некрасивая времянка
+            FixLenRouteType();
+
             // Удаляем точки вне заданных границ
             RemoveNodesOutsideArea(IncludedArea, ExcludedArea);
 
@@ -465,6 +468,40 @@ namespace IWH
                     Ways.Remove(way.Id);
             }
 
+        }
+
+        /// <summary>
+        /// Корректировка ненормальных типов линиц в восточнее Лодейного поля
+        /// </summary>
+        private void FixLenRouteType()
+        {
+            Int64[] FixIDs = 
+            {
+                145393611,
+                150898900,
+                150898894,
+                227455595,
+                102952820,
+                102952836,
+                227455596,
+                102970752,
+                102970770,
+                409850284,
+                409850285,
+                199884323,
+                93895824,
+                107851192,
+                107851203,
+                227455594,
+                107851196,
+                107851208,
+                107851200,
+                107851131
+            };
+            foreach (Int64 Id in FixIDs)
+            {
+                Ways[Id].Type = HighwayType.Tertiary;
+            }
         }
 
         #endregion
