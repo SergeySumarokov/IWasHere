@@ -85,34 +85,9 @@ namespace IWH
         public Int32 Population;
 
         /// <summary>
-        /// Длина участка пути (удаление от предыдущей точки линии).
-        /// </summary>
-        public Distance PartLenght;
-
-        /// <summary>
-        /// Направление участка пути (азимут от предыдущей точки линии).
-        /// </summary>
-        public Angle PartDirection;
-
-        /// <summary>
         /// Радиус окружности, при входе в которую узел считается посещённым.
         /// </summary>
         public Distance Range;
-
-        /// <summary>
-        /// Истина, исли узел был посещён.
-        /// </summary>
-        public Boolean IsVisited;
-
-        /// <summary>
-        /// Количество посещений точки
-        /// </summary>
-        public Int32 VisitedCount;
-
-        /// <summary>
-        /// Время последнего посещения узла.
-        /// </summary>
-        public DateTime LastVisitedTime;
 
         #endregion
 
@@ -144,9 +119,6 @@ namespace IWH
             Population = Int32.Parse(reader.GetAttribute("pop"), xmlFormatProvider);
             Coordinates.Latitude.Degrees = double.Parse(reader.GetAttribute("lat"), xmlFormatProvider);
             Coordinates.Longitude.Degrees = double.Parse(reader.GetAttribute("lon"), xmlFormatProvider);
-            IsVisited = Boolean.Parse(reader.GetAttribute("visited"));
-            VisitedCount = Int32.Parse(reader.GetAttribute("count"), xmlFormatProvider);
-            LastVisitedTime = DateTime.Parse(reader.GetAttribute("last"), xmlFormatProvider);
             Id = Int64.Parse(reader.GetAttribute("id"), xmlFormatProvider);
         }
 
@@ -157,9 +129,6 @@ namespace IWH
             writer.WriteAttributeString("pop", Population.ToString());
             writer.WriteAttributeString("lat", Coordinates.Latitude.Degrees.ToString(xmlFormatProvider));
             writer.WriteAttributeString("lon", Coordinates.Longitude.Degrees.ToString(xmlFormatProvider));
-            writer.WriteAttributeString("visited", IsVisited.ToString(xmlFormatProvider));
-            writer.WriteAttributeString("count", VisitedCount.ToString());
-            writer.WriteAttributeString("last", LastVisitedTime.ToString(xmlFormatProvider));
             writer.WriteAttributeString("id", Id.ToString(xmlFormatProvider));
         }
 

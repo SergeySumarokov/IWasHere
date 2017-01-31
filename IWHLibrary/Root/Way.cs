@@ -135,6 +135,11 @@ namespace IWH
         /// </summary>
         public List<Node> Nodes { get; private set; }
 
+        /// <summary>
+        /// Упорядоченный список участков пути.
+        /// </summary>
+        public List<Leg> Legs { get; private set; }
+
         #endregion
 
         #region "Конструкторы"
@@ -146,6 +151,7 @@ namespace IWH
         {
             Name = String.Empty;
             Nodes = new List<Node>();
+            Legs = new List<Leg>();
         }
 
         #endregion
@@ -159,15 +165,13 @@ namespace IWH
         {
             Lenght = Distance.Zero;
             VisitedLenght = Distance.Zero;
-            for (int i = 1; i <= Nodes.Count-1; i++)
+            foreach (Leg leg in Legs)
             {
-                Nodes[i].PartLenght = Nodes[i-1].Coordinates.OrthodromicDistance(Nodes[i].Coordinates);
-                Nodes[i].PartDirection = Nodes[i-1].Coordinates.OrthodromicBearing(Nodes[i].Coordinates);
-                Lenght += Nodes[i].PartLenght;
-                if (Nodes[i].IsVisited && Nodes[i-1].IsVisited)
-                    VisitedLenght += Nodes[i].PartLenght;
-                if (Nodes[i].LastVisitedTime > LastVisitedTime)
-                    LastVisitedTime = Nodes[i].LastVisitedTime;
+                Lenght += leg.Lenght;
+                if (leg.IsVisited)
+                    VisitedLenght += leg.Lenght;
+                if (leg.LastVisitedTime > LastVisitedTime)
+                    LastVisitedTime = leg.LastVisitedTime;
             }
             IsVisited = Lenght.AlmostEquals(VisitedLenght);
         }
@@ -202,13 +206,27 @@ namespace IWH
             writer.WriteAttributeString("visited", IsVisited.ToString(xmlFormatProvider));
             writer.WriteAttributeString("last", LastVisitedTime.ToString(xmlFormatProvider));
             writer.WriteAttributeString("id", Id.ToString(xmlFormatProvider));
-            // Точки
-            foreach (Node node in Nodes)
+            // Первая точка
+            WiteXml_WriteNode(writer, null, Legs[0].StartNode);
+            // Остальные точки
+            foreach (Leg leg in Legs)
             {
-                writer.WriteStartElement("ref");
-                writer.WriteAttributeString("id", node.Id.ToString(xmlFormatProvider));
-                writer.WriteEndElement();
+                WiteXml_WriteNode(writer, leg, leg.EndNode);
             }
+        }
+
+        private void WiteXml_WriteNode(XmlWriter writer, Leg leg, Node node)
+        {
+            writer.WriteStartElement("ref");
+            writer.WriteAttributeString("id", node.Id.ToString(xmlFormatProvider));
+            if (leg != null)
+            {
+                writer.WriteAttributeString("visited", leg.IsVisited.ToString(xmlFormatProvider));
+                writer.WriteAttributeString("count", leg.VisitedCount.ToString());
+                writer.WriteAttributeString("last", leg.LastVisitedTime.ToString(xmlFormatProvider));
+            }
+            writer.WriteEndElement();
+
         }
 
         #endregion

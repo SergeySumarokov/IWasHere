@@ -170,6 +170,22 @@ namespace IWH
                         Int64 id = Int64.Parse(xmlRef.Attributes["id"].Value, xmlFormatProvider);
                         Node node = Nodes[id]; // Должна существовать
                         way.Nodes.Add(node);
+                        // Для второй и последующих точек создаём участки
+                        if (i > 0)
+                        {
+                            Leg newLeg = new Leg();
+                            newLeg.WayId = way.Id;
+                            newLeg.StartNode = way.Nodes[i-1];
+                            newLeg.EndNode = way.Nodes[i];
+                            newLeg.Direction = newLeg.StartNode.Coordinates.OrthodromicBearing(newLeg.EndNode.Coordinates);
+                            newLeg.Lenght = newLeg.StartNode.Coordinates.OrthodromicDistance(newLeg.EndNode.Coordinates);
+                            newLeg.OneWay = way.OneWay;
+                            newLeg.IsVisited = Boolean.Parse(xmlRef.Attributes["visited"].Value);
+                            newLeg.VisitedCount = Int32.Parse(xmlRef.Attributes["count"].Value, xmlFormatProvider);
+                            newLeg.LastVisitedTime = DateTime.Parse(xmlRef.Attributes["last"].Value, xmlFormatProvider);
+                            way.Legs.Add(newLeg);
+
+                        }
                         // Увеличиваем счетчик использования существующих точек, для не первой и не последней - еще раз
                         Nodes[node.Id].UseCount++;
                         if (!(i == 0 || i == xmlRefs.Count - 1))
@@ -193,6 +209,7 @@ namespace IWH
                     reader.Read();
                 }
             }
+
         }
 
         public void WriteXml(XmlWriter writer)
@@ -230,22 +247,23 @@ namespace IWH
 
             /// Первым проходом читаем линии и сохраняем только нужные
             using (XmlReader xml = XmlReader.Create(osmFileName))
-            {
                 LoadWaysFromOsm(xml, xmlFormatProvider);
-            }
 
             // Вторым проходом собираем точки
             using (XmlReader xml = XmlReader.Create(osmFileName))
-            {
                 LoadNodesFromOsm(xml, xmlFormatProvider);
-            }
-
-            // Корректируем типы линий ??? - это очень некрасивая времянка
-            FixLenRouteType();
 
             // Удаляем точки вне заданных границ
             RemoveNodesOutsideArea(IncludedArea, ExcludedArea);
 
+            // Корректируем типы линий ??? - это очень некрасивая времянка
+            //FixLenRouteType();
+
+            // Формируем участки
+            foreach (Way way in Ways.Values)
+                for (int i = 0; i<way.Nodes.Count-1; i++)
+                    way.Legs.Add(new Leg() { StartNode = way.Nodes[i], EndNode = way.Nodes[i + 1] });
+            
             // Пересчитываем
             Recalculate();
 

@@ -16,76 +16,76 @@ namespace IWHTest
             var stopwatch = new System.Diagnostics.Stopwatch();
             var IwhMap = new IWH.Map();
 
-            // Загружаем границы областей
+            //// Загружаем границы областей
 
-            Console.WriteLine("Загрузка границ области...");
-            stopwatch.Restart();
-            IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
-            XmlDocument xml = new XmlDocument();
-            XmlNamespaceManager prefix;
-            // Питер в границах КАД
-            xml.Load(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
-            prefix = new XmlNamespaceManager(xml.NameTable);
-            prefix.AddNamespace("prfx", xml.DocumentElement.NamespaceURI);
-            var areaSpb = new Area();
-            foreach (XmlNode n in xml.SelectNodes("//prfx:gpx/prfx:rte/prfx:rtept", prefix))
-            {
-                double lat = double.Parse(n.Attributes["lat"].Value, xmlFormatProvider);
-                double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
-                areaSpb.Points.Add(new Coordinates(lat, lon, 0));
-            }
-            // Ленобласть
-            xml.Load(@"\Projects\IWasHere\Resources\RU-LEN_area.gpx");
-            prefix = new XmlNamespaceManager(xml.NameTable);
-            prefix.AddNamespace("prfx", xml.DocumentElement.NamespaceURI);
-            var areaLen = new Area();
-            foreach (XmlNode n in xml.SelectNodes("//prfx:gpx/prfx:rte/prfx:rtept", prefix))
-            {
-                double lat = double.Parse(n.Attributes["lat"].Value, xmlFormatProvider);
-                double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
-                areaLen.Points.Add(new Coordinates(lat, lon, 0));
-            }
-            Console.WriteLine("Загрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
-            Console.WriteLine("----------------");
+            //Console.WriteLine("Загрузка границ области...");
+            //stopwatch.Restart();
+            //IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
+            //XmlDocument xml = new XmlDocument();
+            //XmlNamespaceManager prefix;
+            //// Питер в границах КАД
+            //xml.Load(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
+            //prefix = new XmlNamespaceManager(xml.NameTable);
+            //prefix.AddNamespace("prfx", xml.DocumentElement.NamespaceURI);
+            //var areaSpb = new Area();
+            //foreach (XmlNode n in xml.SelectNodes("//prfx:gpx/prfx:rte/prfx:rtept", prefix))
+            //{
+            //    double lat = double.Parse(n.Attributes["lat"].Value, xmlFormatProvider);
+            //    double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
+            //    areaSpb.Points.Add(new Coordinates(lat, lon, 0));
+            //}
+            //// Ленобласть
+            //xml.Load(@"\Projects\IWasHere\Resources\RU-LEN_area.gpx");
+            //prefix = new XmlNamespaceManager(xml.NameTable);
+            //prefix.AddNamespace("prfx", xml.DocumentElement.NamespaceURI);
+            //var areaLen = new Area();
+            //foreach (XmlNode n in xml.SelectNodes("//prfx:gpx/prfx:rte/prfx:rtept", prefix))
+            //{
+            //    double lat = double.Parse(n.Attributes["lat"].Value, xmlFormatProvider);
+            //    double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
+            //    areaLen.Points.Add(new Coordinates(lat, lon, 0));
+            //}
+            //Console.WriteLine("Загрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
+            //Console.WriteLine("----------------");
 
-            // Формируем локальную базу
+            //// Формируем локальную базу
 
-            Console.WriteLine("Формирование базы по данным из OSM...");
-            stopwatch.Restart();
-            IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-LEN.osm", areaLen, areaSpb);
-            Console.WriteLine("Формирование выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
-            Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
-            Console.WriteLine("Длина {0}км", Math.Round(IwhMap.TotalLenght.Kilometers, 1));
-            Console.WriteLine("----------------");
+            //Console.WriteLine("Формирование базы по данным из OSM...");
+            //stopwatch.Restart();
+            //IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-LEN.osm", areaLen, areaSpb);
+            //Console.WriteLine("Формирование выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
+            //Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
+            //Console.WriteLine("Длина {0}км", Math.Round(IwhMap.TotalLenght.Kilometers, 1));
+            //Console.WriteLine("----------------");
 
-            // Удаляем НП с населением менее 2048
+            //// Удаляем НП с населением менее 2048
 
-            Console.WriteLine("Контроль населенных пунктов...");
-            Console.WriteLine("Узлов до удаления {0}", IwhMap.Nodes.Count);
-            stopwatch.Restart();
-            Int32 VillageCount = 0;
-            foreach (var node in IwhMap.Nodes.Values.ToList())
-            {
-                if (node.Type == IWH.NodeType.Village)
-                {
-                    if (node.Population < 2014)
-                        IwhMap.Nodes.Remove(node.Id);
-                    else
-                        VillageCount++;
-                }
-            }
-            Console.WriteLine("Контроль выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
-            Console.WriteLine("Узлов после удаления {0}", IwhMap.Nodes.Count);
-            Console.WriteLine("из них нас. пунктов {0}", VillageCount);
-            Console.WriteLine("----------------");
+            //Console.WriteLine("Контроль населенных пунктов...");
+            //Console.WriteLine("Узлов до удаления {0}", IwhMap.Nodes.Count);
+            //stopwatch.Restart();
+            //Int32 VillageCount = 0;
+            //foreach (var node in IwhMap.Nodes.Values.ToList())
+            //{
+            //    if (node.Type == IWH.NodeType.Village)
+            //    {
+            //        if (node.Population < 2014)
+            //            IwhMap.Nodes.Remove(node.Id);
+            //        else
+            //            VillageCount++;
+            //    }
+            //}
+            //Console.WriteLine("Контроль выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
+            //Console.WriteLine("Узлов после удаления {0}", IwhMap.Nodes.Count);
+            //Console.WriteLine("из них нас. пунктов {0}", VillageCount);
+            //Console.WriteLine("----------------");
 
-            // Записываем базу
+            //// Записываем базу
 
-            Console.WriteLine("Сохранение базы данных...");
-            stopwatch.Restart();
-            IwhMap.WriteToXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
-            Console.WriteLine("Сохранение выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
-            Console.WriteLine("----------------");
+            //Console.WriteLine("Сохранение базы данных...");
+            //stopwatch.Restart();
+            //IwhMap.WriteToXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
+            //Console.WriteLine("Сохранение выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
+            //Console.WriteLine("----------------");
 
             // Считываем базу
 
@@ -102,6 +102,10 @@ namespace IWHTest
 
             // Анализируем треки
 
+            // ??? времянка начало
+            var LegList = new List<IWH.Leg>();
+            foreach (IWH.Way way in IwhMap.Ways.Values) foreach (IWH.Leg leg in way.Legs) LegList.Add(leg);
+            // ??? времянка конец
             DirectoryInfo trackFolder = new DirectoryInfo(@"\Projects\IWasHere\Resources\Tracks");
             FileInfo[] trackFiles;
             trackFiles = trackFolder.GetFiles("*.gpx");
@@ -123,7 +127,7 @@ namespace IWHTest
                     cacheRange = new Distance(4, Distance.Unit.Kilometers);
                     accupacy = new Distance(10, Distance.Unit.Meters);
                 }
-                AnalizeGpsTrack(IwhMap.Nodes.Values.ToList(), gpxTrack.GetPointList(), cacheRange, accupacy);
+                AnalizeGpsTrack(LegList, gpxTrack.GetPointList(), cacheRange, accupacy);
             }
             Console.WriteLine("Анализ выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
             // Пересчитываем
@@ -156,8 +160,6 @@ namespace IWHTest
             MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.HighwayType>() { IWH.HighwayType.Tertiary }), false, @"\Projects\IWasHere\Resources\Way_Tertiary.gpx");
             MapToGpx(IwhMap.Ways.Values.ToList(), true, @"\Projects\IWasHere\Resources\Way_Visited.gpx");
             CrossroadsToGpx(IwhMap, @"\Projects\IWasHere\Resources\Way_Crossroads.gpx");
-            MapToGpxByVisited(IwhMap, false, @"\Projects\IWasHere\Resources\Unvisited.gpx");
-            MapToGpxByVisited(IwhMap, true, @"\Projects\IWasHere\Resources\Visited.gpx");
             stopwatch.Stop();
             Console.WriteLine("Выгрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
             Console.WriteLine("----------------");
@@ -169,85 +171,86 @@ namespace IWHTest
         }
 
         /// <summary>
-        /// Анализирует список точек GPS и отмечает IsVisible у точек IWH.
+        /// Анализирует список точек GPS и отмечает IsVisible у участков IWH.
         /// </summary>
         /// <remarks>
         /// Предполагалается, что точки в треке, расположены в порядке времени следования по маршруту.
-        /// Точка на карте считается посещенной, если её удаление от отрезка, заданного двумя точками трека
-        /// менее значения, установленного как "зона видимости" точки.
-        /// Для оптимизации работа проводится с набором точек карты, расположенном в заданном радиусе от точки трека.
+        /// Участок пути считается посещенным, если точка трека находится на допустимом удалении
+        /// и направления движения по треку соответствует направлению участка.
+        /// Для оптимизации, работа проводится с участками пути, расположенными в заданном радиусе от точки трека.
         /// </remarks>
-        static void AnalizeGpsTrack(List<IWH.Node> iwhNodes, List<GPS.TrackPoint> gpsPoints, Distance cacheRange, Distance accuracy)
+        static void AnalizeGpsTrack(List<IWH.Leg> iwhLegs, List<GPS.TrackPoint> gpsPoints, Distance cacheRange, Distance accuracy)
         {
-            var cacheNodes = new List<IWH.Node>();
+            // Максимальный угол, при котором линия трека считается совпадающей с линией пути
+            Angle MaximumVisibleDeviation = new Angle(8, Angle.Unit.Degrees);
+            // Максимальное боковое уклонение точки трека от прямой на линии пути
+            Distance MaximumVisibleOffset = new Distance(16, Distance.Unit.Meters);
+            // Время (мин), при истечении котого точка считается посещенной повторно
+            const int visitedCountInerval = 4;
+
+            // Обходим все точки трека, кроме последней.
+            var cacheLegs = new List<IWH.Leg>();
             var cacheCenter = new Coordinates();
-            GPS.TrackPoint point;
+            GPS.TrackPoint gpsPoint;
             for (int i = 0; i < gpsPoints.Count-1; i++ )
             {
-                point = gpsPoints[i];
+                gpsPoint = gpsPoints[i];
 
                 // Вычисляем направление и длину участка трека
-                Angle trackBearing = point.Coordinates.OrthodromicBearing(gpsPoints[i + 1].Coordinates);
-                Distance trackDistance = point.Coordinates.OrthodromicDistance(gpsPoints[i + 1].Coordinates);
+                Angle trackDirection = gpsPoint.Coordinates.OrthodromicBearing(gpsPoints[i + 1].Coordinates);
+                Distance trackLenght = gpsPoint.Coordinates.OrthodromicDistance(gpsPoints[i + 1].Coordinates);
 
-                // Проверяем нахождение текущей точки трека в радиусе загруженного кеша точек
-                if (cacheCenter.IsEmpty || cacheCenter.OrthodromicDistance(point.Coordinates) + trackDistance+accuracy > cacheRange)
+                // Проверяем нахождение текущей точки трека в радиусе загруженного кеша участков
+                if (cacheCenter.IsEmpty || cacheCenter.OrthodromicDistance(gpsPoint.Coordinates) + trackLenght + accuracy > cacheRange)
                 {
                     // Устанавливаем центр кеша на текущую точку трека
-                    cacheCenter = point.Coordinates;
+                    cacheCenter = gpsPoint.Coordinates;
                     // Заново формируем кэш вокруг центральной точки
-                    cacheNodes.Clear();
-                    foreach (var node in iwhNodes)
+                    cacheLegs.Clear();
+                    foreach (var leg in iwhLegs)
                     {
-                        if (cacheCenter.OrthodromicDistance(node.Coordinates) <= cacheRange)
-                            cacheNodes.Add(node);
+                        if (cacheCenter.OrthodromicDistance(leg.StartNode.Coordinates) <= cacheRange)
+                            cacheLegs.Add(leg);
                     }
                 }
 
-                // Проверяем удаление от участка трека каждой точки карты в кеше
-                foreach (var node in cacheNodes)
+                // Обсчитываем для каждой точки трека все находящиеся в кеше участки пути
+                foreach (var leg in cacheLegs)
                 {
-                    Boolean nodeIsVisited = false;
-
-                    // Для каждой точки трека проверяем удаление точки карты от точки трека
-                    Distance nodeDistance = point.Coordinates.OrthodromicDistance(node.Coordinates);
-                    if (nodeDistance <= node.Range + accuracy)
-                        nodeIsVisited = true;
-
-                    // Для всех точек трека, кроме последней, проверяем удаление точки карты от линии трека
-                    if (!nodeIsVisited && i < gpsPoints.Count-1)
+                    // Проверяем удаление точки трека и начальной точки участка пути
+                    Boolean legIsVisited = false;
+                    Distance maxDistance = trackLenght + leg.Lenght; // ??? Дополнительно нужно учесть боковое отклонение
+                    Distance factDistance = gpsPoint.Coordinates.OrthodromicDistance(leg.StartNode.Coordinates);
+                    if (factDistance <= maxDistance + accuracy)
                     {
-                        // Вычисляем азимут точки карты
-                        Angle nodeBearing = point.Coordinates.OrthodromicBearing(node.Coordinates);
-                        // Если разность углов меньше 90гр, значить проекция точки попадает на отрезок
-                        Angle diffBearing = (nodeBearing - trackBearing).Abs();
-                        if (diffBearing < Angle.Right)
+                        // Сравниваем направление участка пути с направление трека
+                        Angle maxDeviation = MaximumVisibleDeviation; // ??? Дополнительно нужно учесть зависимость от длины участка трека
+                        Angle factDeviation = (trackDirection - leg.Direction).Abs();
+                        if ((factDeviation < maxDeviation) || (!leg.OneWay && ((Angle.Straight - factDeviation) < maxDeviation)))
                         {
-                            // Если удаление точки пересечения проекции с отрезком меньше длины отрезка, то точка может подойти
-                            Distance nodeProjection = nodeDistance * diffBearing.Cos();
-                            if (nodeProjection < trackDistance + accuracy)
+                            // Проверяем боковое удаление точки трека от линии пути
+                            Distance maxOffset = MaximumVisibleOffset; // ??? Дополнительно нужно учесть зависимость от длины участка трека
+                            Angle factDirection = gpsPoint.Coordinates.OrthodromicBearing(leg.StartNode.Coordinates);
+                            Distance factOffset = factDistance * Math.Abs((factDirection-leg.Direction).Sin());
+                            if (factOffset < maxOffset)
                             {
-                                // Если удаление точки от отрезка пути меньше максимально-допустимой, то точка подходит
-                                Distance nodeOffset = nodeDistance * diffBearing.Sin();
-                                if (nodeOffset <= node.Range + accuracy)
-                                    nodeIsVisited = true;
+                                 legIsVisited = true;
                             }
                         }
                     }
-
-                    // Отмечаем точку как посещенную; обновляем время и количество посещений
-                    if (nodeIsVisited)
+                    // Отмечаем участок как посещенный; обновляем время и количество посещений
+                    if (legIsVisited)
                     {
-                        node.IsVisited = true;
-                        if (point.Time > node.LastVisitedTime)
+                        leg.IsVisited = true;
+                        if (gpsPoint.Time > leg.LastVisitedTime)
                         {
-                            if ((point.Time - node.LastVisitedTime).TotalMinutes > 5)
-                                node.VisitedCount += 1;
-                            node.LastVisitedTime = point.Time;
+                            if ((gpsPoint.Time - leg.LastVisitedTime).TotalMinutes > visitedCountInerval)
+                                leg.VisitedCount += 1;
+                            leg.LastVisitedTime = gpsPoint.Time;
                         }
                     }
 
-                } // node
+                } // leg
                 
             } // i
         }
@@ -261,32 +264,29 @@ namespace IWHTest
         static void MapToGpx(List<IWH.Way> wayList, Boolean visitedOnly, string outputFileName)
         {
             var gpx = new GPS.Gpx();
-            var nodes = new List<IWH.Node>();
+            var legs = new List<IWH.Leg>();
             // Подготавливаем линии для выгрузки
             foreach (IWH.Way way in wayList)
             {
-                for (int i = 0; i < way.Nodes.Count; i++)
+                // Формируем выборку участков для выгрузки трека 
+                foreach (IWH.Leg leg in way.Legs)
                 {
-                    IWH.Node node = way.Nodes[i];
-                    if (!visitedOnly || node.IsVisited)
-                    {
-                        nodes.Add(node);
-                    }
-                    if ((visitedOnly && !node.IsVisited) || (i == way.Nodes.Count-1))
-                    {
-                        MapToGps_PushTrack(gpx, way, nodes);
-                    }
+                    if (!visitedOnly || leg.IsVisited)
+                        legs.Add(leg);
                 }
+                // Выгружаем накопленный набор участков
+                MapToGps_PushLegs(gpx, way, legs);
             }
             // Выгружаем в файл
             gpx.SaveToFile(outputFileName);
         }
 
-        private static void MapToGps_PushTrack(GPS.Gpx gpx, IWH.Way way, List<IWH.Node> nodes)
+        private static void MapToGps_PushLegs(GPS.Gpx gpx, IWH.Way way, List<IWH.Leg> legs)
         {
-            if (nodes.Count>1)
+            if (legs.Count>0)
             {
                 GPS.Track newTrack = new GPS.Track();
+                // Определяем реквизиты трека
                 newTrack.Name = way.Name + " (" + way.Type.ToString() + " " + way.Id.ToString() + ")";
                 if (way.OneWay)
                     newTrack.Name += " ONE_WAY ";
@@ -298,131 +298,35 @@ namespace IWHTest
                     newTrack.Name += " " + way.Smoothness.ToString();
                 if (way.LastVisitedTime > DateTime.MinValue)
                     newTrack.Name += " " + way.LastVisitedTime.ToShortDateString();
+                // Формируем сегменты
                 GPS.TrackSegment newTrackSegment = new GPS.TrackSegment();
-                foreach (IWH.Node node in nodes)
+                for (int i = 0; i < legs.Count; i++)
                 {
-                    GPS.TrackPoint newTrackPoint = new GPS.TrackPoint();
-                    newTrackPoint.Coordinates = node.Coordinates;
-                    newTrackSegment.Points.Add(newTrackPoint);
+                    // Создаем новый сегмент для первого участка или
+                    // если первая точка текущего участка не равна последней точке предыдущего
+                    // Для первого участка добавляем обе точки, для остальных только конечную.
+                    if (i == 0 || !legs[i].StartNode.Equals(legs[i-1].EndNode))
+                    {
+                        MapTpGps_PushSegment(newTrack, newTrackSegment);
+                        newTrackSegment.Points.Add(new GPS.TrackPoint() { Coordinates = legs[i].StartNode.Coordinates });
+                    }
+                    newTrackSegment.Points.Add(new GPS.TrackPoint() { Coordinates = legs[i].EndNode.Coordinates });
                 }
-                newTrack.Segments.Add(newTrackSegment);
+                //
+                MapTpGps_PushSegment(newTrack, newTrackSegment);
                 gpx.Tracks.Add(newTrack);
+                legs.Clear();
             }
-            nodes.Clear();
         }
 
-        /// <summary>
-        /// Выгружает заданный список линий в файл GPS-трекинга
-        /// </summary>
-        /// <param name="wayList"></param>
-        /// <param name="visitedOnly">Выгружать только посещенные участки линии</param>
-        /// <param name="outputFileName"></param>
-        static void MapToGpxOld(List<IWH.Way> wayList, Boolean visitedOnly, string outputFileName)
+        private static void MapTpGps_PushSegment(GPS.Track track, GPS.TrackSegment segment)
         {
-            GPS.Gpx gpx = new GPS.Gpx();
-            GPS.Track newTrack;
-            GPS.TrackSegment newTrackSegment;
-            GPS.TrackPoint newTrackPoint;
-            bool goodNode;
-            // Подготавливаем линии для выгрузки
-            foreach (IWH.Way way in wayList)
-            {
-                newTrack = new GPS.Track();
-                newTrack.Name = way.Name + " (" + way.Type.ToString() + " " + way.Id.ToString() + ")";
-                if (way.Surface > 0)
-                    newTrack.Name += " " + way.Surface.ToString();
-                if (way.Smoothness > 0)
-                    newTrack.Name += " " + way.Smoothness.ToString();
-                if (way.LastVisitedTime > DateTime.MinValue)
-                    newTrack.Name += " " + way.LastVisitedTime.ToShortDateString();
-                newTrackSegment = new GPS.TrackSegment();
-                for (int i = 0; i < way.Nodes.Count; i++)
-                {
-                    if (visitedOnly)
-                        // Выгружаем посещенную точку только если следующая или предыдущая так-же посещена
-                        goodNode = ((way.Nodes[i].IsVisited) && ((i == 0 || way.Nodes[i - 1].IsVisited) || (i == way.Nodes.Count - 1 || way.Nodes[i + 1].IsVisited)));
-                    else
-                        goodNode = true;
-                    if (goodNode)
-                    {
-                        newTrackPoint = new GPS.TrackPoint();
-                        newTrackPoint.Coordinates = way.Nodes[i].Coordinates;
-                        newTrackSegment.Points.Add(newTrackPoint);
-                    }
-                }
-                if (newTrackSegment.Points.Count >= 2)
-                {
-                    newTrack.Segments.Add(newTrackSegment);
-                    gpx.Tracks.Add(newTrack);
-                }
-            }
-            // Выгружаем в файл
-            gpx.SaveToFile(outputFileName);
+            if (segment.Points.Count > 1)
+                track.Segments.Add(segment);
+            segment = new GPS.TrackSegment();
         }
 
-        /// <summary>
-        /// Выгружает линии и точки в файл GPS-трекинга
-        /// </summary>
-        /// <param name="visitedOnly">Выгружать только посещенные участки линии</param>
-        /// <param name="outputFileName"></param>
-        static void MapToGpxByVisited(IWH.Map map, Boolean visitedOnly, string outputFileName)
-        {
-            GPS.Gpx gpx = new GPS.Gpx();
-            GPS.Track newTrack;
-            GPS.TrackSegment newTrackSegment;
-            GPS.TrackPoint newTrackPoint;
-            GPS.WayPoint newWayPoint;
-            bool goodNode;
-            // Подготавливаем линии для выгрузки
-            foreach (IWH.Way way in map.Ways.Values)
-            {
-                newTrack = new GPS.Track();
-                newTrack.Name = way.Name + " (" + way.Type.ToString() + " " + way.Id.ToString() + ")";
-                newTrackSegment = new GPS.TrackSegment();
-                for (int i = 0; i < way.Nodes.Count; i++)
-                {
-                    // Выгружаем посещенную точку только если следующая или предыдущая так-же посещена
-                    if (visitedOnly)
-                        goodNode = ((way.Nodes[i].IsVisited) && ((i == 0 || way.Nodes[i - 1].IsVisited) || (i == way.Nodes.Count - 1 || way.Nodes[i + 1].IsVisited)));
-                    else
-                        goodNode = ((!way.Nodes[i].IsVisited) && ((i == 0 || !way.Nodes[i - 1].IsVisited) || (i == way.Nodes.Count - 1 || !way.Nodes[i + 1].IsVisited)));
-                    if (goodNode)
-                    {
-                        newTrackPoint = new GPS.TrackPoint();
-                        newTrackPoint.Coordinates = way.Nodes[i].Coordinates;
-                        newTrackSegment.Points.Add(newTrackPoint);
-                    }
-                }
-                if (newTrackSegment.Points.Count >= 2)
-                {
-                    newTrack.Segments.Add(newTrackSegment);
-                    gpx.Tracks.Add(newTrack);
-                }
-            }
-            // Подготавливаем точки для выгрузки
-            var goodNodeTypeList = new List<IWH.NodeType> { IWH.NodeType.City, IWH.NodeType.Town, IWH.NodeType.Village };
-            foreach (IWH.Node node in map.Nodes.Values)
-            {
-                if (goodNodeTypeList.Contains(node.Type))
-                {
-                    if (visitedOnly)
-                        goodNode = node.IsVisited;
-                    else
-                        goodNode = !node.IsVisited;
-                    if (goodNode)
-                    {
-                        newWayPoint = new GPS.WayPoint();
-                        newWayPoint.Coordinates = node.Coordinates;
-                        newWayPoint.Name = string.Format("{0} {1}K", node.Name, Math.Round(node.Population / 1000.0));
-                        gpx.WayPoints.Add(newWayPoint);
-                    }
-                }
-            }
-            // Выгружаем в файл
-            gpx.SaveToFile(outputFileName);
-        }
-
-        /// <summary>
+         /// <summary>
         /// Выгружает перекрестки в файл GPS-трекинга
         /// </summary>
         /// <param name="outputFileName"></param>
