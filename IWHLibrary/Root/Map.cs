@@ -174,12 +174,12 @@ namespace IWH
                         if (i > 0)
                         {
                             Leg newLeg = new Leg();
-                            newLeg.WayId = way.Id;
+                            newLeg.Way = way;
+                            newLeg.Number = way.Legs.Count + 1;
                             newLeg.StartNode = way.Nodes[i-1];
                             newLeg.EndNode = way.Nodes[i];
                             newLeg.Direction = newLeg.StartNode.Coordinates.OrthodromicBearing(newLeg.EndNode.Coordinates);
                             newLeg.Lenght = newLeg.StartNode.Coordinates.OrthodromicDistance(newLeg.EndNode.Coordinates);
-                            newLeg.OneWay = way.OneWay;
                             newLeg.IsVisited = Boolean.Parse(xmlRef.Attributes["visited"].Value);
                             newLeg.VisitedCount = Int32.Parse(xmlRef.Attributes["count"].Value, xmlFormatProvider);
                             newLeg.LastVisitedTime = DateTime.Parse(xmlRef.Attributes["last"].Value, xmlFormatProvider);

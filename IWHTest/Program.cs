@@ -115,19 +115,8 @@ namespace IWHTest
             {
                 Console.WriteLine("Анализ файла {0}", trackFile.Name);
                 GPS.Gpx gpxTrack = GPS.Gpx.FromXmlFile(trackFile.FullName);
-                Distance cacheRange;
-                Distance accupacy;
-                if (trackFile.Name.Contains("GpsHome"))
-                {
-                    cacheRange = new Distance(4, Distance.Unit.Kilometers);
-                    accupacy = new Distance(100, Distance.Unit.Meters);
-                }
-                else
-                {
-                    cacheRange = new Distance(4, Distance.Unit.Kilometers);
-                    accupacy = new Distance(10, Distance.Unit.Meters);
-                }
-                AnalizeGpsTrack(LegList, gpxTrack.GetPointList(), cacheRange, accupacy);
+                Distance cacheRange = Distance.FromKilometers(4);
+                AnalizeGpsTrack(LegList, gpxTrack.GetPointList(), cacheRange, false);
             }
             Console.WriteLine("Анализ выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
             // Пересчитываем
@@ -179,29 +168,35 @@ namespace IWHTest
         /// и направления движения по треку соответствует направлению участка.
         /// Для оптимизации, работа проводится с участками пути, расположенными в заданном радиусе от точки трека.
         /// </remarks>
-        static void AnalizeGpsTrack(List<IWH.Leg> iwhLegs, List<GPS.TrackPoint> gpsPoints, Distance cacheRange, Distance accuracy)
+        static void AnalizeGpsTrack(List<IWH.Leg> iwhLegs, List<GPS.TrackPoint> gpsPoints, Distance cacheRange, bool checkOneWay)
         {
             // Максимальный угол, при котором линия трека считается совпадающей с линией пути
-            Angle MaximumVisibleDeviation = new Angle(8, Angle.Unit.Degrees);
+            Angle MaximumVisitedDeviation = new Angle(16, Angle.Unit.Degrees);
             // Максимальное боковое уклонение точки трека от прямой на линии пути
-            Distance MaximumVisibleOffset = new Distance(16, Distance.Unit.Meters);
+            Distance MaximumVisitedOffset = new Distance(32, Distance.Unit.Meters);
+            // Удаление, от точки трека, при котором участок развязки считается посещенным
+            Distance LinksVisitedDistance = new Distance(256, Distance.Unit.Meters);
             // Время (мин), при истечении котого точка считается посещенной повторно
-            const int visitedCountInerval = 4;
+            const int VisitedCountInerval = 8;
 
             // Обходим все точки трека, кроме последней.
             var cacheLegs = new List<IWH.Leg>();
             var cacheCenter = new Coordinates();
             GPS.TrackPoint gpsPoint;
+            IWH.Leg gpsLeg;
+            
             for (int i = 0; i < gpsPoints.Count-1; i++ )
             {
                 gpsPoint = gpsPoints[i];
-
                 // Вычисляем направление и длину участка трека
-                Angle trackDirection = gpsPoint.Coordinates.OrthodromicBearing(gpsPoints[i + 1].Coordinates);
-                Distance trackLenght = gpsPoint.Coordinates.OrthodromicDistance(gpsPoints[i + 1].Coordinates);
+                gpsLeg = new IWH.Leg();
+                gpsLeg.StartNode = new IWH.Node() { Coordinates = gpsPoints[i].Coordinates };
+                gpsLeg.EndNode = new IWH.Node() { Coordinates = gpsPoints[i + 1].Coordinates };
+                gpsLeg.Direction = gpsLeg.StartNode.Coordinates.OrthodromicBearing(gpsLeg.EndNode.Coordinates);
+                gpsLeg.Lenght = gpsLeg.StartNode.Coordinates.OrthodromicDistance(gpsLeg.EndNode.Coordinates);
 
                 // Проверяем нахождение текущей точки трека в радиусе загруженного кеша участков
-                if (cacheCenter.IsEmpty || cacheCenter.OrthodromicDistance(gpsPoint.Coordinates) + trackLenght + accuracy > cacheRange)
+                if (cacheCenter.IsEmpty || cacheCenter.OrthodromicDistance(gpsPoint.Coordinates) + gpsLeg.Lenght > cacheRange)
                 {
                     // Устанавливаем центр кеша на текущую точку трека
                     cacheCenter = gpsPoint.Coordinates;
@@ -214,27 +209,39 @@ namespace IWHTest
                     }
                 }
 
-                // Обсчитываем для каждой точки трека все находящиеся в кеше участки пути
+                // Обсчитываем для точки трека все находящиеся в кеше участки пути
                 foreach (var leg in cacheLegs)
                 {
                     // Проверяем удаление точки трека и начальной точки участка пути
                     Boolean legIsVisited = false;
-                    Distance maxDistance = trackLenght + leg.Lenght; // ??? Дополнительно нужно учесть боковое отклонение
+                    Distance maxDistance = Distance.FromMeters(Math.Sqrt( Math.Pow(gpsLeg.Lenght.Meters+leg.Lenght.Meters,2)+Math.Pow(MaximumVisitedOffset.Meters,2) )); 
                     Distance factDistance = gpsPoint.Coordinates.OrthodromicDistance(leg.StartNode.Coordinates);
-                    if (factDistance <= maxDistance + accuracy)
+                    // Для развязок простые правила
+                    if (leg.Way.IsLink && factDistance < LinksVisitedDistance)
+                    {
+                        legIsVisited = true;
+                    }
+                    // Для соединений простое правила
+                    else if (leg.Way.Legs.Count == 1 && leg.Lenght < MaximumVisitedOffset && factDistance < LinksVisitedDistance)
+                    {
+                        legIsVisited = true;
+                    }
+                    // Для остальных дорог правила посложнее
+                    else if (factDistance <= maxDistance)
                     {
                         // Сравниваем направление участка пути с направление трека
-                        Angle maxDeviation = MaximumVisibleDeviation; // ??? Дополнительно нужно учесть зависимость от длины участка трека
-                        Angle factDeviation = (trackDirection - leg.Direction).Abs();
-                        if ((factDeviation < maxDeviation) || (!leg.OneWay && ((Angle.Straight - factDeviation) < maxDeviation)))
+                        // Добавляем к максимуму 200% на каждый километр длины трека 
+                        Angle maxDeviation = MaximumVisitedDeviation + MaximumVisitedDeviation * (gpsLeg.Lenght.Kilometers*2);
+                        Angle factDeviation = (gpsLeg.Direction - leg.Direction).Abs();
+                        if ( (factDeviation < maxDeviation) || ( Angle.Straight - factDeviation < maxDeviation & (!checkOneWay | !leg.Way.OneWay)) )
                         {
-                            // Проверяем боковое удаление точки трека от линии пути
-                            Distance maxOffset = MaximumVisibleOffset; // ??? Дополнительно нужно учесть зависимость от длины участка трека
-                            Angle factDirection = gpsPoint.Coordinates.OrthodromicBearing(leg.StartNode.Coordinates);
-                            Distance factOffset = factDistance * Math.Abs((factDirection-leg.Direction).Sin());
-                            if (factOffset < maxOffset)
+                            // Проверяем боковое удаление точки трека от участка пути
+                            // Добавляем к максимуму 200% на каждый километр длины трека
+                            Distance maxOffset = MaximumVisitedOffset + MaximumVisitedOffset * (gpsLeg.Lenght.Kilometers*2);
+                            Distance factOffset = leg.MinLegOffset(gpsLeg);
+                            if (factOffset >= Distance.Zero && factOffset < maxOffset)
                             {
-                                 legIsVisited = true;
+                                legIsVisited = true;
                             }
                         }
                     }
@@ -244,7 +251,7 @@ namespace IWHTest
                         leg.IsVisited = true;
                         if (gpsPoint.Time > leg.LastVisitedTime)
                         {
-                            if ((gpsPoint.Time - leg.LastVisitedTime).TotalMinutes > visitedCountInerval)
+                            if ((gpsPoint.Time - leg.LastVisitedTime).TotalMinutes > VisitedCountInerval)
                                 leg.VisitedCount += 1;
                             leg.LastVisitedTime = gpsPoint.Time;
                         }
@@ -285,11 +292,20 @@ namespace IWHTest
         {
             if (legs.Count>0)
             {
+
+                // ??? debug
+                if (way.Id == 38179833)
+                {
+                    int f = 0;
+                }
+
                 GPS.Track newTrack = new GPS.Track();
                 // Определяем реквизиты трека
                 newTrack.Name = way.Name + " (" + way.Type.ToString() + " " + way.Id.ToString() + ")";
+                if (way.IsLink)
+                    newTrack.Name += " Link";
                 if (way.OneWay)
-                    newTrack.Name += " ONE_WAY ";
+                    newTrack.Name += " ONE_WAY";
                 if (way.Lanes > 0)
                     newTrack.Name += " L=" + way.Lanes.ToString();
                 if (way.Surface > 0)
@@ -307,26 +323,20 @@ namespace IWHTest
                     // Для первого участка добавляем обе точки, для остальных только конечную.
                     if (i == 0 || !legs[i].StartNode.Equals(legs[i-1].EndNode))
                     {
-                        MapTpGps_PushSegment(newTrack, newTrackSegment);
+                        newTrack.Segments.Add(newTrackSegment);
+                        newTrackSegment = new GPS.TrackSegment();
                         newTrackSegment.Points.Add(new GPS.TrackPoint() { Coordinates = legs[i].StartNode.Coordinates });
                     }
                     newTrackSegment.Points.Add(new GPS.TrackPoint() { Coordinates = legs[i].EndNode.Coordinates });
                 }
                 //
-                MapTpGps_PushSegment(newTrack, newTrackSegment);
+                newTrack.Segments.Add(newTrackSegment);
                 gpx.Tracks.Add(newTrack);
                 legs.Clear();
             }
         }
 
-        private static void MapTpGps_PushSegment(GPS.Track track, GPS.TrackSegment segment)
-        {
-            if (segment.Points.Count > 1)
-                track.Segments.Add(segment);
-            segment = new GPS.TrackSegment();
-        }
-
-         /// <summary>
+        /// <summary>
         /// Выгружает перекрестки в файл GPS-трекинга
         /// </summary>
         /// <param name="outputFileName"></param>
