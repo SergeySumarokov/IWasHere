@@ -34,6 +34,10 @@ namespace IWH
         /// </summary>
         public Distance Lenght;
         /// <summary>
+        /// Скорость движения на участке
+        /// </summary>
+        public Speed Speed;
+        /// <summary>
         /// Истина, исли участок был посещён.
         /// </summary>
         public Boolean IsVisited;

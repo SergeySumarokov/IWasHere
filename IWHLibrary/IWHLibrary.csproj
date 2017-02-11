@@ -56,6 +56,7 @@
     <Compile Include="Primitives\Time.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Primitives\Area.cs" />
+    <Compile Include="Root\AverageSpeedCounter.cs" />
     <Compile Include="Root\CommandLine.cs" />
     <Compile Include="Root\Leg.cs" />
     <Compile Include="Root\Map.cs" />

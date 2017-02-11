@@ -102,10 +102,6 @@ namespace IWHTest
 
             // Анализируем треки
 
-            // ??? времянка начало
-            var LegList = new List<IWH.Leg>();
-            foreach (IWH.Way way in IwhMap.Ways.Values) foreach (IWH.Leg leg in way.Legs) LegList.Add(leg);
-            // ??? времянка конец
             DirectoryInfo trackFolder = new DirectoryInfo(@"\Projects\IWasHere\Resources\Tracks");
             FileInfo[] trackFiles;
             trackFiles = trackFolder.GetFiles("*.gpx");
@@ -116,7 +112,7 @@ namespace IWHTest
                 Console.WriteLine("Анализ файла {0}", trackFile.Name);
                 GPS.Gpx gpxTrack = GPS.Gpx.FromXmlFile(trackFile.FullName);
                 Distance cacheRange = Distance.FromKilometers(4);
-                AnalizeGpsTrack(LegList, gpxTrack.GetPointList(), cacheRange, false);
+                AnalizeGpsTrack(IwhMap.Ways.Values.ToList(), gpxTrack.GetPointList(), cacheRange, false);
             }
             Console.WriteLine("Анализ выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
             // Пересчитываем
@@ -168,23 +164,26 @@ namespace IWHTest
         /// и направления движения по треку соответствует направлению участка.
         /// Для оптимизации, работа проводится с участками пути, расположенными в заданном радиусе от точки трека.
         /// </remarks>
-        static void AnalizeGpsTrack(List<IWH.Leg> iwhLegs, List<GPS.TrackPoint> gpsPoints, Distance cacheRange, bool checkOneWay)
+        static void AnalizeGpsTrack(List<IWH.Way> mapWays, List<GPS.TrackPoint> gpsPoints, Distance cacheRange, bool checkOneWay)
         {
             // Максимальный угол, при котором линия трека считается совпадающей с линией пути
-            Angle MaximumVisitedDeviation = new Angle(16, Angle.Unit.Degrees);
+            Angle MaximumVisitedDeviation = Angle.FromDegrees(16);
             // Максимальное боковое уклонение точки трека от прямой на линии пути
-            Distance MaximumVisitedOffset = new Distance(32, Distance.Unit.Meters);
+            Distance MaximumVisitedOffset = Distance.FromMeters(32);
             // Удаление, от точки трека, при котором участок развязки считается посещенным
-            Distance LinksVisitedDistance = new Distance(256, Distance.Unit.Meters);
+            Distance LinksVisitedDistance = Distance.FromMeters(256);
             // Время (мин), при истечении котого точка считается посещенной повторно
             const int VisitedCountInerval = 8;
+            // Минимальный интервал времени, который требуется для расчета средней скорости
+            Time MinimumSpeedInterval = Time.FromSeconds(5);
 
             // Обходим все точки трека, кроме последней.
             var cacheLegs = new List<IWH.Leg>();
             var cacheCenter = new Coordinates();
             GPS.TrackPoint gpsPoint;
             IWH.Leg gpsLeg;
-            
+            var avrSpeedCouner = new IWH.AverageSpeedCounter(MinimumSpeedInterval);
+                        
             for (int i = 0; i < gpsPoints.Count-1; i++ )
             {
                 gpsPoint = gpsPoints[i];
@@ -194,7 +193,9 @@ namespace IWHTest
                 gpsLeg.EndNode = new IWH.Node() { Coordinates = gpsPoints[i + 1].Coordinates };
                 gpsLeg.Direction = gpsLeg.StartNode.Coordinates.OrthodromicBearing(gpsLeg.EndNode.Coordinates);
                 gpsLeg.Lenght = gpsLeg.StartNode.Coordinates.OrthodromicDistance(gpsLeg.EndNode.Coordinates);
-
+                // Вычисляем среднюю скорость движения
+                avrSpeedCouner.Add(gpsPoints[i + 1].Time-gpsPoints[i].Time, gpsLeg.Lenght);
+                gpsLeg.Speed = avrSpeedCouner.GetAverageSpeed();
                 // Проверяем нахождение текущей точки трека в радиусе загруженного кеша участков
                 if (cacheCenter.IsEmpty || cacheCenter.OrthodromicDistance(gpsPoint.Coordinates) + gpsLeg.Lenght > cacheRange)
                 {
@@ -202,10 +203,13 @@ namespace IWHTest
                     cacheCenter = gpsPoint.Coordinates;
                     // Заново формируем кэш вокруг центральной точки
                     cacheLegs.Clear();
-                    foreach (var leg in iwhLegs)
+                    foreach (var way in mapWays)
                     {
-                        if (cacheCenter.OrthodromicDistance(leg.StartNode.Coordinates) <= cacheRange)
-                            cacheLegs.Add(leg);
+                        foreach (var leg in way.Legs)
+                        {
+                            if (cacheCenter.OrthodromicDistance(leg.StartNode.Coordinates) <= cacheRange)
+                                cacheLegs.Add(leg);
+                        }
                     }
                 }
 
@@ -245,16 +249,18 @@ namespace IWHTest
                             }
                         }
                     }
-                    // Отмечаем участок как посещенный; обновляем время и количество посещений
+                    // Отмечаем участок как посещенный; обновляем скорость, время и количество посещений
                     if (legIsVisited)
                     {
                         leg.IsVisited = true;
+                        leg.LastVisitedTime = gpsPoint.Time;
+                        if (leg.Speed.IsEmpty)
+                            leg.Speed = gpsLeg.Speed;
+                        else
+                            leg.Speed = (leg.Speed + gpsLeg.Speed) / 2;
                         if (gpsPoint.Time > leg.LastVisitedTime)
-                        {
                             if ((gpsPoint.Time - leg.LastVisitedTime).TotalMinutes > VisitedCountInerval)
                                 leg.VisitedCount += 1;
-                            leg.LastVisitedTime = gpsPoint.Time;
-                        }
                     }
 
                 } // leg
@@ -314,6 +320,8 @@ namespace IWHTest
                     newTrack.Name += " " + way.Smoothness.ToString();
                 if (way.LastVisitedTime > DateTime.MinValue)
                     newTrack.Name += " " + way.LastVisitedTime.ToShortDateString();
+                if (way.AverageSpeed > Speed.Zero)
+                    newTrack.Name += " " + String.Format("{0}кмч", Math.Round(way.AverageSpeed.KilometersPerHour));
                 // Формируем сегменты
                 GPS.TrackSegment newTrackSegment = new GPS.TrackSegment();
                 for (int i = 0; i < legs.Count; i++)

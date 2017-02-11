@@ -196,6 +196,15 @@ namespace Primitives
         }
 
         /// <summary>
+        /// Возвращает структуру, представляющую указанное количество секунд.
+        /// </summary>
+        /// <param name="value">Количество секунд</param>
+        public static Time FromSeconds(double value)
+        {
+            return new Time(value, Unit.Second);
+        }
+
+        /// <summary>
         /// Возвращает структуру, представляющую указанное количество минут.
         /// </summary>
         /// <param name="value">Количество минут</param>
