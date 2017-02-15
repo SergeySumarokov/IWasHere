@@ -236,9 +236,18 @@ namespace Primitives
             return speed1.Value < speed2.Value;
         }
 
+        public static bool operator <=(Speed speed1, Speed speed2)
+        {
+            return speed1.Value <= speed2.Value;
+        }
+
         public static bool operator >(Speed speed1, Speed speed2)
         {
             return speed1.Value > speed2.Value;
+        }
+        public static bool operator >=(Speed speed1, Speed speed2)
+        {
+            return speed1.Value >= speed2.Value;
         }
 
         #endregion

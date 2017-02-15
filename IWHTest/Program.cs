@@ -144,6 +144,10 @@ namespace IWHTest
             MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.HighwayType>() { IWH.HighwayType.Primary, IWH.HighwayType.Secondary }), false, @"\Projects\IWasHere\Resources\Way_Secondary.gpx");
             MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.HighwayType>() { IWH.HighwayType.Tertiary }), false, @"\Projects\IWasHere\Resources\Way_Tertiary.gpx");
             MapToGpx(IwhMap.Ways.Values.ToList(), true, @"\Projects\IWasHere\Resources\Way_Visited.gpx");
+            MapToGpx(WaysBySpeed(IwhMap.Ways.Values.ToList(), Speed.FromKilometersPerHour(5), Speed.FromKilometersPerHour(25)), true, @"\Projects\IWasHere\Resources\Way_Visited_25kmh.gpx");
+            MapToGpx(WaysBySpeed(IwhMap.Ways.Values.ToList(), Speed.FromKilometersPerHour(25), Speed.FromKilometersPerHour(50)), true, @"\Projects\IWasHere\Resources\Way_Visited_50kmh.gpx");
+            MapToGpx(WaysBySpeed(IwhMap.Ways.Values.ToList(), Speed.FromKilometersPerHour(50), Speed.FromKilometersPerHour(85)), true, @"\Projects\IWasHere\Resources\Way_Visited_85kmh.gpx");
+            MapToGpx(WaysBySpeed(IwhMap.Ways.Values.ToList(), Speed.FromKilometersPerHour(85), Speed.FromKilometersPerHour(200)), true, @"\Projects\IWasHere\Resources\Way_Visited_99kmh.gpx");
             CrossroadsToGpx(IwhMap, @"\Projects\IWasHere\Resources\Way_Crossroads.gpx");
             stopwatch.Stop();
             Console.WriteLine("Выгрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
@@ -176,6 +180,8 @@ namespace IWHTest
             const int VisitedCountInerval = 8;
             // Минимальный интервал времени, который требуется для расчета средней скорости
             Time MinimumSpeedInterval = Time.FromSeconds(5);
+            // Минимальная средняя скорость, которую принимаем как реальную (не шум)
+            Speed MinimumAverageSpeed = Speed.FromKilometersPerHour(5);
 
             // Обходим все точки трека, кроме последней.
             var cacheLegs = new List<IWH.Leg>();
@@ -254,13 +260,18 @@ namespace IWHTest
                     {
                         leg.IsVisited = true;
                         leg.LastVisitedTime = gpsPoint.Time;
-                        if (leg.Speed.IsEmpty)
-                            leg.Speed = gpsLeg.Speed;
-                        else
-                            leg.Speed = (leg.Speed + gpsLeg.Speed) / 2;
+                        if (gpsLeg.Speed > MinimumAverageSpeed)
+                        {
+                            if (leg.Speed.IsEmpty)
+                                leg.Speed = gpsLeg.Speed;
+                            else
+                                leg.Speed = (leg.Speed + gpsLeg.Speed) / 2;
+                        }
                         if (gpsPoint.Time > leg.LastVisitedTime)
+                        {
                             if ((gpsPoint.Time - leg.LastVisitedTime).TotalMinutes > VisitedCountInerval)
                                 leg.VisitedCount += 1;
+                        }
                     }
 
                 } // leg
@@ -374,6 +385,17 @@ namespace IWHTest
             foreach (var way in wayList)
             {
                 if (typeList.Contains(way.Type))
+                    result.Add(way);
+            }
+            return result;
+        }
+
+        static List<IWH.Way> WaysBySpeed(List<IWH.Way> wayList, Speed minSpeed, Speed maxSpeed)
+        {
+            var result = new List<IWH.Way>();
+            foreach (var way in wayList)
+            {
+                if (way.AverageSpeed >= minSpeed && way.AverageSpeed < maxSpeed)
                     result.Add(way);
             }
             return result;
