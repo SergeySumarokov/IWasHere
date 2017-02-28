@@ -1,6 +1,7 @@
 ﻿using System;
+using Primitives;
 
-namespace Primitives
+namespace Geography
 {
 
     /// <summary>

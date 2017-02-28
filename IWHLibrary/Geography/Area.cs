@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using Primitives;
 
-namespace Primitives
+namespace Geography
 {
     /// <summary>
-    /// Представляет географическую область как полигон, заданный списком геодезических координат.
+    /// Представляет географическую область как полигон, заданный списком географических координат.
     /// </summary>
     public class Area
     {
         /// <summary>
-        /// Упорядоченный список точек, описывающий границы области.
+        /// Упорядоченный список точек, описывающий границы географической области.
         /// </summary>
         public List<Coordinates> Points { get; private set; }
 
@@ -21,6 +22,8 @@ namespace Primitives
             Points = new List<Coordinates>();
         }
 
+        #region "Расчеты c областями"
+
         /// <summary>
         /// Возвращает Истину если заданная точка находится внутри области или на ее границе.
         /// </summary>
@@ -31,10 +34,8 @@ namespace Primitives
             return IsPointInArea(Points, pointCoordinates);
         }
 
-        #region "Расчеты c областями"
-
         /// <summary>
-        /// Возвращает истину, если точка находится внутри области, заданной массивом точек.
+        /// Возвращает истину, если заданная точка находится внутри области, заданной массивом точек.
         /// </summary>
         /// <param name="area"></param>
         /// <param name="point"></param>
@@ -57,30 +58,6 @@ namespace Primitives
             }
             return isInside;
         }
-
-        /// <summary>
-        /// Determines if the given point is inside the polygon
-        /// </summary>
-        /// <param name="polygon">the vertices of polygon</param>
-        /// <param name="testPoint">the given point</param>
-        /// <returns>true if the point is inside the polygon; otherwise, false</returns>
-        //public static bool IsPointInPolygon4(PointF[] polygon, PointF testPoint)
-        //{
-        //    bool result = false;
-        //    int j = polygon.Count() - 1;
-        //    for (int i = 0; i < polygon.Count(); i++)
-        //    {
-        //        if (polygon[i].Y < testPoint.Y && polygon[j].Y >= testPoint.Y || polygon[j].Y < testPoint.Y && polygon[i].Y >= testPoint.Y)
-        //        {
-        //            if (polygon[i].X + (testPoint.Y - polygon[i].Y) / (polygon[j].Y - polygon[i].Y) * (polygon[j].X - polygon[i].X) < testPoint.X)
-        //            {
-        //                result = !result;
-        //            }
-        //        }
-        //        j = i;
-        //    }
-        //    return result;
-        //}
 
         #endregion
 
