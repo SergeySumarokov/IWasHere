@@ -471,7 +471,8 @@ namespace IWH
             // Удаляем точки вне заданной области из общего массива точек
             foreach (Node node in Nodes.Values.ToList())
             {
-                if (ExcludedArea.HasPointInside(node.Coordinates) || !IncludedArea.HasPointInside(node.Coordinates))
+                Point nodePoint = new Point(node.Coordinates);
+                if (ExcludedArea.HasPointInside(nodePoint) || !IncludedArea.HasPointInside(nodePoint))
                     Nodes.Remove(node.Id);
             }
             // Удаляем у линий точки, отсутствующие в общем массиве

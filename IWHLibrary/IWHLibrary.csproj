@@ -41,6 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Geography\Leg.cs" />
+    <Compile Include="Geography\Point.cs" />
+    <Compile Include="Geography\Way.cs" />
     <Compile Include="GPSTrack\Gpx.cs" />
     <Compile Include="GPSTrack\Track.cs" />
     <Compile Include="GPSTrack\WayPoint.cs" />

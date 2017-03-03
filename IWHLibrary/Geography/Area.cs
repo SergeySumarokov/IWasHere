@@ -4,22 +4,23 @@ using Primitives;
 
 namespace Geography
 {
+
     /// <summary>
-    /// Представляет географическую область как полигон, заданный списком географических координат.
+    /// Представляет географическую область как полигон, заданный списком точек.
     /// </summary>
     public class Area
     {
         /// <summary>
         /// Упорядоченный список точек, описывающий границы географической области.
         /// </summary>
-        public List<Coordinates> Points { get; private set; }
+        public List<Point> Points { get; private set; }
 
         /// <summary>
         /// Инициализирует новый экземпляр класса.
         /// </summary>
         public Area()
         {
-            Points = new List<Coordinates>();
+            Points = new List<Point>();
         }
 
         #region "Расчеты c областями"
@@ -29,29 +30,27 @@ namespace Geography
         /// </summary>
         /// <param name="pointCoordinates"></param>
         /// <returns></returns>
-        public bool HasPointInside(Coordinates pointCoordinates)
+        public bool HasPointInside(Point point)
         {
-            return IsPointInArea(Points, pointCoordinates);
+            return IsPointInArea(Points, point);
         }
 
         /// <summary>
-        /// Возвращает истину, если заданная точка находится внутри области, заданной массивом точек.
+        /// Возвращает истину, если заданная точка находится внутри заданной области.
         /// </summary>
-        /// <param name="area"></param>
-        /// <param name="point"></param>
         /// <returns>Не будет работать, если область пересекается меридином 180.</returns>
-        public static bool IsPointInArea(List<Coordinates> area, Coordinates point)
+        public static bool IsPointInArea(List<Point> areaPoints, Point testPoint)
         {
 
             bool isInside = false;
-            for (int i = 0, j = area.Count - 1; i < area.Count; j = i++)
+            for (int i = 0, j = areaPoints.Count - 1; i < areaPoints.Count; j = i++)
             {
-                if (((area[i].Latitude > point.Latitude) != (area[j].Latitude > point.Latitude)) &&
-                    (point.Longitude.Radians <
-                        (area[j].Longitude.Radians - area[i].Longitude.Radians)
-                        * (point.Latitude.Radians - area[i].Latitude.Radians)
-                        / (area[j].Latitude.Radians - area[i].Latitude.Radians)
-                        + area[i].Longitude.Radians))
+                if (((areaPoints[i].Coordinates.Latitude > testPoint.Coordinates.Latitude) != (areaPoints[j].Coordinates.Latitude > testPoint.Coordinates.Latitude)) &&
+                    (testPoint.Coordinates.Longitude.Radians <
+                        (areaPoints[j].Coordinates.Longitude.Radians - areaPoints[i].Coordinates.Longitude.Radians)
+                        * (testPoint.Coordinates.Latitude.Radians - areaPoints[i].Coordinates.Latitude.Radians)
+                        / (areaPoints[j].Coordinates.Latitude.Radians - areaPoints[i].Coordinates.Latitude.Radians)
+                        + areaPoints[i].Coordinates.Longitude.Radians))
                 {
                     isInside = !isInside;
                 }

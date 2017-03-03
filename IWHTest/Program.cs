@@ -33,7 +33,7 @@ namespace IWHTest
             //{
             //    double lat = double.Parse(n.Attributes["lat"].Value, xmlFormatProvider);
             //    double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
-            //    areaSpb.Points.Add(new Coordinates(lat, lon, 0));
+            //    areaSpb.Points.Add(new Point(lat, lon, 0));
             //}
             //// Ленобласть
             //xml.Load(@"\Projects\IWasHere\Resources\RU-LEN_area.gpx");
@@ -44,7 +44,7 @@ namespace IWHTest
             //{
             //    double lat = double.Parse(n.Attributes["lat"].Value, xmlFormatProvider);
             //    double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
-            //    areaLen.Points.Add(new Coordinates(lat, lon, 0));
+            //    areaLen.Points.Add(new Point(lat, lon, 0));
             //}
             //Console.WriteLine("Загрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
             //Console.WriteLine("----------------");
