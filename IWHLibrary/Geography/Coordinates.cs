@@ -111,6 +111,28 @@ namespace Geography
 
         #endregion
 
+        #region "Расчеты для проекции Меркатора"
+
+        /// <summary>
+        /// Возвращает прямой пеленг заданной точки для проекции Меркатора.
+        /// </summary>
+        /// <param name="coordinates">Заданная точка</param>
+        public Angle MercatorBearing(Coordinates coordinates)
+        {
+            return GeodesyCalculator.MercatorBearing(this, coordinates);
+        }
+
+        /// <summary>
+        /// Возвращает удаление заданной точки для проекции Меркатора.
+        /// </summary>
+        /// <param name="coordinates">Заданная точка</param>
+        public Distance MercatorDistance(Coordinates coordinates)
+        {
+            return GeodesyCalculator.MercatorDistance(this, coordinates);
+        }
+
+        #endregion
+
         #region "Расчеты по ортодромии"
 
         /// <summary>
@@ -197,9 +219,50 @@ namespace Geography
     public static class GeodesyCalculator
     {
 
-        // Для расчетов использованы алгоритмы, опубликованные Ed Williams и Chris Veness
+        // Для расчетов, помимо прочего, использованы алгоритмы, опубликованные Ed Williams и Chris Veness
         // http://williams.best.vwh.net/avform.htm
         // http://www.movable-type.co.uk/scripts/latlong.html
+
+        #region "Расчеты для проекции Меркатора"
+
+        /// <summary>
+        /// Возвращает пеленг точки2 относительно точки1 по прямой для проекции Меркатора.
+        /// </summary>
+        /// <remarks>Для расчета обратного пеленга следует просто поменять параметры местами.</remarks>
+        public static Angle MercatorBearing(Coordinates coordinates1, Coordinates coordinates2)
+        {
+            return
+                new Angle(
+                    Math.Atan2(
+                        (coordinates2.Longitude.Radians - coordinates1.Longitude.Radians) * Math.Cos((coordinates1.Latitude.Radians + coordinates2.Latitude.Radians) / 2)
+                        ,
+                        coordinates2.Latitude.Radians - coordinates1.Latitude.Radians
+                    )
+                , Angle.Unit.Radians);
+        }
+
+        /// <summary>
+        /// Возвращает удаление точки2 от точки1 по прямой для проекции Меркатора.
+        /// </summary>
+        public static Distance MercatorDistance(Coordinates coordinates1, Coordinates coordinates2)
+        {
+            return 
+                new Distance(
+                    Math.Sqrt(
+                        Math.Pow(
+                            (coordinates2.Longitude.Radians - coordinates1.Longitude.Radians)
+                            *
+                            Math.Cos((coordinates1.Latitude.Radians + coordinates2.Latitude.Radians) / 2)
+                        , 2)
+                        +
+                        Math.Pow(
+                            coordinates2.Latitude.Radians - coordinates1.Latitude.Radians
+                        , 2)
+                    )
+                , Distance.Unit.Radians);
+        }
+
+        #endregion
 
         #region "Расчеты по ортодромии"
 

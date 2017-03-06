@@ -198,13 +198,13 @@ namespace IWHTest
                 gpsLeg = new IWH.Leg();
                 gpsLeg.StartNode = new IWH.Node() { Coordinates = gpsPoints[i].Coordinates };
                 gpsLeg.EndNode = new IWH.Node() { Coordinates = gpsPoints[i + 1].Coordinates };
-                gpsLeg.Direction = gpsLeg.StartNode.Coordinates.OrthodromicBearing(gpsLeg.EndNode.Coordinates);
-                gpsLeg.Lenght = gpsLeg.StartNode.Coordinates.OrthodromicDistance(gpsLeg.EndNode.Coordinates);
+                gpsLeg.Direction = gpsLeg.StartNode.Coordinates.MercatorBearing(gpsLeg.EndNode.Coordinates);
+                gpsLeg.Lenght = gpsLeg.StartNode.Coordinates.MercatorDistance(gpsLeg.EndNode.Coordinates);
                 // Вычисляем среднюю скорость движения
                 avrSpeedCouner.Add(gpsPoints[i + 1].Time-gpsPoints[i].Time, gpsLeg.Lenght);
                 gpsLeg.Speed = avrSpeedCouner.GetAverageSpeed();
                 // Проверяем нахождение текущей точки трека в радиусе загруженного кеша участков
-                if (cacheCenter.IsEmpty || cacheCenter.OrthodromicDistance(gpsPoint.Coordinates) + gpsLeg.Lenght > cacheRange)
+                if (cacheCenter.IsEmpty || cacheCenter.MercatorDistance(gpsPoint.Coordinates) + gpsLeg.Lenght > cacheRange)
                 {
                     // Устанавливаем центр кеша на текущую точку трека
                     cacheCenter = gpsPoint.Coordinates;
@@ -214,7 +214,7 @@ namespace IWHTest
                     {
                         foreach (var leg in way.Legs)
                         {
-                            if (cacheCenter.OrthodromicDistance(leg.StartNode.Coordinates) <= cacheRange)
+                            if (cacheCenter.MercatorDistance(leg.StartNode.Coordinates) <= cacheRange)
                                 cacheLegs.Add(leg);
                         }
                     }
@@ -226,7 +226,7 @@ namespace IWHTest
                     // Проверяем удаление точки трека и начальной точки участка пути
                     Boolean legIsVisited = false;
                     Distance maxDistance = Distance.FromMeters(Math.Sqrt( Math.Pow(gpsLeg.Lenght.Meters+leg.Lenght.Meters,2)+Math.Pow(MaximumVisitedOffset.Meters,2) )); 
-                    Distance factDistance = gpsPoint.Coordinates.OrthodromicDistance(leg.StartNode.Coordinates);
+                    Distance factDistance = gpsPoint.Coordinates.MercatorDistance(leg.StartNode.Coordinates);
                     // Для развязок простые правила
                     if (leg.Way.IsLink && factDistance < LinksVisitedDistance)
                     {
