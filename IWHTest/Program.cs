@@ -35,6 +35,7 @@ namespace IWHTest
             //    double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
             //    areaSpb.Points.Add(new Point(lat, lon, 0));
             //}
+            //areaSpb.Recalculate();
             //// Ленобласть
             //xml.Load(@"\Projects\IWasHere\Resources\RU-LEN_area.gpx");
             //prefix = new XmlNamespaceManager(xml.NameTable);
@@ -46,6 +47,7 @@ namespace IWHTest
             //    double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
             //    areaLen.Points.Add(new Point(lat, lon, 0));
             //}
+            //areaLen.Recalculate();
             //Console.WriteLine("Загрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
             //Console.WriteLine("----------------");
 
@@ -198,8 +200,8 @@ namespace IWHTest
                 gpsLeg = new IWH.Leg();
                 gpsLeg.StartNode = new IWH.Node() { Coordinates = gpsPoints[i].Coordinates };
                 gpsLeg.EndNode = new IWH.Node() { Coordinates = gpsPoints[i + 1].Coordinates };
-                gpsLeg.Direction = gpsLeg.StartNode.Coordinates.MercatorBearing(gpsLeg.EndNode.Coordinates);
-                gpsLeg.Lenght = gpsLeg.StartNode.Coordinates.MercatorDistance(gpsLeg.EndNode.Coordinates);
+                gpsLeg.Direction = gpsLeg.StartNode.Coordinates.OrthodromicBearing(gpsLeg.EndNode.Coordinates);
+                gpsLeg.Lenght = gpsLeg.StartNode.Coordinates.OrthodromicDistance(gpsLeg.EndNode.Coordinates);
                 // Вычисляем среднюю скорость движения
                 avrSpeedCouner.Add(gpsPoints[i + 1].Time-gpsPoints[i].Time, gpsLeg.Lenght);
                 gpsLeg.Speed = avrSpeedCouner.GetAverageSpeed();
