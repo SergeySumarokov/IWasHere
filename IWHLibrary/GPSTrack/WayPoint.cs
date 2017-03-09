@@ -1,43 +1,36 @@
 ﻿using System;
 using System.Xml;
+using System.Xml.Schema;
 using System.Xml.Serialization;
 using Geography;
 
 namespace GPS
 {
 
-    [System.Serializable, XmlType("wpt")]
-    public class WayPoint
+    [XmlRoot("wpt")]
+    public class WayPoint : GPS.GpxPoint, IXmlSerializable
     {
-        [XmlIgnore]
-        public Coordinates Coordinates;
 
-        [XmlAttribute("lat")]
-        public double Lat
-        {
-            get { return Coordinates.Latitude.Degrees; }
-            set { Coordinates.Latitude.Degrees = value; }
-        }
-
-        [XmlAttribute("lon")]
-        public double Lon
-        {
-            get { return Coordinates.Longitude.Degrees; }
-            set { Coordinates.Longitude.Degrees = value; }
-        }
-
-        [XmlIgnore, XmlElement("ele")]
-        public double Ele
-        {
-            get { return Coordinates.Altitude.Meters; }
-            set { Coordinates.Altitude.Meters = value; }
-        }
-
-        [XmlElement("name")]
         public string Name;
 
-        [XmlIgnore, XmlElement("time")]
         public DateTime Time;
+
+        #region "Реализация IXmlSerializable"
+
+        public new void ReadXml(XmlReader reader)
+        {
+            base.ReadXml(reader);
+            Name = reader.GetAttribute("name");
+        }
+
+        public new void WriteXml(XmlWriter writer)
+        {
+            base.WriteXml(writer);
+            if (!string.IsNullOrEmpty(Name))
+                writer.WriteElementString("name", Name);
+        }
+
+        #endregion
 
     }
 

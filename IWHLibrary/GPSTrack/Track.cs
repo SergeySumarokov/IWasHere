@@ -28,34 +28,28 @@ namespace GPS
         public TrackSegment() { Points = new List<TrackPoint>(); }
     }
 
-    [System.Serializable, XmlType("trkpt")]
-    public class TrackPoint
+    [XmlRoot("trkpt")]
+    public class TrackPoint : GPS.GpxPoint, IXmlSerializable
     {
-        [XmlIgnore]
-        public Coordinates Coordinates;
-
-        [XmlAttribute("lat")]
-        public double Lat
-        {
-            get { return Coordinates.Latitude.Degrees; }
-            set { Coordinates.Latitude.Degrees = value; }
-        }
-
-        [XmlAttribute("lon")]
-        public double Lon
-        {
-            get { return Coordinates.Longitude.Degrees; }
-            set { Coordinates.Longitude.Degrees = value; }
-        }
-
-        [XmlIgnore, XmlElement("ele")]
-        public double Ele
-        {
-            get { return Coordinates.Altitude.Meters; }
-            set { Coordinates.Altitude.Meters = value; }
-        }
-
-        [XmlIgnore, XmlElement("time")]
         public DateTime Time;
+
+        #region "Реализация IXmlSerializable"
+
+        public new void ReadXml(XmlReader reader)
+        {
+            base.ReadXml(reader);
+            string timeString = reader.GetAttribute("time");
+            if (!String.IsNullOrEmpty(timeString))
+                Time = DateTime.Parse(timeString, xmlFormatProvider);
+        }
+
+        public new void WriteXml(XmlWriter writer)
+        {
+            base.WriteXml(writer);
+            if (Time != DateTime.MinValue)
+                writer.WriteElementString("time", Time.ToString(xmlFormatProvider));
+        }
+
+        #endregion
     }
 }

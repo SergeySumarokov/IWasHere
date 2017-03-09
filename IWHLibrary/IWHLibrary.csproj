@@ -45,6 +45,7 @@
     <Compile Include="Geography\Point.cs" />
     <Compile Include="Geography\Way.cs" />
     <Compile Include="GPSTrack\Gpx.cs" />
+    <Compile Include="GPSTrack\GpxPoint.cs" />
     <Compile Include="GPSTrack\Track.cs" />
     <Compile Include="GPSTrack\WayPoint.cs" />
     <Compile Include="Primitives\Altitude.cs" />

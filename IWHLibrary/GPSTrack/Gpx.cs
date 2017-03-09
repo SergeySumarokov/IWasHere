@@ -61,8 +61,8 @@ namespace GPS
                             if (nodeTrkpt.Name == "trkpt")
                             {
                                 var pt = new TrackPoint();
-                                pt.Lat = double.Parse(nodeTrkpt.Attributes["lat"].Value, xmlFormatProvider);
-                                pt.Lon = double.Parse(nodeTrkpt.Attributes["lon"].Value, xmlFormatProvider);
+                                pt.LatitudeDeg = double.Parse(nodeTrkpt.Attributes["lat"].Value, xmlFormatProvider);
+                                pt.LongitudeDeg = double.Parse(nodeTrkpt.Attributes["lon"].Value, xmlFormatProvider);
                                 pt.Time = DateTime.Parse(nodeTrkpt["time"].InnerText, xmlFormatProvider);
                                 seg.Points.Add(pt);
                             }
