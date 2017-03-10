@@ -44,10 +44,10 @@
     <Compile Include="Geography\Leg.cs" />
     <Compile Include="Geography\Point.cs" />
     <Compile Include="Geography\Way.cs" />
-    <Compile Include="GPSTrack\Gpx.cs" />
-    <Compile Include="GPSTrack\GpxPoint.cs" />
-    <Compile Include="GPSTrack\Track.cs" />
-    <Compile Include="GPSTrack\WayPoint.cs" />
+    <Compile Include="GPS\Gpx.cs" />
+    <Compile Include="GPS\GpxPoint.cs" />
+    <Compile Include="GPS\Track.cs" />
+    <Compile Include="GPS\WayPoint.cs" />
     <Compile Include="Primitives\Altitude.cs" />
     <Compile Include="Primitives\Angle.cs" />
     <Compile Include="Primitives\AngularVelocity.cs" />

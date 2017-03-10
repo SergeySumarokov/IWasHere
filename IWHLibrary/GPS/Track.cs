@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Serialization;
-using Geography;
 
 namespace GPS
 {
@@ -19,6 +18,8 @@ namespace GPS
         public Track() {Segments = new List<TrackSegment>();}
     }
 
+
+
     [System.Serializable, XmlType("trkseg")]
     public class TrackSegment
     {
@@ -27,6 +28,8 @@ namespace GPS
 
         public TrackSegment() { Points = new List<TrackPoint>(); }
     }
+
+
 
     [XmlRoot("trkpt")]
     public class TrackPoint : GPS.GpxPoint, IXmlSerializable
@@ -37,10 +40,7 @@ namespace GPS
 
         public new void ReadXml(XmlReader reader)
         {
-            base.ReadXml(reader);
-            string timeString = reader.GetAttribute("time");
-            if (!String.IsNullOrEmpty(timeString))
-                Time = DateTime.Parse(timeString, xmlFormatProvider);
+            throw new System.NotSupportedException();
         }
 
         public new void WriteXml(XmlWriter writer)

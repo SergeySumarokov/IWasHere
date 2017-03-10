@@ -15,11 +15,14 @@ namespace GPS
     {
 
         /// <summary>
-        /// 
+        /// Список треков
         /// </summary>
         [XmlElement("trk")]
         public List<Track> Tracks { get; private set; }
 
+        /// <summary>
+        /// Список путевых точек
+        /// </summary>
         [XmlElement("wpt")]
         public List<WayPoint> WayPoints { get; private set; }
 
@@ -33,7 +36,7 @@ namespace GPS
         }
 
         /// <summary>
-        /// Возвращает экземпляр данными из xml-файла
+        /// Возвращает новый экземпляр с данными из xml-файла.
         /// </summary>
         /// <param name="fileName"></param>
         public static Gpx FromXmlFile(string fileName)
@@ -45,17 +48,17 @@ namespace GPS
             xml.Load(fileName);
             prefix = new XmlNamespaceManager(xml.NameTable);
             prefix.AddNamespace("prfx", xml.DocumentElement.NamespaceURI);
-            //foreach (XmlNode nodeTrk in xml.SelectNodes("//prfx:gpx/prfx:trk", prefix))
+            // Обходим треки
             foreach (XmlNode nodeTrk in xml.SelectNodes("//prfx:gpx/prfx:trk", prefix))
             {
                 var trk = new Track();
-                //foreach (XmlNode nodeTrkseg in nodeTrk.SelectNodes("//prfx:trkseg", prefix))
+                // Обходим сегменты трека
                 foreach (XmlNode nodeTrkseg in nodeTrk.ChildNodes)
                 {
                     if (nodeTrkseg.Name=="trkseg")
                     {
                         var seg = new TrackSegment();
-                        //foreach (XmlNode nodeTrkpt in nodeTrkseg.SelectNodes("//prfx:trkpt", prefix))
+                        // Обходим точки сегмента
                         foreach (XmlNode nodeTrkpt in nodeTrkseg.ChildNodes)
                         {
                             if (nodeTrkpt.Name == "trkpt")
@@ -63,7 +66,9 @@ namespace GPS
                                 var pt = new TrackPoint();
                                 pt.LatitudeDeg = double.Parse(nodeTrkpt.Attributes["lat"].Value, xmlFormatProvider);
                                 pt.LongitudeDeg = double.Parse(nodeTrkpt.Attributes["lon"].Value, xmlFormatProvider);
-                                pt.Time = DateTime.Parse(nodeTrkpt["time"].InnerText, xmlFormatProvider);
+                                XmlElement timeElement = nodeTrkpt["time"];
+                                if (timeElement != null)
+                                    pt.Time = DateTime.Parse(timeElement.InnerText, xmlFormatProvider);
                                 seg.Points.Add(pt);
                             }
                         }
@@ -98,13 +103,11 @@ namespace GPS
         /// <param name="fileName"></param>
         public void SaveToFile(string fileName)
         {
-
             var serializer = new XmlSerializer(typeof(GPS.Gpx));
             using (var fileStream = new  FileStream(fileName, FileMode.Create))
             {
                 serializer.Serialize(fileStream, this);
             }
-
         }
 
     }
