@@ -72,7 +72,7 @@ namespace IWHTest
             //    if (node.Type == IWH.NodeType.Village)
             //    {
             //        if (node.Population < 2014)
-            //            IwhMap.Nodes.Remove(node.Id);
+            //            IwhMap.Nodes.Remove(node.OsmId);
             //        else
             //            VillageCount++;
             //    }
@@ -198,10 +198,10 @@ namespace IWHTest
                 gpsPoint = gpsPoints[i];
                 // Вычисляем направление и длину участка трека
                 gpsLeg = new IWH.Leg();
-                gpsLeg.StartNode = new IWH.Node() { Coordinates = gpsPoints[i].Coordinates };
-                gpsLeg.EndNode = new IWH.Node() { Coordinates = gpsPoints[i + 1].Coordinates };
-                gpsLeg.Direction = gpsLeg.StartNode.Coordinates.OrthodromicBearing(gpsLeg.EndNode.Coordinates);
-                gpsLeg.Lenght = gpsLeg.StartNode.Coordinates.OrthodromicDistance(gpsLeg.EndNode.Coordinates);
+                gpsLeg.StartPoint = new IWH.Node() { Coordinates = gpsPoints[i].Coordinates };
+                gpsLeg.EndPoint = new IWH.Node() { Coordinates = gpsPoints[i + 1].Coordinates };
+                gpsLeg.Direction = gpsLeg.StartPoint.Coordinates.OrthodromicBearing(gpsLeg.EndPoint.Coordinates);
+                gpsLeg.Lenght = gpsLeg.StartPoint.Coordinates.OrthodromicDistance(gpsLeg.EndPoint.Coordinates);
                 // Вычисляем среднюю скорость движения
                 avrSpeedCouner.Add(gpsPoints[i + 1].Time-gpsPoints[i].Time, gpsLeg.Lenght);
                 gpsLeg.Speed = avrSpeedCouner.GetAverageSpeed();
@@ -216,7 +216,7 @@ namespace IWHTest
                     {
                         foreach (var leg in way.Legs)
                         {
-                            if (cacheCenter.MercatorDistance(leg.StartNode.Coordinates) <= cacheRange)
+                            if (cacheCenter.MercatorDistance(leg.StartPoint.Coordinates) <= cacheRange)
                                 cacheLegs.Add(leg);
                         }
                     }
@@ -228,7 +228,7 @@ namespace IWHTest
                     // Проверяем удаление точки трека и начальной точки участка пути
                     Boolean legIsVisited = false;
                     Distance maxDistance = Distance.FromMeters(Math.Sqrt( Math.Pow(gpsLeg.Lenght.Meters+leg.Lenght.Meters,2)+Math.Pow(MaximumVisitedOffset.Meters,2) )); 
-                    Distance factDistance = gpsPoint.Coordinates.MercatorDistance(leg.StartNode.Coordinates);
+                    Distance factDistance = gpsPoint.Coordinates.MercatorDistance(leg.StartPoint.Coordinates);
                     // Для развязок простые правила
                     if (leg.Way.IsLink && factDistance < LinksVisitedDistance)
                     {
@@ -314,14 +314,14 @@ namespace IWHTest
             {
 
                 // ??? debug
-                if (way.Id == 38179833)
+                if (way.OsmId == 38179833)
                 {
                     int f = 0;
                 }
 
                 GPS.Track newTrack = new GPS.Track();
                 // Определяем реквизиты трека
-                newTrack.Name = way.Name + " (" + way.Type.ToString() + " " + way.Id.ToString() + ")";
+                newTrack.Name = way.Name + " (" + way.Type.ToString() + " " + way.OsmId.ToString() + ")";
                 if (way.IsLink)
                     newTrack.Name += " Link";
                 if (way.OneWay)
@@ -343,13 +343,13 @@ namespace IWHTest
                     // Создаем новый сегмент для первого участка или
                     // если первая точка текущего участка не равна последней точке предыдущего
                     // Для первого участка добавляем обе точки, для остальных только конечную.
-                    if (i == 0 || !legs[i].StartNode.Equals(legs[i-1].EndNode))
+                    if (i == 0 || !legs[i].StartPoint.Equals(legs[i-1].EndPoint))
                     {
                         newTrack.Segments.Add(newTrackSegment);
                         newTrackSegment = new GPS.TrackSegment();
-                        newTrackSegment.Points.Add(new GPS.TrackPoint() { Coordinates = legs[i].StartNode.Coordinates });
+                        newTrackSegment.Points.Add(new GPS.TrackPoint() { Coordinates = legs[i].StartPoint.Coordinates });
                     }
-                    newTrackSegment.Points.Add(new GPS.TrackPoint() { Coordinates = legs[i].EndNode.Coordinates });
+                    newTrackSegment.Points.Add(new GPS.TrackPoint() { Coordinates = legs[i].EndPoint.Coordinates });
                 }
                 //
                 newTrack.Segments.Add(newTrackSegment);
@@ -370,11 +370,11 @@ namespace IWHTest
             var goodNodeTypeList = new List<IWH.NodeType> { IWH.NodeType.City, IWH.NodeType.Town, IWH.NodeType.Village };
             foreach (IWH.Node node in map.Nodes.Values)
             {
-                if (node.UseCount > 2)
+                if (node.Legs.Count > 2)
                 {
                     newWayPoint = new GPS.WayPoint();
                     newWayPoint.Coordinates = node.Coordinates;
-                    newWayPoint.Name = string.Format("{0} ({1})", node.Id, node.UseCount);
+                    newWayPoint.Name = string.Format("{0} ({1})", node.OsmId, node.Legs.Count);
                     gpx.WayPoints.Add(newWayPoint);
                 }
             }

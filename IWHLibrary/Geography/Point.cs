@@ -62,7 +62,7 @@ namespace Geography
         }
 
         /// <summary>
-        ///  Географическая долгота точки в метрах.
+        ///  Высота точки в метрах.
         /// </summary>
         public double AltitudeMt
         {

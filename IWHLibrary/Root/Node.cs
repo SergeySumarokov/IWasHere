@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using Primitives;
 using Geography;
 
 namespace IWH
@@ -28,25 +28,11 @@ namespace IWH
     /// A node represents a specific point on the earth's surface defined by its latitude and longitude.
     /// </remarks>
     [XmlRoot("node")]
-    public class Node : IXmlSerializable
+    public class Node : Geography.Point, IXmlSerializable
     {
 
         #region "Поля и свойства"
 
-        /// <summary>
-        /// Идентификатор узла OSM.
-        /// </summary>
-        /// <remarks>
-        /// 64-bit integer number.
-        /// Node ids are unique between nodes.
-        /// </remarks>
-        public Int64 Id;
-
-        /// <summary>
-        /// Количество вхождений в линии.
-        /// </summary>
-        public Int32 UseCount;
-        
         /// <summary>
         /// Геодезические координаты узла.
         /// </summary>
@@ -56,8 +42,22 @@ namespace IWH
         /// Longitude coordinate in degrees (East of Greenwich is positive) using the standard WGS84 projection.
         /// Decimal number ≥ −180.0000000 and ≤ 180.0000000 with 7 decimal places.
         /// </remarks>
-        public Coordinates Coordinates;
+        //public Coordinates Coordinates;
 
+        /// <summary>
+        /// Список участков, которые используют точку.
+        /// </summary>
+        public List<Leg> Legs;
+
+        /// <summary>
+        /// Идентификатор узла OSM.
+        /// </summary>
+        /// <remarks>
+        /// 64-bit integer number.
+        /// Node ids are unique between nodes.
+        /// </remarks>
+        public Int64 OsmId;
+        
         /// <summary>
         /// Тип точки.
         /// </summary>
@@ -85,11 +85,6 @@ namespace IWH
         /// </remarks>
         public Int32 Population;
 
-        /// <summary>
-        /// Радиус окружности, при входе в которую узел считается посещённым.
-        /// </summary>
-        public Distance Range;
-
         #endregion
 
         #region "Конструкторы"
@@ -99,6 +94,7 @@ namespace IWH
         /// </summary>
         public Node()
         {
+            Legs = new List<Leg>();
             Name = String.Empty;
         }
 
@@ -115,22 +111,29 @@ namespace IWH
 
         public void ReadXml(XmlReader reader)
         {
-            Name = reader.GetAttribute("name");
-            Type = (NodeType)Enum.Parse(typeof(NodeType), reader.GetAttribute("type"));
-            Population = Int32.Parse(reader.GetAttribute("pop"), xmlFormatProvider);
+            OsmId = Int64.Parse(reader.GetAttribute("id"), xmlFormatProvider);
             Coordinates.Latitude.Degrees = double.Parse(reader.GetAttribute("lat"), xmlFormatProvider);
             Coordinates.Longitude.Degrees = double.Parse(reader.GetAttribute("lon"), xmlFormatProvider);
-            Id = Int64.Parse(reader.GetAttribute("id"), xmlFormatProvider);
+            string typeString = reader.GetAttribute("type");
+            if (typeString != null)
+            {
+                Type = (NodeType)Enum.Parse(typeof(NodeType), typeString);
+                Name = reader.GetAttribute("name");
+                Population = Int32.Parse(reader.GetAttribute("pop"), xmlFormatProvider);
+            }
         }
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteAttributeString("name", Name.ToString(xmlFormatProvider));
-            writer.WriteAttributeString("type", Type.ToString());
-            writer.WriteAttributeString("pop", Population.ToString());
+            writer.WriteAttributeString("id", OsmId.ToString(xmlFormatProvider));
             writer.WriteAttributeString("lat", Coordinates.Latitude.Degrees.ToString(xmlFormatProvider));
             writer.WriteAttributeString("lon", Coordinates.Longitude.Degrees.ToString(xmlFormatProvider));
-            writer.WriteAttributeString("id", Id.ToString(xmlFormatProvider));
+            if (Type != NodeType.Waypoint)
+            {
+                writer.WriteAttributeString("type", Type.ToString());
+                writer.WriteAttributeString("name", Name.ToString(xmlFormatProvider));
+                writer.WriteAttributeString("pop", Population.ToString());
+            }
         }
 
         #endregion

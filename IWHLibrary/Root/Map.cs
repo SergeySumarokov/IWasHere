@@ -152,6 +152,7 @@ namespace IWH
                     XmlNode xmlWay = xmlDoc.SelectSingleNode("way");
                     var way = new Way();
                     // Аттрибуты
+                    way.OsmId = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
                     way.Name = xmlWay.Attributes["name"].Value;
                     way.Type = (HighwayType)Enum.Parse(typeof(HighwayType), xmlWay.Attributes["type"].Value);
                     way.IsLink = Boolean.Parse(xmlWay.Attributes["link"].Value);
@@ -162,40 +163,35 @@ namespace IWH
                     way.OneWay = Boolean.Parse(xmlWay.Attributes["oneway"].Value);
                     way.IsVisited = Boolean.Parse(xmlWay.Attributes["visited"].Value);
                     way.LastVisitedTime = DateTime.Parse(xmlWay.Attributes["last"].Value, xmlFormatProvider);
-                    way.Id = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
                     // Точки
+                    Node point;
+                    Leg newLeg = null;
                     XmlNodeList xmlRefs = xmlDoc.SelectNodes("/way/ref");
                     for (int i = 0; i < xmlRefs.Count; i++)
                     {
                         XmlNode xmlRef = xmlRefs[i];
-                        Int64 id = Int64.Parse(xmlRef.Attributes["id"].Value, xmlFormatProvider);
-                        Node node = Nodes[id]; // Должна существовать
-                        way.Nodes.Add(node);
-                        // Для второй и последующих точек создаём участки
-                        if (i > 0)
+                        point = Nodes[Int64.Parse(xmlRef.Attributes["id"].Value, xmlFormatProvider)];
+                        // Для всех точек кроме последней создаём новые участки
+                        if (i < xmlRefs.Count-1)
                         {
-                            Leg newLeg = new Leg();
+                            newLeg = new Leg();
                             newLeg.Way = way;
-                            newLeg.Number = way.Legs.Count + 1;
-                            newLeg.StartNode = way.Nodes[i-1];
-                            newLeg.EndNode = way.Nodes[i];
-                            newLeg.Direction = newLeg.StartNode.Coordinates.OrthodromicBearing(newLeg.EndNode.Coordinates);
-                            newLeg.Lenght = newLeg.StartNode.Coordinates.OrthodromicDistance(newLeg.EndNode.Coordinates);
+                            newLeg.StartPoint = point;
+                            newLeg.StartPoint.Legs.Add(newLeg);
                             newLeg.IsVisited = Boolean.Parse(xmlRef.Attributes["visited"].Value);
                             newLeg.VisitedCount = Int32.Parse(xmlRef.Attributes["count"].Value, xmlFormatProvider);
                             newLeg.LastVisitedTime = DateTime.Parse(xmlRef.Attributes["last"].Value, xmlFormatProvider);
                             way.Legs.Add(newLeg);
-
                         }
-                        // Увеличиваем счетчик использования существующих точек, для не первой и не последней - еще раз
-                        Nodes[node.Id].UseCount++;
-                        if (!(i == 0 || i == xmlRefs.Count - 1))
-                            Nodes[node.Id].UseCount++;
-                        // Устанавливаем увеличенный радиус для точек, входящих в _link
-                        if (way.IsLink)
-                            node.Range = new Distance(0.2, Distance.Unit.Kilometers);
+                        // Для всех точек кроме первой задаём её концом предыдущего участка
+                        if (i > 0)
+                        {
+                            way.Legs[i-1].EndPoint = point;
+                            way.Legs[i-1].EndPoint.Legs.Add(way.Legs[i-1]);
+                            way.Legs[i-1].Recalculate();
+                        }
                     }
-                    Ways.Add(way.Id, way);
+                    Ways.Add(way.OsmId, way);
                 }
                 else
                 {
@@ -203,15 +199,14 @@ namespace IWH
                     {
                         // Точки
                         var node = (Node)nodeSerializer.Deserialize(reader);
-                        if (node.Range.IsEmpty)
-                            node.Range = new Distance(0.05, Distance.Unit.Kilometers);
-                        Nodes.Add(node.Id, node);
+                        Nodes.Add(node.OsmId, node);
                     }
                     reader.Read();
                 }
             }
 
         }
+
 
         public void WriteXml(XmlWriter writer)
         {
@@ -241,6 +236,7 @@ namespace IWH
         /// <summary>
         /// Загружает в экземпляр данные из osm-файла.
         /// </summary>
+        /// <remarks>Требуется последущий пересчет участков и линий.</remarks>
         public void LoadFromOsm(string osmFileName, Area IncludedArea, Area ExcludedArea)
         {
 
@@ -259,14 +255,6 @@ namespace IWH
 
             // Корректируем типы линий ??? - это очень некрасивая времянка
             //FixLenRouteType();
-
-            // Формируем участки
-            foreach (Way way in Ways.Values)
-                for (int i = 0; i<way.Nodes.Count-1; i++)
-                    way.Legs.Add(new Leg() { StartNode = way.Nodes[i], EndNode = way.Nodes[i + 1] });
-            
-            // Пересчитываем
-            Recalculate();
 
         }
 
@@ -319,7 +307,7 @@ namespace IWH
                                 break;
                         }
                         // Определяем другие реквизиты линии
-                        newWay.Id = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
+                        newWay.OsmId = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
                         if (tags.ContainsKey("name"))
                             newWay.Name = tags["name"];
                         if (tags.ContainsKey("lit"))
@@ -369,6 +357,7 @@ namespace IWH
                         }
                         // Загружаем идентификаторы узлов
                         Node newNode;
+                        List<Node> wayNodes = new List<Node>();
                         foreach (XmlNode xmlNd in xmlDoc.SelectNodes("/way/nd"))
                         {
                             Int64 id = Int64.Parse(xmlNd.Attributes["ref"].Value, xmlFormatProvider);
@@ -378,13 +367,22 @@ namespace IWH
                             }
                             else
                             {
-                                newNode = new Node() { Id = id };
-                                Nodes.Add(newNode.Id, newNode);
+                                newNode = new Node() { OsmId = id };
+                                Nodes.Add(newNode.OsmId, newNode);
                             }
-                            newWay.Nodes.Add(newNode);
+                            wayNodes.Add(newNode);
+                        }
+                        // Создаём участки
+                        Leg newLeg;
+                        for (int i = 0; i < wayNodes.Count-1; i++)
+                        {
+                            newLeg = new Leg();
+                            newLeg.StartPoint = wayNodes[i];
+                            newLeg.EndPoint = wayNodes[i + 1];
+                            newWay.Legs.Add(newLeg);
                         }
                         // Сохраняем нужную линию
-                        Ways.Add(newWay.Id, newWay);
+                        Ways.Add(newWay.OsmId, newWay);
                     }
                     // Линия отработана
                 }
@@ -430,7 +428,7 @@ namespace IWH
                         // Создаем новую и добавляем в список, если не была загружена ранее как узел линии
                         if (newNode == null)
                         {
-                            newNode = new Node() { Id = id };
+                            newNode = new Node() { OsmId = id };
                             Nodes.Add(id, newNode);
                         }
                         // Заполняем специфичные для населенного пункта данные
@@ -471,21 +469,20 @@ namespace IWH
             // Удаляем точки вне заданной области из общего массива точек
             foreach (Node node in Nodes.Values.ToList())
             {
-                Point nodePoint = new Point(node.Coordinates);
-                if (ExcludedArea.HasPointInside(nodePoint) || !IncludedArea.HasPointInside(nodePoint))
-                    Nodes.Remove(node.Id);
+                if (ExcludedArea.HasPointInside(node) || !IncludedArea.HasPointInside(node))
+                    Nodes.Remove(node.OsmId);
             }
-            // Удаляем у линий точки, отсутствующие в общем массиве
-            // и удаляем из общего массива саму линию, если в ней мешьше двух точек
+            // Удаляем у линий участки, точки которых отсутствующие в общем массиве
+            // и удаляем из общего массива саму линию, если в ней нет участков
             foreach (Way way in Ways.Values.ToList())
             {
-                foreach (Node node in way.Nodes.ToList())
+                foreach (Leg leg in way.Legs.ToList())
                 {
-                    if (!Nodes.ContainsKey(node.Id))
-                        way.Nodes.Remove(node);
+                    if (!Nodes.ContainsKey(leg.StartPoint.OsmId) || !Nodes.ContainsKey(leg.EndPoint.OsmId))
+                        way.Legs.Remove(leg);
                 }
-                if (way.Nodes.Count < 2)
-                    Ways.Remove(way.Id);
+                if (way.Legs.Count == 0)
+                    Ways.Remove(way.OsmId);
             }
 
         }

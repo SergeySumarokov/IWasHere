@@ -48,7 +48,7 @@ namespace IWH
     /// Описание полей относится к линиям, представляющим дороги.
     /// </remarks>
     [XmlRoot("way")]
-    public class Way : IXmlSerializable
+    public class Way : Geography.Way, IXmlSerializable
     {
 
         #region "Поля и свойства"
@@ -56,7 +56,7 @@ namespace IWH
         /// <summary>
         /// Идентификатор OSM.
         /// </summary>
-        public Int64 Id;
+        public Int64 OsmId;
 
         /// <summary>
         /// Тип дороги.
@@ -138,12 +138,12 @@ namespace IWH
         /// <summary>
         /// Упорядоченный список узлов (точек) линии.
         /// </summary>
-        public List<Node> Nodes { get; private set; }
+        //public List<Node> Points { get; private set; }
 
         /// <summary>
         /// Упорядоченный список участков пути.
         /// </summary>
-        public List<Leg> Legs { get; private set; }
+        public List<Leg> Legs { get; set; }
 
         #endregion
 
@@ -155,7 +155,6 @@ namespace IWH
         public Way()
         {
             Name = String.Empty;
-            Nodes = new List<Node>();
             Legs = new List<Leg>();
         }
 
@@ -207,6 +206,7 @@ namespace IWH
         public void WriteXml(XmlWriter writer)
         {
             // Линия
+            writer.WriteAttributeString("id", OsmId.ToString(xmlFormatProvider));
             writer.WriteAttributeString("name", Name.ToString(xmlFormatProvider));
             writer.WriteAttributeString("type", Type.ToString());
             writer.WriteAttributeString("link", IsLink.ToString());
@@ -217,24 +217,23 @@ namespace IWH
             writer.WriteAttributeString("lanes", Lanes.ToString());
             writer.WriteAttributeString("visited", IsVisited.ToString(xmlFormatProvider));
             writer.WriteAttributeString("last", LastVisitedTime.ToString(xmlFormatProvider));
-            writer.WriteAttributeString("id", Id.ToString(xmlFormatProvider));
-            // Первая точка
-            WiteXml_WriteNode(writer, null, Legs[0].StartNode);
-            // Остальные точки
-            foreach (Leg leg in Legs)
+            // Первые точки участков
+            for (int i=0; i<Legs.Count; i++)
             {
-                WiteXml_WriteNode(writer, leg, leg.EndNode);
+                WriteXml_WriteNode(writer, Legs[i], Legs[i].StartPoint);
             }
+            // Последняя точка
+            WriteXml_WriteNode(writer, null, Legs[Legs.Count-1].EndPoint);
         }
 
-        private void WiteXml_WriteNode(XmlWriter writer, Leg leg, Node node)
+        private void WriteXml_WriteNode(XmlWriter writer, Leg leg, Node node)
         {
             writer.WriteStartElement("ref");
-            writer.WriteAttributeString("id", node.Id.ToString(xmlFormatProvider));
+            writer.WriteAttributeString("id", node.OsmId.ToString(xmlFormatProvider));
             if (leg != null)
             {
                 writer.WriteAttributeString("visited", leg.IsVisited.ToString(xmlFormatProvider));
-                writer.WriteAttributeString("count", leg.VisitedCount.ToString());
+                writer.WriteAttributeString("count", leg.VisitedCount.ToString(xmlFormatProvider));
                 writer.WriteAttributeString("last", leg.LastVisitedTime.ToString(xmlFormatProvider));
             }
             writer.WriteEndElement();

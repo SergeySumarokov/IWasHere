@@ -50,14 +50,16 @@ namespace Geography
         /// Возвращает Истину если заданная точка находится внутри области или на ее границе.
         /// </summary>
         /// <param name="pointCoordinates"></param>
-        /// <returns></returns>
+        /// <remarks>Не будет работать, если область пересекается мередианом 180.</remarks>
         public bool HasPointInside(Point point)
         {
+            // Сначала проверяем на вхождение в прямоугольную область
             if (point.Coordinates.Latitude < _minPoint.Latitude ||
                 point.Coordinates.Latitude > _maxPoint.Latitude ||
                 point.Coordinates.Longitude < _minPoint.Longitude ||
                 point.Coordinates.Longitude > _maxPoint.Longitude)
             { return false; }
+            // и только после этого проводим точную проверку
             else
             { return IsPointInArea(Points, point); }
         }
@@ -65,7 +67,7 @@ namespace Geography
         /// <summary>
         /// Возвращает истину, если заданная точка находится внутри заданной области.
         /// </summary>
-        /// <returns>Не будет работать, если область пересекается мередианом 180.</returns>
+        /// <remarks>Не будет работать, если область пересекается мередианом 180.</remarks>
         public static bool IsPointInArea(List<Point> areaPoints, Point testPoint)
         {
 

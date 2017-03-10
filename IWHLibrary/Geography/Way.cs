@@ -10,8 +10,7 @@ namespace Geography
     public class Way
     {
 
-        public List<Leg> Legs { get; private set; }
-
+        public List<Leg> Legs { get; protected set; }
 
         public Way()
         {
