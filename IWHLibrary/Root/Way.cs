@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Schema;
@@ -185,6 +186,22 @@ namespace IWH
             }
             AverageSpeed = VisitedLenght / visitedTime;
             IsVisited = Lenght.AlmostEquals(VisitedLenght);
+        }
+
+        /// <summary>
+        /// Разделяет путь на два. Указанное количество участков от начала пути переносится в новый путь.
+        /// </summary>
+        /// <param name="legsToCut"></param>
+        /// <returns></returns>
+        public Way CutLegs(int legsToCut)
+        {
+            Way result = (Way)this.MemberwiseClone();
+            result.Legs = this.Legs.ToList();
+            result.Legs.RemoveRange(legsToCut, this.Legs.Count - legsToCut);
+            result.Recalculate();
+            this.Legs.RemoveRange(0, legsToCut);
+            this.Recalculate();
+            return result;
         }
 
         #endregion

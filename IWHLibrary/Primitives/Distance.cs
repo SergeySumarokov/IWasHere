@@ -205,6 +205,11 @@ namespace Primitives
             return new Distance(distance.Value * value);
         }
 
+        public static double operator /(Distance distance1, Distance distance2)
+        {
+            return (distance1.Value / distance2.Value);
+        }
+
         public static Distance operator /(Distance distance, double value)
         {
             return new Distance(distance.Value / value);

@@ -27,9 +27,9 @@ namespace IWH
         public Dictionary<Int64, Node> Nodes { get; private set; }
 
         /// <summary>
-        /// Индексированный список линий.
+        /// Cписок линий.
         /// </summary>
-        public Dictionary<Int64, Way> Ways { get; private set; }
+        public List<Way> Ways { get; private set; }
 
         /// <summary>
         /// Общая протяженность обязательных линий.
@@ -61,7 +61,7 @@ namespace IWH
         public Map()
         {
             Nodes = new Dictionary<Int64, Node>();
-            Ways = new Dictionary<Int64, Way>();
+            Ways = new List<Way>();
         }
 
         #endregion
@@ -78,7 +78,7 @@ namespace IWH
             TotalVisitedLenght = Distance.Zero;
             TargetLenght = Distance.Zero;
             TargetVisitedLenght = Distance.Zero;
-            foreach (Way way in Ways.Values)
+            foreach (Way way in Ways)
             {
                 // Пересчитываем линию
                 way.Recalculate();
@@ -91,6 +91,92 @@ namespace IWH
                 TotalVisitedLenght += way.VisitedLenght;
             }
 
+        }
+
+        /// <summary>
+        /// Разделяет существующие пути по точкам, являющимся перекрестками
+        /// </summary>
+        public void DivideWaysByCrossroads()
+        {
+            // Работаем с копией списка, потому что оригинал будем править
+            foreach (Way way in Ways.ToList())
+            {
+                int legIndex = int.MaxValue;
+                while (legIndex > 0)
+                {
+                    legIndex = GetFirstLegAfterCrossroad(way);
+                    if (legIndex > 0)
+                    {
+                        Way newWay = way.CutLegs(legIndex);
+                        Ways.Add(newWay);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Возвращает индекс первого участка пути за перекрестком или -1, если перекрестков нет
+        /// </summary>
+        /// <param name=""></param>
+        /// <returns></returns>
+        private int GetFirstLegAfterCrossroad(Way way)
+        {
+            int result = -1;
+            // Проверяем со второго участка, потому что начинать путь с перекрестка - это нормально
+            for (int i=1; i<way.Legs.Count; i++)
+            {
+                // Если начальная точка участка участвует больше чем в двух участках - это участок за перекрестком
+                if (way.Legs[i].StartPoint.Legs.Count > 2)
+                {
+                    result = i;
+                    break;
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Разделяет существующие пути максимальной длине
+        /// </summary>
+        public void DivideWaysByLenght()
+        {
+            Distance maxLenght = Distance.FromKilometers(4);
+            int minLegsCount = 2;
+            // Работаем с копией списка, потому что оригинал будем править
+            foreach (Way way in Ways.ToList())
+            {
+                Distance maxThisWaylenght = way.Lenght / (Math.Floor(way.Lenght / maxLenght)+1);
+                while (way.Lenght > maxThisWaylenght && way.Legs.Count >= minLegsCount)
+                {
+                    int legIndex = GetFirstLegByLenght(way, maxThisWaylenght);
+                    if (legIndex >= 0)
+                    {
+                        Way newWay = way.CutLegs(legIndex+1);
+                        Ways.Add(newWay);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Возвращает индекс первого участка пути, на котором путь превышает заданную длину
+        /// </summary>
+        /// <param name=""></param>
+        /// <returns></returns>
+        private int GetFirstLegByLenght(Way way, Distance maxLenght)
+        {
+            Distance segmentLenght = Distance.Zero;
+            int result = -1;
+            for (int i = 0; i < way.Legs.Count; i++)
+            {
+                segmentLenght += way.Legs[i].Lenght;
+                if (segmentLenght > maxLenght)
+                {
+                    result = i;
+                    break;
+                }
+            }
+            return result;
         }
 
         /// <summary>
@@ -191,7 +277,7 @@ namespace IWH
                             way.Legs[i-1].Recalculate();
                         }
                     }
-                    Ways.Add(way.OsmId, way);
+                    Ways.Add(way);
                 }
                 else
                 {
@@ -222,7 +308,7 @@ namespace IWH
                 nodeSerializer.Serialize(writer, node);
             }
             // Линии
-            foreach (Way way in Ways.Values)
+            foreach (Way way in Ways)
             {
                 waySerializer.Serialize(writer, way);
             }
@@ -382,7 +468,7 @@ namespace IWH
                             newWay.Legs.Add(newLeg);
                         }
                         // Сохраняем нужную линию
-                        Ways.Add(newWay.OsmId, newWay);
+                        Ways.Add(newWay);
                     }
                     // Линия отработана
                 }
@@ -474,7 +560,7 @@ namespace IWH
             }
             // Удаляем у линий участки, точки которых отсутствующие в общем массиве
             // и удаляем из общего массива саму линию, если в ней нет участков
-            foreach (Way way in Ways.Values.ToList())
+            foreach (Way way in Ways.ToList())
             {
                 foreach (Leg leg in way.Legs.ToList())
                 {
@@ -482,44 +568,44 @@ namespace IWH
                         way.Legs.Remove(leg);
                 }
                 if (way.Legs.Count == 0)
-                    Ways.Remove(way.OsmId);
+                    Ways.Remove(way);
             }
 
         }
 
-        /// <summary>
-        /// Корректировка ненормальных типов линиц в восточнее Лодейного поля
-        /// </summary>
-        private void FixLenRouteType()
-        {
-            Int64[] FixIDs = 
-            {
-                145393611,
-                150898900,
-                150898894,
-                227455595,
-                102952820,
-                102952836,
-                227455596,
-                102970752,
-                102970770,
-                409850284,
-                409850285,
-                199884323,
-                93895824,
-                107851192,
-                107851203,
-                227455594,
-                107851196,
-                107851208,
-                107851200,
-                107851131
-            };
-            foreach (Int64 Id in FixIDs)
-            {
-                Ways[Id].Type = HighwayType.Tertiary;
-            }
-        }
+        ///// <summary>
+        ///// Корректировка ненормальных типов линиц в восточнее Лодейного поля
+        ///// </summary>
+        //private void FixLenRouteType()
+        //{
+        //    Int64[] FixIDs = 
+        //    {
+        //        145393611,
+        //        150898900,
+        //        150898894,
+        //        227455595,
+        //        102952820,
+        //        102952836,
+        //        227455596,
+        //        102970752,
+        //        102970770,
+        //        409850284,
+        //        409850285,
+        //        199884323,
+        //        93895824,
+        //        107851192,
+        //        107851203,
+        //        227455594,
+        //        107851196,
+        //        107851208,
+        //        107851200,
+        //        107851131
+        //    };
+        //    foreach (Int64 Id in FixIDs)
+        //    {
+        //        Ways[Id].Type = HighwayType.Tertiary;
+        //    }
+        //}
 
         #endregion
 

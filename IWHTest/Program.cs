@@ -95,7 +95,21 @@ namespace IWHTest
             Console.WriteLine("Загрузка базы данных...");
             stopwatch.Restart();
             IwhMap = IWH.Map.ReadFromXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
+            IwhMap.Recalculate();
             Console.WriteLine("Загрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
+            Console.WriteLine("Длина {0}км, Посещено {1}км ({2}%)",
+                Math.Round(IwhMap.TotalLenght.Kilometers, 1),
+                Math.Round(IwhMap.TotalVisitedLenght.Kilometers, 1),
+                Math.Round(IwhMap.TotalVisitedLenght.Kilometers / IwhMap.TotalLenght.Kilometers * 100, 2));
+            Console.WriteLine("----------------");
+
+            Console.WriteLine("Корректировка путей...");
+            stopwatch.Restart();
+            IwhMap.DivideWaysByCrossroads();
+            IwhMap.DivideWaysByLenght();
+            IwhMap.Recalculate();
+            Console.WriteLine("Корректировка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
             Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
             Console.WriteLine("Длина {0}км, Посещено {1}км ({2}%)",
                 Math.Round(IwhMap.TotalLenght.Kilometers, 1),
@@ -115,7 +129,7 @@ namespace IWHTest
                 Console.WriteLine("Анализ файла {0}", trackFile.Name);
                 GPS.Gpx gpxTrack = GPS.Gpx.FromXmlFile(trackFile.FullName);
                 Distance cacheRange = Distance.FromKilometers(4);
-                AnalizeGpsTrack(IwhMap.Ways.Values.ToList(), gpxTrack.GetPointList(), cacheRange, false);
+                AnalizeGpsTrack(IwhMap.Ways, gpxTrack.GetPointList(), cacheRange, false);
             }
             Console.WriteLine("Анализ выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
             // Пересчитываем
@@ -131,6 +145,8 @@ namespace IWHTest
                 Math.Round(IwhMap.TargetVisitedLenght.Kilometers / IwhMap.TargetLenght.Kilometers * 100, 2));
             Console.WriteLine("----------------");
 
+            //SelectWaysStat(IwhMap.Ways);
+
             //// Записываем базу
 
             //Console.WriteLine("Сохранение базы данных...");
@@ -143,14 +159,14 @@ namespace IWHTest
 
             Console.WriteLine("Выгрузка GPS-трека...");
             stopwatch.Restart();
-            MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.HighwayType>() { IWH.HighwayType.Motorway, IWH.HighwayType.Trunk }), false, @"\Projects\IWasHere\Resources\Way_Primary.gpx");
-            MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.HighwayType>() { IWH.HighwayType.Primary, IWH.HighwayType.Secondary }), false, @"\Projects\IWasHere\Resources\Way_Secondary.gpx");
-            MapToGpx(WaysByType(IwhMap.Ways.Values.ToList(), new List<IWH.HighwayType>() { IWH.HighwayType.Tertiary }), false, @"\Projects\IWasHere\Resources\Way_Tertiary.gpx");
-            MapToGpx(IwhMap.Ways.Values.ToList(), true, @"\Projects\IWasHere\Resources\Way_Visited.gpx");
-            MapToGpx(WaysBySpeed(IwhMap.Ways.Values.ToList(), Speed.FromKilometersPerHour(5), Speed.FromKilometersPerHour(25)), true, @"\Projects\IWasHere\Resources\Way_Visited_25kmh.gpx");
-            MapToGpx(WaysBySpeed(IwhMap.Ways.Values.ToList(), Speed.FromKilometersPerHour(25), Speed.FromKilometersPerHour(50)), true, @"\Projects\IWasHere\Resources\Way_Visited_50kmh.gpx");
-            MapToGpx(WaysBySpeed(IwhMap.Ways.Values.ToList(), Speed.FromKilometersPerHour(50), Speed.FromKilometersPerHour(85)), true, @"\Projects\IWasHere\Resources\Way_Visited_85kmh.gpx");
-            MapToGpx(WaysBySpeed(IwhMap.Ways.Values.ToList(), Speed.FromKilometersPerHour(85), Speed.FromKilometersPerHour(200)), true, @"\Projects\IWasHere\Resources\Way_Visited_99kmh.gpx");
+            MapToGpx(WaysByType(IwhMap.Ways, new List<IWH.HighwayType>() { IWH.HighwayType.Motorway, IWH.HighwayType.Trunk }), false, @"\Projects\IWasHere\Resources\Way_Primary.gpx");
+            MapToGpx(WaysByType(IwhMap.Ways, new List<IWH.HighwayType>() { IWH.HighwayType.Primary, IWH.HighwayType.Secondary }), false, @"\Projects\IWasHere\Resources\Way_Secondary.gpx");
+            MapToGpx(WaysByType(IwhMap.Ways, new List<IWH.HighwayType>() { IWH.HighwayType.Tertiary }), false, @"\Projects\IWasHere\Resources\Way_Tertiary.gpx");
+            MapToGpx(IwhMap.Ways, true, @"\Projects\IWasHere\Resources\Way_Visited.gpx");
+            MapToGpx(WaysBySpeed(IwhMap.Ways, Speed.FromKilometersPerHour(5), Speed.FromKilometersPerHour(25)), true, @"\Projects\IWasHere\Resources\Way_Visited_25kmh.gpx");
+            MapToGpx(WaysBySpeed(IwhMap.Ways, Speed.FromKilometersPerHour(25), Speed.FromKilometersPerHour(50)), true, @"\Projects\IWasHere\Resources\Way_Visited_50kmh.gpx");
+            MapToGpx(WaysBySpeed(IwhMap.Ways, Speed.FromKilometersPerHour(50), Speed.FromKilometersPerHour(85)), true, @"\Projects\IWasHere\Resources\Way_Visited_85kmh.gpx");
+            MapToGpx(WaysBySpeed(IwhMap.Ways, Speed.FromKilometersPerHour(85), Speed.FromKilometersPerHour(200)), true, @"\Projects\IWasHere\Resources\Way_Visited_99kmh.gpx");
             CrossroadsToGpx(IwhMap, @"\Projects\IWasHere\Resources\Way_Crossroads.gpx");
             stopwatch.Stop();
             Console.WriteLine("Выгрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
@@ -404,6 +420,7 @@ namespace IWHTest
             return result;
         }
 
+        
         // Это было нужно, чтобы выбрать из базы ОСМ все типы тегов по дорогам и наспунктам
         static void SelectOsmAttributes(string[] args)
         //static void Main(string[] args)
@@ -455,6 +472,21 @@ namespace IWHTest
 
             Console.WriteLine("Done. Press [Enter] to exit.");
             Console.ReadLine();
+        }
+
+        // Это было нужно, чтобы собрать статистику по количеству точек и длине загруженных линий
+        static void SelectWaysStat(List<IWH.Way> Ways)
+        {
+            StreamWriter csv = new StreamWriter(new FileStream(@"\Projects\IWasHere\Resources\WaysStat.csv", FileMode.Create));
+            IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-US");
+            foreach (IWH.Way way in Ways)
+            {
+                csv.WriteLine("{0};{1};{2};{3}",
+                    way.OsmId, way.Name, way.Legs.Count, way.Lenght.Kilometers
+                );
+
+            }
+            csv.Close();
         }
 
     }
