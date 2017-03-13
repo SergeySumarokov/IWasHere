@@ -146,6 +146,42 @@ namespace IWH
         /// </summary>
         public List<Leg> Legs { get; set; }
 
+        /// <summary>
+        /// Возвращает первый участок пути
+        /// </summary>
+        public Leg FirstLeg
+        {
+            get { return Legs[0]; }
+            private set { }
+        }
+
+        /// <summary>
+        /// Возвращает последний участок пути
+        /// </summary>
+        public Leg LastLeg
+        {
+            get { return Legs[Legs.Count-1]; }
+            private set { }
+        }
+
+        /// <summary>
+        /// Возвращает первую точку пути
+        /// </summary>
+        public Node FirstPoint
+        {
+            get { return FirstLeg.StartPoint; }
+            private set { }
+        }
+
+        /// <summary>
+        /// Возвращает последщюю точку пути
+        /// </summary>
+        public Node LastPoint
+        {
+            get { return LastLeg.EndPoint; }
+            private set { }
+        }
+
         #endregion
 
         #region "Конструкторы"
@@ -202,6 +238,29 @@ namespace IWH
             this.Legs.RemoveRange(0, legsToCut);
             this.Recalculate();
             return result;
+        }
+
+
+        /// <summary>
+        /// Присоединяет заданный путь.
+        /// </summary>
+        /// <param name="way"></param>
+        public void CombineLegs (Way attachedWay)
+        {
+            // Определяем каким концом присоединять
+            if (FirstPoint.Equals(attachedWay.LastLeg))
+            {
+                // Присоединяем путь перед
+                List<Leg> tempLegs = new List<Leg>(attachedWay.Legs);
+                tempLegs.AddRange(Legs);
+                Legs = tempLegs;
+            }
+            else
+            {
+                // Присоединяем путь после
+                Legs.AddRange(attachedWay.Legs);
+            }
+            Recalculate();
         }
 
         #endregion

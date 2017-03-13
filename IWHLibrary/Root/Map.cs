@@ -180,6 +180,71 @@ namespace IWH
         }
 
         /// <summary>
+        /// Объединяет слишком короткии пути со смежными
+        /// </summary>
+        public void CombineShortWaysWithAdjacent()
+        {
+            Distance maxWayLenght = Distance.FromKilometers(1);
+            int maxLegsCount = 2;
+            // Объединяем в случае совпадения параметров и направлений
+            foreach (Way way in Ways.ToList())
+            {
+                if (way.Lenght <= maxWayLenght && way.Legs.Count <= maxLegsCount)
+                {
+                    // Сначала проверяем первую точку пути
+                    Leg goodLeg = CheckPointForPossibilityCombining(way.FirstPoint, way.FirstLeg);
+                    if (goodLeg != null)
+                    {
+                        goodLeg.Way.CombineLegs(way);
+                        Ways.Remove(way);
+                    }
+
+                    // Потом, если не получилось, проверяем последнюю точку пути
+                    if (goodLeg == null)
+                    {
+                        goodLeg = CheckPointForPossibilityCombining(way.LastPoint, way.LastLeg);
+                        if (goodLeg != null)
+                        {
+                            goodLeg.Way.CombineLegs(way);
+                            Ways.Remove(way);
+                        }
+                    }
+
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// Возвращает участок, к которому возможно присоединить заданный участок или null если такого нет
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="sourceLeg"></param>
+        /// <returns></returns>
+        private Leg CheckPointForPossibilityCombining(Node node, Leg sourceLeg)
+        {
+            Angle maxLegDirectionDeviation = Angle.FromDegrees(5);
+            Leg result = null;
+            if (node.Legs.Count > 1)
+            {
+                foreach (Leg leg in node.Legs)
+                {
+                    if (
+                        !leg.Equals(sourceLeg)
+                        && (leg.Direction-sourceLeg.Direction).Cos() > maxLegDirectionDeviation.Cos()
+                        && leg.Way.Type == sourceLeg.Way.Type
+                        && leg.Way.Name == sourceLeg.Way.Name
+                        )
+                    {
+                        result = leg;
+                        break;
+                    }
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
         /// Возвращает новый экземпляр с данными, загруженными из xml-файла.
         /// </summary>
         /// <param name="fileName"></param>

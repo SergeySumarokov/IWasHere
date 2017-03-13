@@ -106,6 +106,7 @@ namespace IWHTest
 
             Console.WriteLine("Корректировка путей...");
             stopwatch.Restart();
+            IwhMap.CombineShortWaysWithAdjacent();
             IwhMap.DivideWaysByCrossroads();
             IwhMap.DivideWaysByLenght();
             IwhMap.Recalculate();
