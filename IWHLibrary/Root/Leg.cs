@@ -30,44 +30,28 @@ namespace IWH
         }
 
         /// <summary>
-        /// Направление участка
-        /// </summary>
-        //public Angle Direction;
-
-        /// <summary>
-        /// Протяженность участка
-        /// </summary>
-        //public Distance Lenght;
-
-        /// <summary>
         /// Ссылка на путь, которому принадлежит участок
         /// </summary>
         public Way Way;
 
         /// <summary>
-        /// Порядковый номер участка в пути
-        /// </summary>
-        //public Int32 Number;
-
-        /// <summary>
         /// Скорость движения на участке
         /// </summary>
-
         public Speed Speed;
+
         /// <summary>
         /// Истина, исли участок был посещён.
         /// </summary>
-
         public Boolean IsVisited;
+
         /// <summary>
         /// Количество посещений участка
         /// </summary>
-
         public Int32 VisitedCount;
+
         /// <summary>
         /// Время последнего посещения участка.
         /// </summary>
-
         public DateTime LastVisitedTime;
 
     }

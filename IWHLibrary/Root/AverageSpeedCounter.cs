@@ -32,18 +32,21 @@ namespace IWH
         /// <param name="distance"></param>
         public void Add(Time time, Distance distance)
         {
-            // Добавляем в массив расстояние и время
-            timeList.Add(time);
-            TotalTime += time;
-            distList.Add(distance);
-            TotalDistance += distance;
-            // Уменьшаем размер массива до необходимого
-            while (timeList.Count > 1 && TotalTime > _timeInterval)
+            if (time > Time.Zero && distance > Distance.Zero)
             {
-                TotalTime -= timeList[0];
-                TotalDistance -= distList[0];
-                timeList.RemoveAt(0);
-                distList.RemoveAt(0);
+                // Добавляем в массив расстояние и время
+                timeList.Add(time);
+                TotalTime += time;
+                distList.Add(distance);
+                TotalDistance += distance;
+                // Уменьшаем размер массива до необходимого
+                while (timeList.Count > 1 && TotalTime > _timeInterval)
+                {
+                    TotalTime -= timeList[0];
+                    TotalDistance -= distList[0];
+                    timeList.RemoveAt(0);
+                    distList.RemoveAt(0);
+                }
             }
         }
 
@@ -53,7 +56,10 @@ namespace IWH
         /// <returns></returns>
         public Speed GetAverageSpeed()
         {
-            return TotalDistance/TotalTime;
+            if (TotalTime > Time.Zero && TotalDistance > Distance.Zero)
+                return TotalDistance / TotalTime;
+            else
+                return Speed.Zero;
         }
 
     }

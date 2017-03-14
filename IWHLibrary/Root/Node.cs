@@ -138,6 +138,11 @@ namespace IWH
 
         #endregion
 
+        public override string ToString()
+        {
+            return string.Format("id={0}", this.OsmId);
+        }
+
     }
 
 }

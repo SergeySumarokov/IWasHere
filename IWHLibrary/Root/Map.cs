@@ -94,6 +94,23 @@ namespace IWH
         }
 
         /// <summary>
+        /// Формирует список всех всех участков пути на карте.
+        /// </summary>
+        /// <returns></returns>
+        public List<Leg> GetLegsList()
+        {
+            List<Leg> result = new List<Leg>();
+            foreach (Way way in Ways)
+            {
+                foreach (Leg leg in way.Legs)
+                {
+                    result.Add(leg);
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
         /// Разделяет существующие пути по точкам, являющимся перекрестками
         /// </summary>
         public void DivideWaysByCrossroads()
@@ -189,7 +206,7 @@ namespace IWH
             // Объединяем в случае совпадения параметров и направлений
             foreach (Way way in Ways.ToList())
             {
-                if (way.Lenght <= maxWayLenght && way.Legs.Count <= maxLegsCount)
+                if (way.Legs.Count <= maxLegsCount && way.Lenght <= maxWayLenght)
                 {
                     // Сначала проверяем первую точку пути
                     Leg goodLeg = CheckPointForPossibilityCombining(way.FirstPoint, way.FirstLeg);
@@ -198,7 +215,6 @@ namespace IWH
                         goodLeg.Way.CombineLegs(way);
                         Ways.Remove(way);
                     }
-
                     // Потом, если не получилось, проверяем последнюю точку пути
                     if (goodLeg == null)
                     {
@@ -233,6 +249,7 @@ namespace IWH
                         !leg.Equals(sourceLeg)
                         && (leg.Direction-sourceLeg.Direction).Cos() > maxLegDirectionDeviation.Cos()
                         && leg.Way.Type == sourceLeg.Way.Type
+                        && leg.Way.OneWay == sourceLeg.Way.OneWay
                         && leg.Way.Name == sourceLeg.Way.Name
                         )
                     {

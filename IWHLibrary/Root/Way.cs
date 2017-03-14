@@ -234,8 +234,10 @@ namespace IWH
             Way result = (Way)this.MemberwiseClone();
             result.Legs = this.Legs.ToList();
             result.Legs.RemoveRange(legsToCut, this.Legs.Count - legsToCut);
+            result.UpdateParentWay();
             result.Recalculate();
             this.Legs.RemoveRange(0, legsToCut);
+            this.UpdateParentWay();
             this.Recalculate();
             return result;
         }
@@ -248,7 +250,7 @@ namespace IWH
         public void CombineLegs (Way attachedWay)
         {
             // Определяем каким концом присоединять
-            if (FirstPoint.Equals(attachedWay.LastLeg))
+            if (FirstPoint.Equals(attachedWay.LastPoint))
             {
                 // Присоединяем путь перед
                 List<Leg> tempLegs = new List<Leg>(attachedWay.Legs);
@@ -260,7 +262,14 @@ namespace IWH
                 // Присоединяем путь после
                 Legs.AddRange(attachedWay.Legs);
             }
+            UpdateParentWay();
             Recalculate();
+        }
+
+        private void UpdateParentWay()
+        {
+            foreach (Leg leg in Legs)
+                leg.Way = this;
         }
 
         #endregion
@@ -317,6 +326,11 @@ namespace IWH
         }
 
         #endregion
+
+        public override string ToString()
+        {
+            return string.Format("Id={0}", this.OsmId);
+        }
 
     }
 

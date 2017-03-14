@@ -130,7 +130,7 @@ namespace IWHTest
                 Console.WriteLine("Анализ файла {0}", trackFile.Name);
                 GPS.Gpx gpxTrack = GPS.Gpx.FromXmlFile(trackFile.FullName);
                 Distance cacheRange = Distance.FromKilometers(4);
-                AnalizeGpsTrack(IwhMap.Ways, gpxTrack.GetPointList(), cacheRange, false);
+                AnalizeGpsTrack(IwhMap.GetLegsList(), gpxTrack.GetPointList(), cacheRange, false);
             }
             Console.WriteLine("Анализ выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
             // Пересчитываем
@@ -188,7 +188,7 @@ namespace IWHTest
         /// и направления движения по треку соответствует направлению участка.
         /// Для оптимизации, работа проводится с участками пути, расположенными в заданном радиусе от точки трека.
         /// </remarks>
-        static void AnalizeGpsTrack(List<IWH.Way> mapWays, List<GPS.TrackPoint> gpsPoints, Distance cacheRange, bool checkOneWay)
+        static void AnalizeGpsTrack(List<IWH.Leg> mapLegs, List<GPS.TrackPoint> gpsPoints, Distance cacheRange, bool checkOneWay)
         {
             // Максимальный угол, при котором линия трека считается совпадающей с линией пути
             Angle MaximumVisitedDeviation = Angle.FromDegrees(16);
@@ -197,15 +197,16 @@ namespace IWHTest
             // Удаление, от точки трека, при котором участок развязки считается посещенным
             Distance LinksVisitedDistance = Distance.FromMeters(256);
             // Время (мин), при истечении котого точка считается посещенной повторно
-            const int VisitedCountInerval = 8;
+            Time VisitedCountInerval = Time.FromMinutes(8);
             // Минимальный интервал времени, который требуется для расчета средней скорости
             Time MinimumSpeedInterval = Time.FromSeconds(5);
             // Минимальная средняя скорость, которую принимаем как реальную (не шум)
             Speed MinimumAverageSpeed = Speed.FromKilometersPerHour(5);
 
+            // Создаём два уровня кэшей для участков
+            LegsCache cache2 = new LegsCache(mapLegs, cacheRange * 8);
+            LegsCache cache1 = new LegsCache(cache2.Legs, cacheRange);
             // Обходим все точки трека, кроме последней.
-            var cacheLegs = new List<IWH.Leg>();
-            var cacheCenter = new Coordinates();
             GPS.TrackPoint gpsPoint;
             IWH.Leg gpsLeg;
             var avrSpeedCouner = new IWH.AverageSpeedCounter(MinimumSpeedInterval);
@@ -222,25 +223,12 @@ namespace IWHTest
                 // Вычисляем среднюю скорость движения
                 avrSpeedCouner.Add(gpsPoints[i + 1].Time-gpsPoints[i].Time, gpsLeg.Lenght);
                 gpsLeg.Speed = avrSpeedCouner.GetAverageSpeed();
-                // Проверяем нахождение текущей точки трека в радиусе загруженного кеша участков
-                if (cacheCenter.IsEmpty || cacheCenter.MercatorDistance(gpsPoint.Coordinates) + gpsLeg.Lenght > cacheRange)
-                {
-                    // Устанавливаем центр кеша на текущую точку трека
-                    cacheCenter = gpsPoint.Coordinates;
-                    // Заново формируем кэш вокруг центральной точки
-                    cacheLegs.Clear();
-                    foreach (var way in mapWays)
-                    {
-                        foreach (var leg in way.Legs)
-                        {
-                            if (cacheCenter.MercatorDistance(leg.StartPoint.Coordinates) <= cacheRange)
-                                cacheLegs.Add(leg);
-                        }
-                    }
-                }
+                // Проверяем состояние кешей
+                cache2.CheckCoordinates(gpsLeg.StartPoint.Coordinates, cacheRange);
+                cache1.CheckCoordinates(gpsLeg.StartPoint.Coordinates, gpsLeg.Lenght);
 
                 // Обсчитываем для точки трека все находящиеся в кеше участки пути
-                foreach (var leg in cacheLegs)
+                foreach (var leg in cache1.Legs)
                 {
                     // Проверяем удаление точки трека и начальной точки участка пути
                     Boolean legIsVisited = false;
@@ -279,24 +267,61 @@ namespace IWHTest
                     if (legIsVisited)
                     {
                         leg.IsVisited = true;
-                        leg.LastVisitedTime = gpsPoint.Time;
-                        if (gpsLeg.Speed > MinimumAverageSpeed)
-                        {
-                            if (leg.Speed.IsEmpty)
-                                leg.Speed = gpsLeg.Speed;
-                            else
-                                leg.Speed = (leg.Speed + gpsLeg.Speed) / 2;
-                        }
                         if (gpsPoint.Time > leg.LastVisitedTime)
                         {
-                            if ((gpsPoint.Time - leg.LastVisitedTime).TotalMinutes > VisitedCountInerval)
+                            leg.LastVisitedTime = gpsPoint.Time;
+                            if ((gpsPoint.Time - leg.LastVisitedTime) > VisitedCountInerval)
                                 leg.VisitedCount += 1;
+                        }
+                        if (gpsLeg.Speed > MinimumAverageSpeed)
+                        {
+                            // Сначала считали среднюю скорость
+                            //if (leg.Speed.IsEmpty)
+                            //    leg.Speed = gpsLeg.Speed;
+                            //else
+                            //    leg.Speed = (leg.Speed + gpsLeg.Speed) / 2;
+                            // Теперь считаем максимальную
+                            if (gpsLeg.Speed > leg.Speed)
+                                leg.Speed = gpsLeg.Speed;
                         }
                     }
 
                 } // leg
                 
             } // i
+        }
+
+        private class LegsCache
+        {
+            private Coordinates _center;
+            private Distance _range;
+            private List<IWH.Leg> _legs;
+
+            internal List<IWH.Leg> Legs { get; private set; }
+
+            internal LegsCache(List<IWH.Leg> legsList, Distance cacheRange)
+            {
+                _legs = legsList;
+                _range = cacheRange;
+                Legs = new List<IWH.Leg>();
+            }
+
+            internal void CheckCoordinates(Coordinates coordinates, Distance minDistance)
+            {
+                // Проверяем нахождение текущей точки трека в радиусе загруженного кеша участков
+                if (_center.IsEmpty || _center.MercatorDistance(coordinates) + minDistance > _range)
+                {
+                    // Устанавливаем центр кеша на текущую точку трека
+                    _center = coordinates;
+                    // Заново формируем кэш вокруг центральной точки
+                    Legs.Clear();
+                    foreach (var leg in _legs)
+                    {
+                        if (_center.MercatorDistance(leg.StartPoint.Coordinates) <= _range)
+                            Legs.Add(leg);
+                    }
+                }
+            }
         }
 
         /// <summary>
