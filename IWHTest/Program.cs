@@ -2,7 +2,6 @@
 using System.IO;
 using System.Xml;
 using System.Collections.Generic;
-using System.Linq;
 using Primitives;
 using Geography;
 
@@ -17,39 +16,18 @@ namespace IWHTest
             var stopwatch = new System.Diagnostics.Stopwatch();
             var IwhMap = new IWH.Map();
 
-            //// Загружаем границы областей
+            // Загружаем границы областей
 
-            //Console.WriteLine("Загрузка границ области...");
-            //stopwatch.Restart();
-            //IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
-            //XmlDocument xml = new XmlDocument();
-            //XmlNamespaceManager prefix;
-            //// Питер в границах КАД
-            //xml.Load(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
-            //prefix = new XmlNamespaceManager(xml.NameTable);
-            //prefix.AddNamespace("prfx", xml.DocumentElement.NamespaceURI);
-            //var areaSpb = new Area();
-            //foreach (XmlNode n in xml.SelectNodes("//prfx:gpx/prfx:rte/prfx:rtept", prefix))
-            //{
-            //    double lat = double.Parse(n.Attributes["lat"].Value, xmlFormatProvider);
-            //    double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
-            //    areaSpb.Points.Add(new Point(lat, lon, 0));
-            //}
-            //areaSpb.Recalculate();
-            //// Ленобласть
-            //xml.Load(@"\Projects\IWasHere\Resources\RU-LEN_area.gpx");
-            //prefix = new XmlNamespaceManager(xml.NameTable);
-            //prefix.AddNamespace("prfx", xml.DocumentElement.NamespaceURI);
-            //var areaLen = new Area();
-            //foreach (XmlNode n in xml.SelectNodes("//prfx:gpx/prfx:rte/prfx:rtept", prefix))
-            //{
-            //    double lat = double.Parse(n.Attributes["lat"].Value, xmlFormatProvider);
-            //    double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
-            //    areaLen.Points.Add(new Point(lat, lon, 0));
-            //}
-            //areaLen.Recalculate();
-            //Console.WriteLine("Загрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
-            //Console.WriteLine("----------------");
+            Console.WriteLine("Загрузка границ области...");
+            stopwatch.Restart();
+            // Питер в границах КАД
+            Area areaSpb = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
+            // Ленобласть
+            Area areaLen = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-LEN_area.gpx");
+            // Корректировка типа
+            Area areaFix = AreaFromGpx(@"\Projects\IWasHere\Resources\Fix_Tertiary.gpx");
+            Console.WriteLine("Загрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("----------------");
 
             //// Формируем локальную базу
 
@@ -106,6 +84,7 @@ namespace IWHTest
 
             Console.WriteLine("Корректировка путей...");
             stopwatch.Restart();
+            IwhMap.FixWayTypeInArea(areaFix, IWH.HighwayType.Tertiary);
             IwhMap.CombineShortWaysWithAdjacent();
             IwhMap.DivideWaysByCrossroads();
             IwhMap.DivideWaysByLenght();
@@ -146,8 +125,6 @@ namespace IWHTest
                 Math.Round(IwhMap.TargetVisitedLenght.Kilometers / IwhMap.TargetLenght.Kilometers * 100, 2));
             Console.WriteLine("----------------");
 
-            //SelectWaysStat(IwhMap.Ways);
-
             //// Записываем базу
 
             //Console.WriteLine("Сохранение базы данных...");
@@ -177,6 +154,30 @@ namespace IWHTest
 
             Console.WriteLine("Работа завершена. Нажмите [Enter] для выхода.");
             Console.ReadLine();
+        }
+
+        /// <summary>
+        /// Возвращает географическую область, загруженную из gpx-файла
+        /// </summary>
+        /// <param name="gpxFileName"></param>
+        /// <returns></returns>
+        static Geography.Area AreaFromGpx(string gpxFileName)
+        {
+            Geography.Area result = new Geography.Area();
+            IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
+            XmlDocument xml = new XmlDocument();
+            XmlNamespaceManager prefix;
+            xml.Load(gpxFileName);
+            prefix = new XmlNamespaceManager(xml.NameTable);
+            prefix.AddNamespace("prfx", xml.DocumentElement.NamespaceURI);
+            foreach (XmlNode n in xml.SelectNodes("//prfx:gpx/prfx:rte/prfx:rtept", prefix))
+            {
+                double lat = double.Parse(n.Attributes["lat"].Value, xmlFormatProvider);
+                double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
+                result.Points.Add(new Point(lat, lon, 0));
+            }
+            result.Recalculate();
+            return result;
         }
 
         /// <summary>
@@ -276,13 +277,13 @@ namespace IWHTest
                         if (gpsLeg.Speed > MinimumAverageSpeed)
                         {
                             // Сначала считали среднюю скорость
-                            //if (leg.Speed.IsEmpty)
-                            //    leg.Speed = gpsLeg.Speed;
-                            //else
-                            //    leg.Speed = (leg.Speed + gpsLeg.Speed) / 2;
-                            // Теперь считаем максимальную
-                            if (gpsLeg.Speed > leg.Speed)
+                            if (leg.Speed.IsEmpty)
                                 leg.Speed = gpsLeg.Speed;
+                            else
+                                leg.Speed = (leg.Speed + gpsLeg.Speed) / 2;
+                            //Теперь считаем максимальную
+                            //if (gpsLeg.Speed > leg.Speed)
+                            //    leg.Speed = gpsLeg.Speed;
                         }
                     }
 
