@@ -122,6 +122,11 @@ namespace IWH
         public Speed AverageSpeed;
 
         /// <summary>
+        /// Среднее количество посещений.
+        /// </summary>
+        public double AverageVisitedCount;
+
+        /// <summary>
         /// Суммарная протяженность посещённых участков дороги.
         /// </summary>
         public Distance VisitedLenght;
@@ -206,22 +211,25 @@ namespace IWH
         {
             Lenght = Distance.Zero;
             VisitedLenght = Distance.Zero;
-            Time visitedTime = Time.Zero;
+            Time VisitedTime = Time.Zero;
+            double VisitedCount = 0;
             foreach (Leg leg in Legs)
             {
                 Lenght += leg.Lenght;
                 if (leg.IsVisited)
                 {
                     VisitedLenght += leg.Lenght;
-                    visitedTime += leg.Lenght / leg.Speed;
+                    VisitedTime += leg.Lenght / leg.Speed;
+                    VisitedCount += leg.VisitedCount;
                 }
                 if (leg.LastVisitedTime > LastVisitedTime)
                 {
                     LastVisitedTime = leg.LastVisitedTime;
                 }
             }
-            AverageSpeed = VisitedLenght / visitedTime;
+            AverageSpeed = VisitedLenght / VisitedTime;
             IsVisited = Lenght.AlmostEquals(VisitedLenght);
+            AverageVisitedCount = VisitedCount / Legs.Count;
         }
 
         /// <summary>

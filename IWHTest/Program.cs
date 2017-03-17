@@ -145,6 +145,9 @@ namespace IWHTest
             MapToGpx(WaysBySpeed(IwhMap.Ways, Speed.FromKilometersPerHour(25), Speed.FromKilometersPerHour(50)), true, @"\Projects\IWasHere\Resources\Way_Visited_50kmh.gpx");
             MapToGpx(WaysBySpeed(IwhMap.Ways, Speed.FromKilometersPerHour(50), Speed.FromKilometersPerHour(85)), true, @"\Projects\IWasHere\Resources\Way_Visited_85kmh.gpx");
             MapToGpx(WaysBySpeed(IwhMap.Ways, Speed.FromKilometersPerHour(85), Speed.FromKilometersPerHour(200)), true, @"\Projects\IWasHere\Resources\Way_Visited_99kmh.gpx");
+            MapToGpx(WaysByTimes(IwhMap.Ways, 0, 1), true, @"\Projects\IWasHere\Resources\Way_Times_1.gpx");
+            MapToGpx(WaysByTimes(IwhMap.Ways, 1, 3), true, @"\Projects\IWasHere\Resources\Way_Times_2.gpx");
+            MapToGpx(WaysByTimes(IwhMap.Ways, 3, 99), true, @"\Projects\IWasHere\Resources\Way_Times_4.gpx");
             CrossroadsToGpx(IwhMap, @"\Projects\IWasHere\Resources\Way_Crossroads.gpx");
             stopwatch.Stop();
             Console.WriteLine("Выгрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
@@ -270,9 +273,9 @@ namespace IWHTest
                         leg.IsVisited = true;
                         if (gpsPoint.Time > leg.LastVisitedTime)
                         {
-                            leg.LastVisitedTime = gpsPoint.Time;
-                            if ((gpsPoint.Time - leg.LastVisitedTime) > VisitedCountInerval)
+                            if (leg.VisitedCount == 0 || (gpsPoint.Time - leg.LastVisitedTime) > VisitedCountInerval)
                                 leg.VisitedCount += 1;
+                            leg.LastVisitedTime = gpsPoint.Time;
                         }
                         if (gpsLeg.Speed > MinimumAverageSpeed)
                         {
@@ -378,7 +381,9 @@ namespace IWHTest
                 if (way.LastVisitedTime > DateTime.MinValue)
                     newTrack.Name += " " + way.LastVisitedTime.ToShortDateString();
                 if (way.AverageSpeed > Speed.Zero)
-                    newTrack.Name += " " + String.Format("{0}кмч", Math.Round(way.AverageSpeed.KilometersPerHour));
+                    newTrack.Name += " " + String.Format("{0:000}кмч", way.AverageSpeed.KilometersPerHour);
+                if (way.AverageVisitedCount > 0.0)
+                    newTrack.Name += " " + String.Format("{0:0.00}", way.AverageVisitedCount);
                 // Формируем сегменты
                 GPS.TrackSegment newTrackSegment = new GPS.TrackSegment();
                 for (int i = 0; i < legs.Count; i++)
@@ -447,7 +452,17 @@ namespace IWHTest
             return result;
         }
 
-        
+        static List<IWH.Way> WaysByTimes(List<IWH.Way> wayList, double minVisitedCount, double maxVisitedCount)
+        {
+            var result = new List<IWH.Way>();
+            foreach (var way in wayList)
+            {
+                if (way.AverageVisitedCount > minVisitedCount && way.AverageVisitedCount <= maxVisitedCount)
+                    result.Add(way);
+            }
+            return result;
+        }
+
         // Это было нужно, чтобы выбрать из базы ОСМ все типы тегов по дорогам и наспунктам
         static void SelectOsmAttributes(string[] args)
         //static void Main(string[] args)

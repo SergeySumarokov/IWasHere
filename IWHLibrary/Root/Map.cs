@@ -166,6 +166,10 @@ namespace IWH
                 while (way.Lenght > maxThisWaylenght && way.Legs.Count >= minLegsCount)
                 {
                     int legIndex = GetFirstLegByLenght(way, maxThisWaylenght);
+                    // Не допускаем разделения по последней точке
+                    if (legIndex == way.Legs.Count-1)
+                        legIndex -= 1;
+                    // Делим если можем
                     if (legIndex >= 0)
                     {
                         Way newWay = way.CutLegs(legIndex+1);
