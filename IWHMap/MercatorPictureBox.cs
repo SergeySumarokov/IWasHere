@@ -144,11 +144,14 @@ namespace IWHMap
         // Let the user drag the image around.
         private bool Dragging = false;
         private int LastX, LastY;
+        private System.Diagnostics.Stopwatch dragTimer; // Для ограничения частоты обновления
 
         private void this_MouseDown(object sender, MouseEventArgs e)
         {
             LastX = e.X;
             LastY = e.Y;
+            dragTimer = new System.Diagnostics.Stopwatch();
+            dragTimer.Start();
             Dragging = true;
         }
 
@@ -161,11 +164,15 @@ namespace IWHMap
             LastX = e.X;
             LastY = e.Y;
 
+            if (dragTimer.ElapsedMilliseconds <= 30) return;
+
             DrawMap();
+            dragTimer.Restart();
         }
 
         private void this_MouseUp(object sender, MouseEventArgs e)
         {
+            dragTimer = null;
             Dragging = false;
         }
 
