@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IWHLibrary", "IWHLibrary\IWHLibrary.csproj", "{ABA8E6B0-5501-4047-9B2E-0A887007CA1C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IWHTest", "IWHTest\IWHTest.csproj", "{1A098131-4A64-4130-A533-43AB0CFDE598}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IWHMap", "IWHMap\IWHMap.csproj", "{DD974173-666A-4DE9-A526-7F8B6B5F33B3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{1A098131-4A64-4130-A533-43AB0CFDE598}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A098131-4A64-4130-A533-43AB0CFDE598}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A098131-4A64-4130-A533-43AB0CFDE598}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD974173-666A-4DE9-A526-7F8B6B5F33B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD974173-666A-4DE9-A526-7F8B6B5F33B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD974173-666A-4DE9-A526-7F8B6B5F33B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD974173-666A-4DE9-A526-7F8B6B5F33B3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
