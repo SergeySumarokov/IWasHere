@@ -17,8 +17,11 @@ namespace IWHMap
 
             InitializeComponent();
 
-            MercatorMap.MapImage = new Bitmap(@"\Projects\IWasHere\Resources\RU-LEN_map.jpg", false); ;
-
+            // Загрузка и привязка карты
+            MercatorMap.BindMap(
+                new Bitmap(@"\Projects\IWasHere\Resources\RU-LEN_map.jpg", false),
+                new Geography.Coordinates(61.34507817, 27.69927978, 0),
+                new Geography.Coordinates(58.38460903, 35.86486816, 0));
         }
 
         private void MainForm_Load(object sender, EventArgs e)

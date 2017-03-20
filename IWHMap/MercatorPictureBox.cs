@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using Geography;
 
 namespace IWHMap
 {
@@ -11,47 +12,38 @@ namespace IWHMap
     public partial class MercatorPictureBox : System.Windows.Forms.PictureBox
     {
 
-        //private Bitmap OriginalImage;
-        private Bitmap OriginalImage;
-        private float CurrentScale = 1;
+        // Файл карты и привязка
+        private Bitmap originalImage;
+        private Coordinates mapNordWest;
+        private Coordinates mapSouthEast;
         private Bitmap VisibleImage = null;
         private Graphics VisibleGraphics = null;
+
+        private float scaleView = 1; // масштаб отображения (2 = уменьшение до 50%)
+        private float scaleLat; // коэффициент для пересчёта радиан широты в пиксели
+        private float scaleLon; // коэффициент для пересчёта радиан долготы в пиксели
 
         // Upper left corner of the image in the PictureBox.
         private int PicX = 0, PicY = 0;
 
-        /// <summary>
-        /// Растровая карта
-        /// </summary>
-        public Bitmap MapImage
-        {
-            get { return OriginalImage; }
-            set
-            {
-                OriginalImage = value;
-                PrepareGraphics();
-                DrawMap();
-            }
-        }
-
-        /// <summary>
-        /// Масштаб изображения - расстояние на один пиксель.
-        /// </summary>
-        public Primitives.Distance MapScale { get; set; }
-
-        /// <summary>
-        /// Координаты центральной точки карты
-        /// </summary>
-        public Geography.Coordinates CenterPoint { get; set; }
-
-
         public MercatorPictureBox()
         {
             InitializeComponent();
+        }
 
-            // Get ready to draw.
+        /// <summary>
+        /// Принимает карту с привязкой к координатам
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <param name="nordWest"></param>
+        /// <param name="southEast"></param>
+        public void BindMap(Bitmap bitmap, Coordinates nordWest, Coordinates southEast)
+        {
+            originalImage = bitmap;
+            mapNordWest = nordWest;
+            mapSouthEast = southEast;
             PrepareGraphics();
-
+            DrawMap();
         }
 
         protected override void OnResize(EventArgs e)
@@ -90,18 +82,23 @@ namespace IWHMap
             // Display the Bitmap.
             this.Image = VisibleImage;
         }
+
+        // Пересчитываем коэффициенты масштаба для широты/долготы
+        private void SetScale()
+        {
+        }
         
         // Set the PictureBox's position.
         private void SetOrigin()
         {
             // Keep x and y within bounds.
-            float scaled_width = CurrentScale * OriginalImage.Width;
+            float scaled_width = scaleView * originalImage.Width;
             int xmin = (int)(this.ClientSize.Width - scaled_width);
             if (xmin > 0) xmin = 0;
             if (PicX < xmin) PicX = xmin;
             else if (PicX > 0) PicX = 0;
 
-            float scaled_height = CurrentScale * OriginalImage.Height;
+            float scaled_height = scaleView * originalImage.Height;
             int ymin = (int)(this.ClientSize.Height - scaled_height);
             if (ymin > 0) ymin = 0;
             if (PicY < ymin) PicY = ymin;
@@ -112,14 +109,14 @@ namespace IWHMap
         private void DrawMap()
         {
 
-            if (OriginalImage == null) return;
+            if (originalImage == null) return;
 
             // Validate PicX and PicY.
             SetOrigin();
 
             // Get the destination area.
-            float scaled_width = CurrentScale * OriginalImage.Width;
-            float scaled_height = CurrentScale * OriginalImage.Height;
+            float scaled_width = scaleView * originalImage.Width;
+            float scaled_height = scaleView * originalImage.Height;
             PointF[] dest_points =
             {
                 new PointF(PicX, PicY),
@@ -129,11 +126,11 @@ namespace IWHMap
 
             // Draw the whole image.
             RectangleF source_rect = new RectangleF(
-                0, 0, OriginalImage.Width, OriginalImage.Height);
+                0, 0, originalImage.Width, originalImage.Height);
 
             // Draw.
             VisibleGraphics.Clear(this.BackColor);
-            VisibleGraphics.DrawImage(OriginalImage, dest_points, source_rect, GraphicsUnit.Pixel);
+            VisibleGraphics.DrawImage(originalImage, dest_points, source_rect, GraphicsUnit.Pixel);
 
             // Update the display.
             this.Refresh();

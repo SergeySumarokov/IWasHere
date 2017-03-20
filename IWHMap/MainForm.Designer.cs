@@ -39,7 +39,6 @@
             this.MercatorMap.Image = ((System.Drawing.Image)(resources.GetObject("MercatorMap.Image")));
             this.MercatorMap.Location = new System.Drawing.Point(0, 0);
             this.MercatorMap.Name = "MercatorMap";
-            this.MercatorMap.MapImage = null;
             this.MercatorMap.Size = new System.Drawing.Size(400, 330);
             this.MercatorMap.TabIndex = 0;
             this.MercatorMap.TabStop = false;
