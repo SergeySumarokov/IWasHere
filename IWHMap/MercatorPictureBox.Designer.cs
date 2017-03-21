@@ -34,6 +34,7 @@
             // MercatorPictureBox
             // 
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.this_MouseDown);
+            this.MouseEnter += new System.EventHandler(this.this_MouseEnter);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.this_MouseMove);
             this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.this_MouseUp);
             ((System.ComponentModel.ISupportInitialize)(this)).EndInit();

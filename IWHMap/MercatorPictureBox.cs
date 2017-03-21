@@ -12,24 +12,44 @@ namespace IWHMap
     public partial class MercatorPictureBox : System.Windows.Forms.PictureBox
     {
 
+        #region Определения
+
         // Файл карты и привязка
-        private Bitmap originalImage;
+        private Bitmap mapImage;
         private Coordinates mapNordWest;
         private Coordinates mapSouthEast;
-        private Bitmap VisibleImage = null;
-        private Graphics VisibleGraphics = null;
-
-        private float scaleView = 1; // масштаб отображения (2 = уменьшение до 50%)
+        private Bitmap visibleImage;
+        private Graphics visibleGraphics;
+        // Положение и масштаб
+        private int mapX = 0, mapY = 0; // левый верхний угол видимой части карты
+        private float scaleView = 1F; // масштаб отображения (2 = уменьшение до 50%)
+        private float scaleMin = 0.5F;
+        private float scaleMax = 4.0F;
+        private float scaleStep = 1.1F;
         private float scaleLat; // коэффициент для пересчёта радиан широты в пиксели
         private float scaleLon; // коэффициент для пересчёта радиан долготы в пиксели
+        // Перемещение
+        private bool dragging = false;
+        private int dragLastX, dralLastY;
+        private System.Diagnostics.Stopwatch dragTimer; // Для ограничения частоты обновления
+        // Отрисовка
+        private List<LineToDraw> linesToDraw = new List<LineToDraw>();
 
-        // Upper left corner of the image in the PictureBox.
-        private int PicX = 0, PicY = 0;
+        #endregion
+
+        #region Конструкторы
 
         public MercatorPictureBox()
         {
+
             InitializeComponent();
+
+            this.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.this_MouseWheel);
         }
+
+        #endregion
+
+        #region Методы
 
         /// <summary>
         /// Принимает карту с привязкой к координатам
@@ -39,12 +59,16 @@ namespace IWHMap
         /// <param name="southEast"></param>
         public void BindMap(Bitmap bitmap, Coordinates nordWest, Coordinates southEast)
         {
-            originalImage = bitmap;
+            mapImage = bitmap;
             mapNordWest = nordWest;
             mapSouthEast = southEast;
             PrepareGraphics();
             DrawMap();
         }
+
+        #endregion
+
+        #region События
 
         protected override void OnResize(EventArgs e)
         {
@@ -55,111 +79,142 @@ namespace IWHMap
 
         protected override void OnPaint(PaintEventArgs pe)
         {
+            // Отрисовываем карту
             base.OnPaint(pe);
-
-            // Дальше пойдет отрисовка линий из массива
+            // Отрисовываем линии
+            Graphics g = pe.Graphics;
+            foreach (LineToDraw line in linesToDraw)
+            {
+                g.DrawLines(line.Pen, line.Points);
+            }
         }
 
+        private void this_MouseEnter(object sender, EventArgs e)
+        {
+            this.Focus(); // Это нужно, чтобы MouseWheel отрабатывал в любом случае.
+        }
+
+        public void this_MouseWheel(object sender, MouseEventArgs e)
+        {
+            SetScale(Math.Sign(e.Delta));
+            DrawMap();
+        }
+
+        #endregion
+
+        #region Рисование
+
+        // Необходимо вызывать при изменении размера элемента
         private void PrepareGraphics()
         {
             // Skip it if we've been minimized.
-            if ((this.ClientSize.Width == 0) ||
-                (this.ClientSize.Height == 0)) return;
-
+            if ((this.ClientSize.Width == 0) || (this.ClientSize.Height == 0)) return;
             // Free old resources.
-            if (VisibleGraphics != null)
+            if (visibleGraphics != null)
             {
                 this.Image = null;
-                VisibleGraphics.Dispose();
-                VisibleImage.Dispose();
+                visibleGraphics.Dispose();
+                visibleImage.Dispose();
             }
-
             // Make the new Bitmap and Graphics.
-            VisibleImage = new Bitmap(this.ClientSize.Width,this.ClientSize.Height);
-            VisibleGraphics = Graphics.FromImage(VisibleImage);
-            VisibleGraphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.High;
-
+            visibleImage = new Bitmap(this.ClientSize.Width,this.ClientSize.Height);
+            visibleGraphics = Graphics.FromImage(visibleImage);
+            visibleGraphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.High;
             // Display the Bitmap.
-            this.Image = VisibleImage;
+            this.Image = visibleImage;
         }
 
-        // Пересчитываем коэффициенты масштаба для широты/долготы
-        private void SetScale()
+        // Пересчитываем коэффициенты масштаба
+        private void SetScale(int delta)
         {
+            if (delta > 0 & scaleView < scaleMax)
+            {
+                scaleView *= scaleStep;
+                if (scaleView > scaleMax) scaleView = scaleMax;
+            }
+            if (delta < 0 & scaleView > scaleMin)
+            {
+                scaleView /= scaleStep;
+                if (scaleView < scaleMin) scaleView = scaleMin;
+            }
+            System.Drawing.Point relativePoint = this.PointToClient(Cursor.Position);
+
         }
-        
-        // Set the PictureBox's position.
+
+        // Устанавливает положение карты
         private void SetOrigin()
         {
-            // Keep x and y within bounds.
-            float scaled_width = scaleView * originalImage.Width;
-            int xmin = (int)(this.ClientSize.Width - scaled_width);
+            // Не допускаем уменьшения карты меньше размера окна
+            int scaled_width = (int)(mapImage.Width / scaleView);
+            if (scaled_width < this.ClientSize.Width)
+                scaleView = (float)mapImage.Width / this.ClientSize.Width;
+            int scaled_height = (int)(mapImage.Height / scaleView);
+            if (scaled_height < this.ClientSize.Height)
+                scaleView = (float)mapImage.Height / this.ClientSize.Height;
+            // Не допускаем выхода карты за границу окна
+            int xmin = this.ClientSize.Width - scaled_width;
             if (xmin > 0) xmin = 0;
-            if (PicX < xmin) PicX = xmin;
-            else if (PicX > 0) PicX = 0;
+            if (mapX < xmin) mapX = xmin;
+            else if (mapX > 0) mapX = 0;
 
-            float scaled_height = scaleView * originalImage.Height;
-            int ymin = (int)(this.ClientSize.Height - scaled_height);
+            int ymin = this.ClientSize.Height - scaled_height;
             if (ymin > 0) ymin = 0;
-            if (PicY < ymin) PicY = ymin;
-            else if (PicY > 0) PicY = 0;
+            if (mapY < ymin) mapY = ymin;
+            else if (mapY > 0) mapY = 0;
         }
 
         // Draw the image at the correct scale and location.
         private void DrawMap()
         {
 
-            if (originalImage == null) return;
+            if (mapImage == null) return;
 
             // Validate PicX and PicY.
             SetOrigin();
 
             // Get the destination area.
-            float scaled_width = scaleView * originalImage.Width;
-            float scaled_height = scaleView * originalImage.Height;
+            float scaled_width = mapImage.Width / scaleView;
+            float scaled_height = mapImage.Height / scaleView;
             PointF[] dest_points =
             {
-                new PointF(PicX, PicY),
-                new PointF(PicX + scaled_width, PicY),
-                new PointF(PicX, PicY + scaled_height),
+                new PointF(mapX, mapY),
+                new PointF(mapX + scaled_width, mapY),
+                new PointF(mapX, mapY + scaled_height),
             };
 
             // Draw the whole image.
             RectangleF source_rect = new RectangleF(
-                0, 0, originalImage.Width, originalImage.Height);
+                0, 0, mapImage.Width, mapImage.Height);
 
             // Draw.
-            VisibleGraphics.Clear(this.BackColor);
-            VisibleGraphics.DrawImage(originalImage, dest_points, source_rect, GraphicsUnit.Pixel);
+            visibleGraphics.Clear(this.BackColor);
+            visibleGraphics.DrawImage(mapImage, dest_points, source_rect, GraphicsUnit.Pixel);
 
             // Update the display.
             this.Refresh();
         }
 
-        #region Dragging
+        #endregion
 
-        // Let the user drag the image around.
-        private bool Dragging = false;
-        private int LastX, LastY;
-        private System.Diagnostics.Stopwatch dragTimer; // Для ограничения частоты обновления
+        #region Перемещение
 
         private void this_MouseDown(object sender, MouseEventArgs e)
         {
-            LastX = e.X;
-            LastY = e.Y;
+            dragLastX = e.X;
+            dralLastY = e.Y;
             dragTimer = new System.Diagnostics.Stopwatch();
             dragTimer.Start();
-            Dragging = true;
+            dragging = true;
         }
 
         private void this_MouseMove(object sender, MouseEventArgs e)
         {
-            if (!Dragging) return;
+            if (!dragging) return;
 
-            PicX += e.X - LastX;
-            PicY += e.Y - LastY;
-            LastX = e.X;
-            LastY = e.Y;
+            mapX += e.X - dragLastX;
+            mapY += e.Y - dralLastY;
+            dragLastX = e.X;
+            dralLastY = e.Y;
 
             if (dragTimer.ElapsedMilliseconds <= 30) return;
 
@@ -170,7 +225,7 @@ namespace IWHMap
         private void this_MouseUp(object sender, MouseEventArgs e)
         {
             dragTimer = null;
-            Dragging = false;
+            dragging = false;
         }
 
         #endregion
@@ -183,6 +238,7 @@ namespace IWHMap
     public struct LineToDraw
     {
         public Pen Pen;
-        public List<Geography.Coordinates> Coordinates;
+        public Geography.Coordinates[] Coordinates;
+        public System.Drawing.Point[] Points;
     }
 }
