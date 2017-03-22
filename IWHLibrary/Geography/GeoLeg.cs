@@ -6,18 +6,18 @@ namespace Geography
     /// <summary>
     /// Представляет участок пути, заданный начальной и конечной точкой
     /// </summary>
-    public class Leg
+    public class GeoLeg
     {
 
         /// <summary>
         /// Начальная точка участка
         /// </summary>
-        public Point StartPoint { get; set; }
+        public GeoPoint StartPoint { get; set; }
 
         /// <summary>
         /// Конечная точка участка
         /// </summary>
-        public Point EndPoint { get; set; }
+        public GeoPoint EndPoint { get; set; }
 
         /// Направление участка
         /// </summary>
@@ -40,7 +40,7 @@ namespace Geography
         /// <summary>
         /// Возвращает кратчайшее расстояние между текущим и заданным участком пути, либо отрицательное значение, если проекции точек не попадают на вектора.
         /// </summary>
-        public Distance MinLegOffset(Leg anotherLeg)
+        public Distance MinLegOffset(GeoLeg anotherLeg)
         {
             Distance offset = Distance.FromKilometers(-1);
             offset = MinNodeOffset(this, anotherLeg.StartPoint, offset);
@@ -50,7 +50,7 @@ namespace Geography
             return offset;
         }
 
-        private static Distance MinNodeOffset(Leg leg, Point point, Distance previsionOffset)
+        private static Distance MinNodeOffset(GeoLeg leg, GeoPoint point, Distance previsionOffset)
         {
             // Возвращаем длину проекции точки на вектор, либо предыдущее (переданное) значение 
             // если оно отрицательно, меньше текущего, либо проекция не попадает на вектор.

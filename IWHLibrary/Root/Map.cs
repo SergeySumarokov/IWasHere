@@ -270,7 +270,7 @@ namespace IWH
         /// </summary>
         /// <param name="area"></param>
         /// <param name="targetType"></param>
-        public void FixWayTypeInArea(Geography.Area area, IWH.HighwayType targetType)
+        public void FixWayTypeInArea(Geography.GeoArea area, IWH.HighwayType targetType)
         {
             foreach (Way way in Ways)
             {
@@ -423,7 +423,7 @@ namespace IWH
         /// Загружает в экземпляр данные из osm-файла.
         /// </summary>
         /// <remarks>Требуется последущий пересчет участков и линий.</remarks>
-        public void LoadFromOsm(string osmFileName, Area IncludedArea, Area ExcludedArea)
+        public void LoadFromOsm(string osmFileName, GeoArea IncludedArea, GeoArea ExcludedArea)
         {
 
             IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
@@ -647,7 +647,7 @@ namespace IWH
         /// <summary>
         /// Удаляет точки, лежащие вне заданной области и упаковывает карту
         /// </summary>
-        private void RemoveNodesOutsideArea(Area IncludedArea, Area ExcludedArea)
+        private void RemoveNodesOutsideArea(GeoArea IncludedArea, GeoArea ExcludedArea)
         {
             // Удаляем точки вне заданной области из общего массива точек
             foreach (Node node in Nodes.Values.ToList())

@@ -7,27 +7,27 @@ namespace Geography
     /// <summary>
     /// Представляет путь, заданный набором участков
     /// </summary>
-    public class Way
+    public class GeoWay
     {
 
-        public List<Leg> Legs { get; protected set; }
+        public List<GeoLeg> Legs { get; protected set; }
 
-        public Way()
+        public GeoWay()
         {
-            Legs = new List<Leg>();
+            Legs = new List<GeoLeg>();
         }
 
         /// <summary>
         /// Возвращает список всех точек пути
         /// </summary>
         /// <returns></returns>
-        public List<Point> GetPoints()
+        public List<GeoPoint> GetPoints()
         {
-            var result = new List<Point>();
+            var result = new List<GeoPoint>();
             if (Legs.Count>0)
             {
                 result.Add(Legs[0].StartPoint);
-                foreach (Leg leg in Legs)
+                foreach (GeoLeg leg in Legs)
                 {
                     result.Add(leg.EndPoint);
                 }

@@ -21,11 +21,11 @@ namespace IWHTest
             Console.WriteLine("Загрузка границ области...");
             stopwatch.Restart();
             // Питер в границах КАД
-            Area areaSpb = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
+            GeoArea areaSpb = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
             // Ленобласть
-            Area areaLen = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-LEN_area.gpx");
+            GeoArea areaLen = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-LEN_area.gpx");
             // Корректировка типа
-            Area areaFix = AreaFromGpx(@"\Projects\IWasHere\Resources\Fix_Tertiary.gpx");
+            GeoArea areaFix = AreaFromGpx(@"\Projects\IWasHere\Resources\Fix_Tertiary.gpx");
             Console.WriteLine("Загрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
             Console.WriteLine("----------------");
 
@@ -164,9 +164,9 @@ namespace IWHTest
         /// </summary>
         /// <param name="gpxFileName"></param>
         /// <returns></returns>
-        static Geography.Area AreaFromGpx(string gpxFileName)
+        static Geography.GeoArea AreaFromGpx(string gpxFileName)
         {
-            Geography.Area result = new Geography.Area();
+            Geography.GeoArea result = new Geography.GeoArea();
             IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
             XmlDocument xml = new XmlDocument();
             XmlNamespaceManager prefix;
@@ -177,7 +177,7 @@ namespace IWHTest
             {
                 double lat = double.Parse(n.Attributes["lat"].Value, xmlFormatProvider);
                 double lon = double.Parse(n.Attributes["lon"].Value, xmlFormatProvider);
-                result.Points.Add(new Point(lat, lon, 0));
+                result.Points.Add(new GeoPoint(lat, lon, 0));
             }
             result.Recalculate();
             return result;

@@ -8,7 +8,7 @@ namespace Geography
     /// <summary>
     /// Представляет географическую область как полигон, заданный списком точек.
     /// </summary>
-    public class Area
+    public class GeoArea
     {
 
         // Минимальные и максимальные значения широты и долготы для оптимизации алгоритмов
@@ -18,14 +18,14 @@ namespace Geography
         /// <summary>
         /// Упорядоченный список точек, описывающий границы географической области.
         /// </summary>
-        public List<Point> Points { get; private set; }
+        public List<GeoPoint> Points { get; private set; }
 
         /// <summary>
         /// Инициализирует новый экземпляр класса.
         /// </summary>
-        public Area()
+        public GeoArea()
         {
-            Points = new List<Point>();
+            Points = new List<GeoPoint>();
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace Geography
         {
             _minPoint = Points[0].Coordinates;
             _maxPoint = Points[0].Coordinates;
-            foreach (Point point in Points)
+            foreach (GeoPoint point in Points)
             {
                 if (point.Coordinates.Latitude < _minPoint.Latitude) { _minPoint.Latitude = point.Coordinates.Latitude; }
                 if (point.Coordinates.Latitude > _maxPoint.Latitude) { _maxPoint.Latitude = point.Coordinates.Latitude; }
@@ -51,7 +51,7 @@ namespace Geography
         /// </summary>
         /// <param name="pointCoordinates"></param>
         /// <remarks>Не будет работать, если область пересекается мередианом 180.</remarks>
-        public bool HasPointInside(Point point)
+        public bool HasPointInside(GeoPoint point)
         {
             // Сначала проверяем на вхождение в прямоугольную область
             if (point.Coordinates.Latitude < _minPoint.Latitude ||
@@ -68,7 +68,7 @@ namespace Geography
         /// Возвращает истину, если заданная точка находится внутри заданной области.
         /// </summary>
         /// <remarks>Не будет работать, если область пересекается мередианом 180.</remarks>
-        public static bool IsPointInArea(List<Point> areaPoints, Point testPoint)
+        public static bool IsPointInArea(List<GeoPoint> areaPoints, GeoPoint testPoint)
         {
 
             bool isInside = false;

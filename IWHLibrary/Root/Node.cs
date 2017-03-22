@@ -28,7 +28,7 @@ namespace IWH
     /// A node represents a specific point on the earth's surface defined by its latitude and longitude.
     /// </remarks>
     [XmlRoot("node")]
-    public class Node : Geography.Point, IXmlSerializable
+    public class Node : Geography.GeoPoint, IXmlSerializable
     {
 
         #region "Поля и свойства"

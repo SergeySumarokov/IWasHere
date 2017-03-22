@@ -6,7 +6,7 @@ namespace Geography
     /// <summary>
     /// Представляет точку, заданную географическими координатами.
     /// </summary>
-    public class Point
+    public class GeoPoint
     {
 
         #region "Свойства"
@@ -77,12 +77,12 @@ namespace Geography
         /// <summary>
         /// Инициализирует новый экземпляр класса.
         /// </summary>
-        public Point() { }
+        public GeoPoint() { }
 
         /// <summary>
         /// Инициализирует новый экземпляр заданными координатами.
         /// </summary>
-        public Point(Coordinates coordinates)
+        public GeoPoint(Coordinates coordinates)
         {
             Coordinates = coordinates;
         }
@@ -93,7 +93,7 @@ namespace Geography
         /// <param name="latitudeDeg">Широта (гр)</param>
         /// <param name="longitudeDeg">Долгота (гр)</param>
         /// <param name="altitudeMt">Высота (м)</param>
-        public Point(double latitudeDeg, double longitudeDeg, double altitudeMt)
+        public GeoPoint(double latitudeDeg, double longitudeDeg, double altitudeMt)
         {
             Coordinates = new Coordinates(latitudeDeg, longitudeDeg, altitudeMt);
         }

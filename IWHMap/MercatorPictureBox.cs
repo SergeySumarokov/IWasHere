@@ -21,11 +21,11 @@ namespace IWHMap
         private Bitmap visibleImage;
         private Graphics visibleGraphics;
         // Положение и масштаб
-        private int mapX = 0, mapY = 0; // левый верхний угол видимой части карты
-        private float scaleView = 1F; // масштаб отображения (2 = уменьшение до 50%)
-        private float scaleMin = 0.5F;
-        private float scaleMax = 4.0F;
-        private float scaleStep = 1.1F;
+        private int mapX = 0, mapY = 0; // положение ЛВ-угла карты относительно ЛВ-угла элемента управления; должно быть отрицательным
+        private float scaleView = 1F; // масштаб отображения карты (2 = уменьшение до 50%)
+        private float scaleMin = 0.5F; // Минимальный масштаб
+        private float scaleMax = 4.0F; // Максимальный масштаб
+        private float scaleStep = 1.2F; // Шаг изменения масштаба
         private float scaleLat; // коэффициент для пересчёта радиан широты в пиксели
         private float scaleLon; // коэффициент для пересчёта радиан долготы в пиксели
         // Перемещение
@@ -102,7 +102,7 @@ namespace IWHMap
 
         #endregion
 
-        #region Рисование
+        #region Положение и масштаб карты
 
         // Необходимо вызывать при изменении размера элемента
         private void PrepareGraphics()
@@ -124,9 +124,15 @@ namespace IWHMap
             this.Image = visibleImage;
         }
 
-        // Пересчитываем коэффициенты масштаба
+        // Пересчитываем коэффициент масштаба
         private void SetScale(int delta)
         {
+            // Запоминаем текущее положение мыши над картой
+            Point cursorOnMap = new Point(); // положение мыши на карте в оригинальном размере
+            Point cursorOnControl = this.PointToClient(Cursor.Position); // положение мыши на этом элементе
+            cursorOnMap.X = (int)((mapX - cursorOnControl.X) * scaleView);
+            cursorOnMap.Y = (int)((mapY - cursorOnControl.Y) * scaleView);
+            // Меняем масштаб карты
             if (delta > 0 & scaleView < scaleMax)
             {
                 scaleView *= scaleStep;
@@ -137,66 +143,64 @@ namespace IWHMap
                 scaleView /= scaleStep;
                 if (scaleView < scaleMin) scaleView = scaleMin;
             }
-            System.Drawing.Point relativePoint = this.PointToClient(Cursor.Position);
-
+            // Меняем положение карты так, чтобы точка под указателем мыши осталась на месте
+            mapX = (int)(cursorOnMap.X / scaleView + cursorOnControl.X);
+            mapY = (int)(cursorOnMap.Y / scaleView + cursorOnControl.Y);
         }
 
-        // Устанавливает положение карты
+        // Устанавливает положение и масшаб карты в допустимых пределах
         private void SetOrigin()
         {
             // Не допускаем уменьшения карты меньше размера окна
-            int scaled_width = (int)(mapImage.Width / scaleView);
-            if (scaled_width < this.ClientSize.Width)
+            Size scaledSize = GetScaledSize();
+            if (scaledSize.Width < this.ClientSize.Width)
                 scaleView = (float)mapImage.Width / this.ClientSize.Width;
-            int scaled_height = (int)(mapImage.Height / scaleView);
-            if (scaled_height < this.ClientSize.Height)
+            if (scaledSize.Height < this.ClientSize.Height)
                 scaleView = (float)mapImage.Height / this.ClientSize.Height;
-            // Не допускаем выхода карты за границу окна
-            int xmin = this.ClientSize.Width - scaled_width;
+            // Не допускаем появления в окне границы карты
+            int xmin = this.ClientSize.Width - scaledSize.Width;
             if (xmin > 0) xmin = 0;
             if (mapX < xmin) mapX = xmin;
             else if (mapX > 0) mapX = 0;
-
-            int ymin = this.ClientSize.Height - scaled_height;
+            int ymin = this.ClientSize.Height - scaledSize.Height;
             if (ymin > 0) ymin = 0;
             if (mapY < ymin) mapY = ymin;
             else if (mapY > 0) mapY = 0;
         }
 
-        // Draw the image at the correct scale and location.
+        // Возвращает размер карты с учётом масштаба
+        private Size GetScaledSize()
+        {
+            return new Size((int)(mapImage.Width / scaleView), (int)(mapImage.Height / scaleView));
+        }
+
+        // Отрисовывает карту
         private void DrawMap()
         {
-
             if (mapImage == null) return;
-
-            // Validate PicX and PicY.
+            // Проверяем положение и масштаб карты
             SetOrigin();
-
             // Get the destination area.
-            float scaled_width = mapImage.Width / scaleView;
-            float scaled_height = mapImage.Height / scaleView;
+            Size scaledSize = GetScaledSize();
             PointF[] dest_points =
             {
                 new PointF(mapX, mapY),
-                new PointF(mapX + scaled_width, mapY),
-                new PointF(mapX, mapY + scaled_height),
+                new PointF(mapX + scaledSize.Width, mapY),
+                new PointF(mapX, mapY + scaledSize.Height),
             };
-
             // Draw the whole image.
             RectangleF source_rect = new RectangleF(
                 0, 0, mapImage.Width, mapImage.Height);
-
             // Draw.
             visibleGraphics.Clear(this.BackColor);
             visibleGraphics.DrawImage(mapImage, dest_points, source_rect, GraphicsUnit.Pixel);
-
             // Update the display.
             this.Refresh();
         }
 
         #endregion
 
-        #region Перемещение
+        #region Перемещение карты
 
         private void this_MouseDown(object sender, MouseEventArgs e)
         {

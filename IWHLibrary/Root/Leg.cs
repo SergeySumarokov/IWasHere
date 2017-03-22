@@ -8,7 +8,7 @@ namespace IWH
     /// <summary>
     /// Участок пути, заданный двумя точками с рассчитанным направлением пути и расстоянием.
     /// </summary>
-    public class Leg : Geography.Leg
+    public class Leg : Geography.GeoLeg
     {
 
         /// <summary>

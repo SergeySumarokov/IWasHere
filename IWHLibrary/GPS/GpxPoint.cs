@@ -6,7 +6,7 @@ using System.Xml.Serialization;
 namespace GPS
 {
 
-    public abstract class GpxPoint : Geography.Point, IXmlSerializable
+    public abstract class GpxPoint : Geography.GeoPoint, IXmlSerializable
     {
 
         #region "Реализация IXmlSerializable"

@@ -49,7 +49,7 @@ namespace IWH
     /// Описание полей относится к линиям, представляющим дороги.
     /// </remarks>
     [XmlRoot("way")]
-    public class Way : Geography.Way, IXmlSerializable
+    public class Way : Geography.GeoWay, IXmlSerializable
     {
 
         #region "Поля и свойства"
