@@ -26,8 +26,6 @@ namespace IWHMap
         private float scaleMin = 0.5F; // Минимальный масштаб
         private float scaleMax = 4.0F; // Максимальный масштаб
         private float scaleStep = 1.2F; // Шаг изменения масштаба
-        private float scaleLat; // коэффициент для пересчёта радиан широты в пиксели
-        private float scaleLon; // коэффициент для пересчёта радиан долготы в пиксели
         // Перемещение
         private bool dragging = false;
         private int dragLastX, dralLastY;
@@ -45,6 +43,7 @@ namespace IWHMap
             InitializeComponent();
 
             this.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.this_MouseWheel);
+
         }
 
         #endregion
@@ -82,11 +81,7 @@ namespace IWHMap
             // Отрисовываем карту
             base.OnPaint(pe);
             // Отрисовываем линии
-            Graphics g = pe.Graphics;
-            foreach (LineToDraw line in linesToDraw)
-            {
-                g.DrawLines(line.Pen, line.Points);
-            }
+            DrawLines(pe.Graphics);
         }
 
         private void this_MouseEnter(object sender, EventArgs e)
@@ -166,6 +161,8 @@ namespace IWHMap
             if (ymin > 0) ymin = 0;
             if (mapY < ymin) mapY = ymin;
             else if (mapY > 0) mapY = 0;
+            // Инициируем пересчёт координат линий
+            RecalcLines();
         }
 
         // Возвращает размер карты с учётом масштаба
@@ -234,15 +231,48 @@ namespace IWHMap
 
         #endregion
 
+        #region Рисование линий
+
+        // Пересчитывает положение точек всех линий на карте в оригинальном размере
+        private void RecalcLines()
+        {
+            double scaleLat =  mapImage.Height / (mapNordWest.Latitude - mapSouthEast.Latitude).Radians;
+            double scaleLon = mapImage.Width / (mapNordWest.Longitude - mapSouthEast.Longitude).Radians;
+            // Обходим каждую линию
+            foreach (LineToDraw line in linesToDraw)
+            {
+                // Пересчитываем все точки
+                Point[] points = new Point[line.Coordinates.Length];
+                for (int i=0; i<line.Coordinates.Length; i++)
+                {
+                    points[i].X = mapX + (int)((mapNordWest.Longitude - line.Coordinates[i].Longitude).Radians * scaleLon / scaleView);
+                    points[i].Y = mapY + (int)((mapNordWest.Latitude - line.Coordinates[i].Latitude).Radians * scaleLat / scaleView);
+                }
+                line.Points = points;
+            }
+        }
+
+        private void DrawLines(Graphics g)
+        {
+            foreach (LineToDraw line in linesToDraw)
+            {
+                g.DrawLines(line.Pen, line.Points);
+            }
+
+        }
+
+        #endregion
+
     }
 
     /// <summary>
     /// Структура линии для отрисовки на карте
     /// </summary>
-    public struct LineToDraw
+    public class LineToDraw
     {
-        public Pen Pen;
+        public System.Drawing.Pen Pen;
         public Geography.Coordinates[] Coordinates;
         public System.Drawing.Point[] Points;
     }
+
 }
