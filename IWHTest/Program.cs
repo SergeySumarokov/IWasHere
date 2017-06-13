@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Collections.Generic;
 using Primitives;
@@ -13,27 +14,44 @@ namespace IWHTest
         static void Main(string[] args)
         {
 
+            bool calcSpbOnly = true;
+
             var stopwatch = new System.Diagnostics.Stopwatch();
             var IwhMap = new IWH.Map();
+
+            string folderResources = @"\Projects\IWasHere\Resources";
+            if (calcSpbOnly) folderResources = @"\Projects\IWasHere\Resources\IWasHere78";
 
             // Загружаем границы областей
 
             Console.WriteLine("Загрузка границ области...");
             stopwatch.Restart();
-            // Питер в границах КАД
-            GeoArea areaSpb = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
             // Ленобласть
-            GeoArea areaLen = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-LEN_area.gpx");
-            // Корректировка типа
+            GeoArea areaInclude = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-LEN_area.gpx");
+            // Питер в границах КАД
+            GeoArea areaExclude = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
+            // Корректировка типа дорог
             GeoArea areaFix = AreaFromGpx(@"\Projects\IWasHere\Resources\Fix_Tertiary.gpx");
+            if (calcSpbOnly)
+            {
+                // Питер в границах КАД
+                areaInclude = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
+                areaExclude = null;
+                areaFix = null;
+            }
             Console.WriteLine("Загрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
             Console.WriteLine("----------------");
+
+            // -----
 
             //// Формируем локальную базу
 
             //Console.WriteLine("Формирование базы по данным из OSM...");
             //stopwatch.Restart();
-            //IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-LEN.osm", areaLen, areaSpb);
+            //if (calcSpbOnly)
+            //    IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-SPE.osm", areaInclude, areaExclude);
+            //else
+            //    IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-LEN.osm", areaInclude, areaExclude);
             //Console.WriteLine("Формирование выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
             //Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
             //Console.WriteLine("Длина {0}км", Math.Round(IwhMap.TotalLenght.Kilometers, 1));
@@ -64,15 +82,17 @@ namespace IWHTest
 
             //Console.WriteLine("Сохранение базы данных...");
             //stopwatch.Restart();
-            //IwhMap.WriteToXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
+            //IwhMap.WriteToXml(folderResources + @"\IwhMap.xml");
             //Console.WriteLine("Сохранение выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
             //Console.WriteLine("----------------");
+
+            // -----
 
             // Считываем базу
 
             Console.WriteLine("Загрузка базы данных...");
             stopwatch.Restart();
-            IwhMap = IWH.Map.ReadFromXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
+            IwhMap = IWH.Map.ReadFromXml(folderResources + @"\IwhMap.xml");
             IwhMap.Recalculate();
             Console.WriteLine("Загрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
             Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
@@ -99,7 +119,7 @@ namespace IWHTest
 
             // Анализируем треки
 
-            DirectoryInfo trackFolder = new DirectoryInfo(@"\Projects\IWasHere\Resources\Tracks");
+            DirectoryInfo trackFolder = new DirectoryInfo(folderResources + @"\Tracks");
             FileInfo[] trackFiles;
             trackFiles = trackFolder.GetFiles("*.gpx");
             // Обрабатываем треки
@@ -109,7 +129,7 @@ namespace IWHTest
                 Console.WriteLine("Анализ файла {0}", trackFile.Name);
                 GPS.Gpx gpxTrack = GPS.Gpx.FromXmlFile(trackFile.FullName);
                 Distance cacheRange = Distance.FromKilometers(4);
-                AnalizeGpsTrack(IwhMap.GetLegsList(), gpxTrack.GetPointList(), cacheRange, false);
+                AnalizeGpsTrack(IwhMap.GetLegsList(), gpxTrack.GetPointList(), cacheRange, calcSpbOnly);
             }
             Console.WriteLine("Анализ выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
             // Пересчитываем
@@ -129,7 +149,7 @@ namespace IWHTest
 
             //Console.WriteLine("Сохранение базы данных...");
             //stopwatch.Restart();
-            //IwhMap.WriteToXml(@"\Projects\IWasHere\Resources\IwhMap.xml");
+            //IwhMap.WriteToXml(folderResources + @"\IwhMap.xml");
             //Console.WriteLine("Сохранение выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
             //Console.WriteLine("----------------");
 
@@ -137,18 +157,18 @@ namespace IWHTest
 
             Console.WriteLine("Выгрузка GPS-трека...");
             stopwatch.Restart();
-            MapToGpx(WaysByType(IwhMap.Ways, new List<IWH.HighwayType>() { IWH.HighwayType.Motorway, IWH.HighwayType.Trunk }), false, @"\Projects\IWasHere\Resources\Way_Primary.gpx");
-            MapToGpx(WaysByType(IwhMap.Ways, new List<IWH.HighwayType>() { IWH.HighwayType.Primary, IWH.HighwayType.Secondary }), false, @"\Projects\IWasHere\Resources\Way_Secondary.gpx");
-            MapToGpx(WaysByType(IwhMap.Ways, new List<IWH.HighwayType>() { IWH.HighwayType.Tertiary }), false, @"\Projects\IWasHere\Resources\Way_Tertiary.gpx");
-            MapToGpx(IwhMap.Ways, true, @"\Projects\IWasHere\Resources\Way_Visited.gpx");
-            MapToGpx(WaysBySpeed(IwhMap.Ways, Speed.FromKilometersPerHour(5), Speed.FromKilometersPerHour(25)), true, @"\Projects\IWasHere\Resources\Way_Visited_25kmh.gpx");
-            MapToGpx(WaysBySpeed(IwhMap.Ways, Speed.FromKilometersPerHour(25), Speed.FromKilometersPerHour(50)), true, @"\Projects\IWasHere\Resources\Way_Visited_50kmh.gpx");
-            MapToGpx(WaysBySpeed(IwhMap.Ways, Speed.FromKilometersPerHour(50), Speed.FromKilometersPerHour(85)), true, @"\Projects\IWasHere\Resources\Way_Visited_85kmh.gpx");
-            MapToGpx(WaysBySpeed(IwhMap.Ways, Speed.FromKilometersPerHour(85), Speed.FromKilometersPerHour(200)), true, @"\Projects\IWasHere\Resources\Way_Visited_99kmh.gpx");
-            MapToGpx(WaysByTimes(IwhMap.Ways, 0, 1), true, @"\Projects\IWasHere\Resources\Way_Times_1.gpx");
-            MapToGpx(WaysByTimes(IwhMap.Ways, 1, 3), true, @"\Projects\IWasHere\Resources\Way_Times_2.gpx");
-            MapToGpx(WaysByTimes(IwhMap.Ways, 3, 99), true, @"\Projects\IWasHere\Resources\Way_Times_4.gpx");
-            CrossroadsToGpx(IwhMap, @"\Projects\IWasHere\Resources\Way_Crossroads.gpx");
+            MapToGpx(WaysByType(IwhMap.Ways, new List<IWH.HighwayType>() { IWH.HighwayType.Motorway, IWH.HighwayType.Trunk }), false, folderResources + @"\Way_Primary.gpx");
+            MapToGpx(WaysByType(IwhMap.Ways, new List<IWH.HighwayType>() { IWH.HighwayType.Primary, IWH.HighwayType.Secondary }), false, folderResources + @"\Way_Secondary.gpx");
+            MapToGpx(WaysByType(IwhMap.Ways, new List<IWH.HighwayType>() { IWH.HighwayType.Tertiary }), false, folderResources + @"\Way_Tertiary.gpx");
+            MapToGpx(IwhMap.Ways, true, folderResources + @"\Way_Visited.gpx");
+            MapToGpx(WaysBySpeed(IwhMap.Ways, Speed.FromKilometersPerHour(5), Speed.FromKilometersPerHour(25)), true, folderResources + @"\Way_Visited_25kmh.gpx");
+            MapToGpx(WaysBySpeed(IwhMap.Ways, Speed.FromKilometersPerHour(25), Speed.FromKilometersPerHour(50)), true, folderResources + @"\Way_Visited_50kmh.gpx");
+            MapToGpx(WaysBySpeed(IwhMap.Ways, Speed.FromKilometersPerHour(50), Speed.FromKilometersPerHour(85)), true, folderResources + @"\Way_Visited_85kmh.gpx");
+            MapToGpx(WaysBySpeed(IwhMap.Ways, Speed.FromKilometersPerHour(85), Speed.FromKilometersPerHour(200)), true, folderResources + @"\Way_Visited_99kmh.gpx");
+            MapToGpx(WaysByTimes(IwhMap.Ways, 0, 1), true, folderResources + @"\Way_Times_1.gpx");
+            MapToGpx(WaysByTimes(IwhMap.Ways, 1, 3), true, folderResources + @"\Way_Times_2.gpx");
+            MapToGpx(WaysByTimes(IwhMap.Ways, 3, 99), true, folderResources + @"\Way_Times_4.gpx");
+            CrossroadsToGpx(IwhMap, folderResources + @"\Way_Crossroads.gpx");
             stopwatch.Stop();
             Console.WriteLine("Выгрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
             Console.WriteLine("----------------");

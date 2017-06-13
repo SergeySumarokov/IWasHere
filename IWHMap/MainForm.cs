@@ -17,6 +17,28 @@ namespace IWHMap
 
             InitializeComponent();
 
+            // 
+            GPS.Gpx gpxTrack = GPS.Gpx.FromXmlFile(@"\Projects\IWasHere\Resources\Way_Visited.gpx");
+
+
+            foreach (GPS.Track track in gpxTrack.Tracks)
+            {
+                foreach (GPS.TrackSegment segment in track.Segments)
+                {
+                    var coordinates = new List<Geography.Coordinates>();
+                    var line = new LineToDraw();
+                    line.Pen = new System.Drawing.Pen(Color.Red, 3);
+                    foreach (GPS.TrackPoint point in segment.Points)
+                    {
+                        coordinates.Add(point.Coordinates);
+                    }
+                    line.Coordinates = coordinates.ToArray();
+                    if (line.Coordinates.Length==0)
+                        { }
+                    else
+                        MercatorMap.AddLine(line);
+                }
+            }
             // Загрузка и привязка карты
             MercatorMap.BindMap(
                 new Bitmap(@"\Projects\IWasHere\Resources\RU-LEN_map.jpg", false),

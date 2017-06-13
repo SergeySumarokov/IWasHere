@@ -272,6 +272,8 @@ namespace IWH
         /// <param name="targetType"></param>
         public void FixWayTypeInArea(Geography.GeoArea area, IWH.HighwayType targetType)
         {
+            if (area == null)
+                return;
             foreach (Way way in Ways)
             {
                 if (area.HasPointInside(way.FirstPoint) && area.HasPointInside(way.LastPoint))
@@ -652,7 +654,7 @@ namespace IWH
             // Удаляем точки вне заданной области из общего массива точек
             foreach (Node node in Nodes.Values.ToList())
             {
-                if (ExcludedArea.HasPointInside(node) || !IncludedArea.HasPointInside(node))
+                if (!IncludedArea.HasPointInside(node) || (ExcludedArea != null && ExcludedArea.HasPointInside(node)))
                     Nodes.Remove(node.OsmId);
             }
             // Удаляем у линий участки, точки которых отсутствующие в общем массиве

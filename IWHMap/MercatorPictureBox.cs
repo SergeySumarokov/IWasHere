@@ -65,6 +65,15 @@ namespace IWHMap
             DrawMap();
         }
 
+        /// <summary>
+        /// Добавляет линию в список подлежащих отрисовке
+        /// </summary>
+        /// <param name="line"></param>
+        public void AddLine(LineToDraw line)
+        {
+            linesToDraw.Add(line);
+        }
+
         #endregion
 
         #region События

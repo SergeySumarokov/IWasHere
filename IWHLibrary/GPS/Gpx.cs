@@ -68,7 +68,7 @@ namespace GPS
                                 pt.LongitudeDeg = double.Parse(nodeTrkpt.Attributes["lon"].Value, xmlFormatProvider);
                                 XmlElement timeElement = nodeTrkpt["time"];
                                 if (timeElement != null)
-                                    pt.Time = DateTime.Parse(timeElement.InnerText, xmlFormatProvider);
+                                    pt.Time = USDTPParse(timeElement.InnerText, xmlFormatProvider);
                                 seg.Points.Add(pt);
                             }
                         }
@@ -78,6 +78,12 @@ namespace GPS
                 gpx.Tracks.Add(trk);
             }
             return gpx;
+        }
+
+        private static DateTime USDTPParse(string text, IFormatProvider xmlFormatProvider) // USDTP = Universal Sortable Date Time Pattern
+        {
+            if (text.Length == 18) text = "20" + text; //17-04-06T10:51:05Z
+            return DateTime.Parse(text, xmlFormatProvider);
         }
 
         public List<TrackPoint> GetPointList()
