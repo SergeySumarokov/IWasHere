@@ -14,7 +14,7 @@ namespace IWHTest
         static void Main(string[] args)
         {
 
-            bool calcSpbOnly = true;
+            bool calcSpbOnly = false;
 
             var stopwatch = new System.Diagnostics.Stopwatch();
             var IwhMap = new IWH.Map();
@@ -31,13 +31,15 @@ namespace IWHTest
             // Питер в границах КАД
             GeoArea areaExclude = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
             // Корректировка типа дорог
-            GeoArea areaFix = AreaFromGpx(@"\Projects\IWasHere\Resources\Fix_Tertiary.gpx");
+            GeoArea areaFix1 = AreaFromGpx(@"\Projects\IWasHere\Resources\Fix_Tertiary1.gpx");
+            GeoArea areaFix2 = AreaFromGpx(@"\Projects\IWasHere\Resources\Fix_Tertiary2.gpx");
             if (calcSpbOnly)
             {
                 // Питер в границах КАД
                 areaInclude = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
                 areaExclude = null;
-                areaFix = null;
+                areaFix1 = null;
+                areaFix2 = null;
             }
             Console.WriteLine("Загрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
             Console.WriteLine("----------------");
@@ -104,7 +106,8 @@ namespace IWHTest
 
             Console.WriteLine("Корректировка путей...");
             stopwatch.Restart();
-            IwhMap.FixWayTypeInArea(areaFix, IWH.HighwayType.Tertiary);
+            IwhMap.FixWayTypeInArea(areaFix1, IWH.HighwayType.Tertiary);
+            IwhMap.FixWayTypeInArea(areaFix2, IWH.HighwayType.Tertiary);
             IwhMap.CombineShortWaysWithAdjacent();
             IwhMap.DivideWaysByCrossroads();
             IwhMap.DivideWaysByLenght();
