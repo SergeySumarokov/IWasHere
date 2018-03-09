@@ -14,50 +14,64 @@ namespace IWHTest
         static void Main(string[] args)
         {
 
-            bool calcSpbOnly = false;
+            //bool calcSpbOnly = false;
 
             var stopwatch = new System.Diagnostics.Stopwatch();
             var IwhMap = new IWH.Map();
 
             string folderResources = @"\Projects\IWasHere\Resources";
-            if (calcSpbOnly) folderResources = @"\Projects\IWasHere\Resources\IWasHere78";
+            //if (calcSpbOnly) folderResources = @"\Projects\IWasHere\Resources\IWasHere78";
 
             // Загружаем границы областей
 
             Console.WriteLine("Загрузка границ области...");
             stopwatch.Restart();
-            // Ленобласть
-            GeoArea areaInclude = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-LEN_area.gpx");
-            // Питер в границах КАД
+            // Внешняя граница
+            GeoArea areaInclude = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-NW_area.gpx");
+            //GeoArea areaInclude = null;
+            // Внутреняя граница
             GeoArea areaExclude = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
+            //GeoArea areaExclude = null;
             // Корректировка типа дорог
-            GeoArea areaFix1 = AreaFromGpx(@"\Projects\IWasHere\Resources\Fix_Tertiary1.gpx");
-            GeoArea areaFix2 = AreaFromGpx(@"\Projects\IWasHere\Resources\Fix_Tertiary2.gpx");
-            if (calcSpbOnly)
-            {
-                // Питер в границах КАД
-                areaInclude = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
-                areaExclude = null;
-                areaFix1 = null;
-                areaFix2 = null;
-            }
+            //GeoArea areaFix1 = AreaFromGpx(@"\Projects\IWasHere\Resources\Fix_Tertiary1.gpx");
+            //GeoArea areaFix2 = AreaFromGpx(@"\Projects\IWasHere\Resources\Fix_Tertiary2.gpx");
+            GeoArea areaFix1 = null;
+            GeoArea areaFix2 = null;
+            //if (calcSpbOnly)
+            //{
+            //    // Питер в границах КАД
+            //    areaInclude = AreaFromGpx(@"\Projects\IWasHere\Resources\RU-SPE_area.gpx");
+            //    areaExclude = null;
+            //    areaFix1 = null;
+            //    areaFix2 = null;
+            //}
             Console.WriteLine("Загрузка выполнена за {0} мсек", stopwatch.ElapsedMilliseconds);
             Console.WriteLine("----------------");
 
             // -----
 
-            //// Формируем локальную базу
+            // Формируем локальную базу
 
-            //Console.WriteLine("Формирование базы по данным из OSM...");
-            //stopwatch.Restart();
+            string[] osmFileNames =
+                {
+                    @"\Temp\IWasHere\RU-KR.osm",
+                    @"\Temp\IWasHere\RU-LEN.osm",
+                    @"\Temp\IWasHere\RU-MUR.osm",
+                    @"\Temp\IWasHere\RU-NGR.osm",
+                    @"\Temp\IWasHere\RU-PSK.osm",
+                    @"\Temp\IWasHere\RU-VLG.osm"
+                };
+
+            Console.WriteLine("Формирование базы по данным из OSM...");
+            stopwatch.Restart();
             //if (calcSpbOnly)
             //    IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-SPE.osm", areaInclude, areaExclude);
             //else
-            //    IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-LEN.osm", areaInclude, areaExclude);
-            //Console.WriteLine("Формирование выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
-            //Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
-            //Console.WriteLine("Длина {0}км", Math.Round(IwhMap.TotalLenght.Kilometers, 1));
-            //Console.WriteLine("----------------");
+                IwhMap.LoadFromOsm(osmFileNames, areaInclude, areaExclude);
+            Console.WriteLine("Формирование выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
+            Console.WriteLine("Длина {0}км", Math.Round(IwhMap.TotalLenght.Kilometers, 1));
+            Console.WriteLine("----------------");
 
             //// Удаляем НП с населением менее 2048
 
@@ -80,13 +94,13 @@ namespace IWHTest
             //Console.WriteLine("из них нас. пунктов {0}", VillageCount);
             //Console.WriteLine("----------------");
 
-            //// Записываем базу
+            //Записываем базу
 
-            //Console.WriteLine("Сохранение базы данных...");
-            //stopwatch.Restart();
-            //IwhMap.WriteToXml(folderResources + @"\IwhMap.xml");
-            //Console.WriteLine("Сохранение выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
-            //Console.WriteLine("----------------");
+            Console.WriteLine("Сохранение базы данных...");
+            stopwatch.Restart();
+            IwhMap.WriteToXml(folderResources + @"\IwhMap.xml");
+            Console.WriteLine("Сохранение выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("----------------");
 
             // -----
 
@@ -132,7 +146,8 @@ namespace IWHTest
                 Console.WriteLine("Анализ файла {0}", trackFile.Name);
                 GPS.Gpx gpxTrack = GPS.Gpx.FromXmlFile(trackFile.FullName);
                 Distance cacheRange = Distance.FromKilometers(4);
-                AnalizeGpsTrack(IwhMap.GetLegsList(), gpxTrack.GetPointList(), cacheRange, calcSpbOnly);
+                //AnalizeGpsTrack(IwhMap.GetLegsList(), gpxTrack.GetPointList(), cacheRange, calcSpbOnly);
+                AnalizeGpsTrack(IwhMap.GetLegsList(), gpxTrack.GetPointList(), cacheRange, false);
             }
             Console.WriteLine("Анализ выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
             // Пересчитываем
