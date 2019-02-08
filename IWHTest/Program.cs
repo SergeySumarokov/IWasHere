@@ -52,14 +52,18 @@ namespace IWHTest
 
             // Формируем локальную базу
 
+            //string[] osmFileNames =
+            //    {
+            //        @"\Temp\IWasHere\RU-KR.osm",
+            //        @"\Temp\IWasHere\RU-LEN.osm",
+            //        @"\Temp\IWasHere\RU-MUR.osm",
+            //        @"\Temp\IWasHere\RU-NGR.osm",
+            //        @"\Temp\IWasHere\RU-PSK.osm",
+            //        @"\Temp\IWasHere\RU-VLG.osm"
+            //    };
             string[] osmFileNames =
                 {
-                    @"\Temp\IWasHere\RU-KR.osm",
-                    @"\Temp\IWasHere\RU-LEN.osm",
-                    @"\Temp\IWasHere\RU-MUR.osm",
-                    @"\Temp\IWasHere\RU-NGR.osm",
-                    @"\Temp\IWasHere\RU-PSK.osm",
-                    @"\Temp\IWasHere\RU-VLG.osm"
+                    @"\Temp\IWasHere\northwestern-fed-district-latest.osm"
                 };
 
             Console.WriteLine("Формирование базы по данным из OSM...");
@@ -136,7 +140,7 @@ namespace IWHTest
 
             // Анализируем треки
 
-            DirectoryInfo trackFolder = new DirectoryInfo(folderResources + @"\Tracks");
+            DirectoryInfo trackFolder = new DirectoryInfo(folderResources + @"\Temp\IWasHere\Tracks");
             FileInfo[] trackFiles;
             trackFiles = trackFolder.GetFiles("*.gpx");
             // Обрабатываем треки
