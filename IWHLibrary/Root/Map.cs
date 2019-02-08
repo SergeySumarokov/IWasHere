@@ -425,19 +425,21 @@ namespace IWH
         /// Загружает в экземпляр данные из osm-файла.
         /// </summary>
         /// <remarks>Требуется последущий пересчет участков и линий.</remarks>
-        public void LoadFromOsm(string osmFileName, GeoArea IncludedArea, GeoArea ExcludedArea)
+        public void LoadFromOsm(string[] osmFileNames, GeoArea IncludedArea, GeoArea ExcludedArea)
         {
 
             IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
+            // Обходим все файлы
+            foreach (string osmFileName in osmFileNames)
+            {
+                /// Первым проходом читаем линии и сохраняем только нужные
+                using (XmlReader xml = XmlReader.Create(osmFileName))
+                    LoadWaysFromOsm(xml, xmlFormatProvider);
 
-            /// Первым проходом читаем линии и сохраняем только нужные
-            using (XmlReader xml = XmlReader.Create(osmFileName))
-                LoadWaysFromOsm(xml, xmlFormatProvider);
-
-            // Вторым проходом собираем точки
-            using (XmlReader xml = XmlReader.Create(osmFileName))
-                LoadNodesFromOsm(xml, xmlFormatProvider);
-
+                // Вторым проходом собираем точки
+                using (XmlReader xml = XmlReader.Create(osmFileName))
+                    LoadNodesFromOsm(xml, xmlFormatProvider);
+            }
             // Удаляем точки вне заданных границ
             RemoveNodesOutsideArea(IncludedArea, ExcludedArea);
 
@@ -448,6 +450,13 @@ namespace IWH
         /// </summary>
         private void LoadWaysFromOsm(XmlReader xml, IFormatProvider xmlFormatProvider)
         {
+            // Формируем список идентификаторов существующих линий
+            var waysDict = new Dictionary<Int64, Way>();
+            foreach (Way way in Ways)
+            {
+                waysDict.Add(way.OsmId, way);
+            }
+            //
             var highwayList = new List<string> { "motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "tertiary_link" };
             while (xml.Read())
             {
@@ -567,7 +576,11 @@ namespace IWH
                             newWay.Legs.Add(newLeg);
                         }
                         // Сохраняем нужную линию
-                        Ways.Add(newWay);
+                        if (!waysDict.ContainsKey(newWay.OsmId))
+                        {
+                            waysDict.Add(newWay.OsmId, newWay);
+                            Ways.Add( newWay);
+                        }
                     }
                     // Линия отработана
                 }
@@ -654,7 +667,11 @@ namespace IWH
             // Удаляем точки вне заданной области из общего массива точек
             foreach (Node node in Nodes.Values.ToList())
             {
-                if (!IncludedArea.HasPointInside(node) || (ExcludedArea != null && ExcludedArea.HasPointInside(node)))
+
+                //
+                //if (node.OsmId == 1875009848) throw new Exception("???");
+
+                if (node.Coordinates.IsEmpty || IncludedArea != null && !IncludedArea.HasPointInside(node) || (ExcludedArea != null && ExcludedArea.HasPointInside(node)))
                     Nodes.Remove(node.OsmId);
             }
             // Удаляем у линий участки, точки которых отсутствующие в общем массиве
@@ -663,6 +680,10 @@ namespace IWH
             {
                 foreach (Leg leg in way.Legs.ToList())
                 {
+
+                    //
+                    //if (leg.StartPoint.OsmId == 1875009848 || leg.EndPoint.OsmId == 1875009848) throw new Exception("???");
+
                     if (!Nodes.ContainsKey(leg.StartPoint.OsmId) || !Nodes.ContainsKey(leg.EndPoint.OsmId))
                         way.Legs.Remove(leg);
                 }
