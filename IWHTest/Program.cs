@@ -50,61 +50,61 @@ namespace IWHTest
 
             // -----
 
-            // Формируем локальную базу
+            //// Формируем локальную базу
 
+            ////string[] osmFileNames =
+            ////    {
+            ////        @"\Temp\IWasHere\RU-KR.osm",
+            ////        @"\Temp\IWasHere\RU-LEN.osm",
+            ////        @"\Temp\IWasHere\RU-MUR.osm",
+            ////        @"\Temp\IWasHere\RU-NGR.osm",
+            ////        @"\Temp\IWasHere\RU-PSK.osm",
+            ////        @"\Temp\IWasHere\RU-VLG.osm"
+            ////    };
             //string[] osmFileNames =
             //    {
-            //        @"\Temp\IWasHere\RU-KR.osm",
-            //        @"\Temp\IWasHere\RU-LEN.osm",
-            //        @"\Temp\IWasHere\RU-MUR.osm",
-            //        @"\Temp\IWasHere\RU-NGR.osm",
-            //        @"\Temp\IWasHere\RU-PSK.osm",
-            //        @"\Temp\IWasHere\RU-VLG.osm"
+            //        @"\Temp\IWasHere\northwestern-fed-district-latest.osm"
             //    };
-            string[] osmFileNames =
-                {
-                    @"\Temp\IWasHere\northwestern-fed-district-latest.osm"
-                };
 
-            Console.WriteLine("Формирование базы по данным из OSM...");
-            stopwatch.Restart();
-            //if (calcSpbOnly)
-            //    IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-SPE.osm", areaInclude, areaExclude);
-            //else
-                IwhMap.LoadFromOsm(osmFileNames, areaInclude, areaExclude);
-            Console.WriteLine("Формирование выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
-            Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
-            Console.WriteLine("Длина {0}км", Math.Round(IwhMap.TotalLenght.Kilometers, 1));
-            Console.WriteLine("----------------");
-
-            //// Удаляем НП с населением менее 2048
-
-            //Console.WriteLine("Контроль населенных пунктов...");
-            //Console.WriteLine("Узлов до удаления {0}", IwhMap.Nodes.Count);
+            //Console.WriteLine("Формирование базы по данным из OSM...");
             //stopwatch.Restart();
-            //Int32 VillageCount = 0;
-            //foreach (var node in IwhMap.Nodes.Values.ToList())
-            //{
-            //    if (node.Type == IWH.NodeType.Village)
-            //    {
-            //        if (node.Population < 2014)
-            //            IwhMap.Nodes.Remove(node.OsmId);
-            //        else
-            //            VillageCount++;
-            //    }
-            //}
-            //Console.WriteLine("Контроль выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
-            //Console.WriteLine("Узлов после удаления {0}", IwhMap.Nodes.Count);
-            //Console.WriteLine("из них нас. пунктов {0}", VillageCount);
+            ////if (calcSpbOnly)
+            ////    IwhMap.LoadFromOsm(@"\Temp\IWasHere\RU-SPE.osm", areaInclude, areaExclude);
+            ////else
+            //    IwhMap.LoadFromOsm(osmFileNames, areaInclude, areaExclude);
+            //Console.WriteLine("Формирование выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
+            //Console.WriteLine("Линий {0}, Узлов {1}", IwhMap.Ways.Count, IwhMap.Nodes.Count);
+            //Console.WriteLine("Длина {0}км", Math.Round(IwhMap.TotalLenght.Kilometers, 1));
             //Console.WriteLine("----------------");
 
-            //Записываем базу
+            ////// Удаляем НП с населением менее 2048
 
-            Console.WriteLine("Сохранение базы данных...");
-            stopwatch.Restart();
-            IwhMap.WriteToXml(folderResources + @"\IwhMap.xml");
-            Console.WriteLine("Сохранение выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
-            Console.WriteLine("----------------");
+            ////Console.WriteLine("Контроль населенных пунктов...");
+            ////Console.WriteLine("Узлов до удаления {0}", IwhMap.Nodes.Count);
+            ////stopwatch.Restart();
+            ////Int32 VillageCount = 0;
+            ////foreach (var node in IwhMap.Nodes.Values.ToList())
+            ////{
+            ////    if (node.Type == IWH.NodeType.Village)
+            ////    {
+            ////        if (node.Population < 2014)
+            ////            IwhMap.Nodes.Remove(node.OsmId);
+            ////        else
+            ////            VillageCount++;
+            ////    }
+            ////}
+            ////Console.WriteLine("Контроль выполнен за {0} мсек", stopwatch.ElapsedMilliseconds);
+            ////Console.WriteLine("Узлов после удаления {0}", IwhMap.Nodes.Count);
+            ////Console.WriteLine("из них нас. пунктов {0}", VillageCount);
+            ////Console.WriteLine("----------------");
+
+            ////Записываем базу
+
+            //Console.WriteLine("Сохранение базы данных...");
+            //stopwatch.Restart();
+            //IwhMap.WriteToXml(folderResources + @"\IwhMap.xml");
+            //Console.WriteLine("Сохранение выполнено за {0} мсек", stopwatch.ElapsedMilliseconds);
+            //Console.WriteLine("----------------");
 
             // -----
 
@@ -140,7 +140,7 @@ namespace IWHTest
 
             // Анализируем треки
 
-            DirectoryInfo trackFolder = new DirectoryInfo(folderResources + @"\Temp\IWasHere\Tracks");
+            DirectoryInfo trackFolder = new DirectoryInfo(@"\Temp\IWasHere\Tracks");
             FileInfo[] trackFiles;
             trackFiles = trackFolder.GetFiles("*.gpx");
             // Обрабатываем треки
