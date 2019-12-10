@@ -140,7 +140,7 @@ namespace IWHTest
 
             // Анализируем треки
 
-            DirectoryInfo trackFolder = new DirectoryInfo(@"\Temp\IWasHere\Tracks");
+            DirectoryInfo trackFolder = new DirectoryInfo(folderResources + @"\Tracks");
             FileInfo[] trackFiles;
             trackFiles = trackFolder.GetFiles("*.gpx");
             // Обрабатываем треки
