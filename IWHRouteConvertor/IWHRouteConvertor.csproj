@@ -44,6 +44,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RouteWriter.cs" />
+    <Compile Include="RouteReader.cs" />
+    <Compile Include="Helper.cs" />
     <Compile Include="Route.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
