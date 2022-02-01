@@ -32,8 +32,8 @@ namespace IWHRouteConvertor
         public static Route GetDebugRoute()
         {
             Route route = new Route();
-            route.AddPoint(60, 30, "Первый");
-            route.AddPoint(61, 29, "Второй");
+            route.AddPoint(60, 30, false, "Первый");
+            route.AddPoint(61, 29, false, "Второй");
             return route;
         }
 

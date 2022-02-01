@@ -20,7 +20,7 @@ namespace IWHRouteConvertor
     /// <summary>
     /// Представляет точку маршрута/
     /// </summary>
-    public class RoutePoint : GeoPoint
+    public class routePoint : GeoPoint
     {
         /// <summary>
         /// Имя точки маршрута.
@@ -41,7 +41,7 @@ namespace IWHRouteConvertor
         /// <summary>
         /// Упорядоченный список точек, описывающий маршрут.
         /// </summary>
-        public List<RoutePoint> Points { get; private set; } = new List<RoutePoint>();
+        public List<routePoint> Points { get; private set; } = new List<routePoint>();
         
         /// <summary>
         /// Загружает маршрут из текстового представления заданного формата
@@ -56,24 +56,19 @@ namespace IWHRouteConvertor
 
         }
 
-        public void AddPoint (double LatitudeDeg, double LongitudeDeg, string Name)
+        public void AddPoint (Double latitudeDeg, Double longitudeDeg, Boolean intermediate, String name)
         {
-            RoutePoint point = new RoutePoint();
-            point.LatitudeDeg = LatitudeDeg;
-            point.LongitudeDeg = LongitudeDeg;
-            point.Name = Name;
+            routePoint point = new routePoint();
+            point.LatitudeDeg = latitudeDeg;
+            point.LongitudeDeg = longitudeDeg;
+            point.Intermediate = intermediate;
+            point.Name = name;
             Points.Add(point);
         }
 
-        public string ToText()
+        public String ToText()
         {
-            string text = string.Empty;
-            foreach (RoutePoint point in this.Points)
-            {
-                if (text.Length > 0) text += Environment.NewLine;
-                text += string.Format("{0:f6},{1:f6},{2},{3}", point.LatitudeDeg, point.LongitudeDeg,point.Intermediate.GetHashCode(), point.Name);
-            }
-            return text;
+            return RouteWriter.ToNative(this);
         }
 
     }

@@ -10,23 +10,46 @@ namespace IWHRouteConvertor
 
         private static IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
 
-        public static Route GetRouteFromString(String routeString)
+        public static Route FromString(String routeString)
         {
             RouteFormat routeFormat = DetermineRouteFormat(routeString);
             switch (routeFormat)
             {
-                case RouteFormat.YandexURL: return GetFromYandexURL(routeString);
+                case RouteFormat.Native: return FromNative(routeString);
+                case RouteFormat.YandexURL: return FromYandexURL(routeString);
                 default: return null;
             }
         }
 
-        public static RouteFormat DetermineRouteFormat(String RouteString)
+        private static RouteFormat DetermineRouteFormat(String routeString)
         {
-            if (RouteString.ToLower().StartsWith("https://yandex.ru/maps/")) return RouteFormat.YandexURL;
+            if (routeString.ToLower().StartsWith("https://yandex.ru/maps/")) return RouteFormat.YandexURL;
             else return RouteFormat.Unknown;
         }
 
-        public static Route GetFromYandexURL(String yandexURL)
+        public static Route FromNative(String routeString)
+        {
+            Route result = new Route();
+            String[] routeLines = routeString.Split(new string[] { System.Environment.NewLine },StringSplitOptions.RemoveEmptyEntries);
+            if (routeLines.Length == 0)
+                return null;
+            foreach (String routeLine in routeLines)
+            {
+                String[] pointParams = routeLine.Split(',');
+                if (pointParams.Length == 4)
+                    result.AddPoint(
+                        Double.Parse(pointParams[0], xmlFormatProvider),
+                        Double.Parse(pointParams[1], xmlFormatProvider),
+                        Int32.Parse(pointParams[2]) == 1,
+                        pointParams[3].Trim()
+                        );
+                else
+                    return null;
+            }
+            return result;
+        }
+
+        public static Route FromYandexURL(String yandexURL)
         {
             // Проверяем начало строки на правильный URL
             yandexURL = yandexURL.ToLower();
@@ -45,7 +68,7 @@ namespace IWHRouteConvertor
             foreach (String listVal in pointList)
             {
                 String[] pointVal = listVal.Split(',');
-                route.AddPoint(Double.Parse(pointVal[0],xmlFormatProvider),Double.Parse(pointVal[1],xmlFormatProvider),"");
+                route.AddPoint(Double.Parse(pointVal[0],xmlFormatProvider),Double.Parse(pointVal[1],xmlFormatProvider),false,"");
             }
 
             // Обозначаем промежуточные точки
