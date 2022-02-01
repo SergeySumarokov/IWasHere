@@ -17,6 +17,7 @@ namespace IWHRouteConvertor
                 {
                     case RouteFormat.Native: return ToNative(route);
                     case RouteFormat.YandexURL: return ToYandexURL(route);
+                    case RouteFormat.GoogleURL: return ToGoogleURL(route);
                     case RouteFormat.RTE: return ToRTE(route);
                     default: return null;
                 }
@@ -39,7 +40,7 @@ namespace IWHRouteConvertor
         {
             string result = "https://yandex.ru/maps/?mode=routes";
             var rtextParam = new List<string>();
-            // Добавляем оординаты точек маршрута
+            // Добавляем координаты точек маршрута
             foreach (routePoint point in route.Points)
             {
                 rtextParam.Add(String.Format(xmlFormatProvider, "{0:f6}%2C{1:f6}", point.LatitudeDeg, point.LongitudeDeg));
@@ -49,12 +50,31 @@ namespace IWHRouteConvertor
             var viaParam = new List<string>();
             for (int i = 0; i < route.Points.Count; i++)
             {
-                if (route.Points[i].Intermediate) viaParam.Add(String.Format("{0}", i));
+                if (route.Points[i].Intermediate)
+                    viaParam.Add(String.Format("{0}", i));
             }
             if (viaParam.Count > 0)
-            {
                 result += "&via=" + String.Join("~", viaParam);
+            // Возвращаем результат
+            return result;
+        }
+
+        public static String ToGoogleURL(Route route)
+        {
+            string result = "https://www.google.ru/maps/dir/";
+            var mainPoints = new List<string>();
+            var intrPoints = new List<string>();
+            // Добавляем раздельно координаты основных и вспомогательныхточек
+            foreach (routePoint point in route.Points)
+            {
+                if (point.Intermediate)
+                    intrPoints.Add(String.Format(xmlFormatProvider, "!1d{0:f7}!2d{1:f7}", point.LongitudeDeg, point.LatitudeDeg));
+                else
+                    mainPoints.Add(String.Format(xmlFormatProvider, "{0:f7},{1:f7}", point.LatitudeDeg, point.LongitudeDeg));
             }
+            result += String.Join("/", mainPoints);
+            if (intrPoints.Count > 0)
+                result += "/data=!4m9!4m8!1m5!3m4!1m2" + String.Join("", intrPoints);
             // Возвращаем результат
             return result;
         }
