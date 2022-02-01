@@ -10,6 +10,20 @@ namespace IWHRouteConvertor
 
         private static IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
 
+        public static String ToText(Route route, RouteFormat routeFormat)
+        {
+            {
+                switch (routeFormat)
+                {
+                    case RouteFormat.Native: return ToNative(route);
+                    case RouteFormat.YandexURL: return ToYandexURL(route);
+                    case RouteFormat.RTE: return ToRTE(route);
+                    default: return null;
+                }
+            }
+
+        }
+
         public static String ToNative(Route route)
         {
             string result = string.Empty;
@@ -21,20 +35,6 @@ namespace IWHRouteConvertor
             return result;
         }
 
-        public static String ToRTE(Route route)
-        {
-            String result = String.Join(Environment.NewLine, new String[] {"OziExplorer Route File Version 1.0","WGS 84","Reserved 1","Reserved 2","","R,0,,,"});
-            foreach (routePoint point in route.Points)
-            {
-                var pointString = new String[] { "W", "0", "", "", "", "", "" };
-                pointString[4] = point.Name;
-                pointString[5] = String.Format(xmlFormatProvider, "{0:f6}", point.LatitudeDeg);
-                pointString[6] = String.Format(xmlFormatProvider, "{0:f6}", point.LongitudeDeg);
-                result += Environment.NewLine + String.Join(",", pointString);
-            }
-            return result;
-        }
-    
         public static String ToYandexURL(Route route)
         {
             string result = "https://yandex.ru/maps/?mode=routes";
@@ -59,5 +59,18 @@ namespace IWHRouteConvertor
             return result;
         }
 
+        public static String ToRTE(Route route)
+        {
+            String result = String.Join(Environment.NewLine, new String[] { "OziExplorer Route File Version 1.0", "WGS 84", "Reserved 1", "Reserved 2", "", "R,0,,," });
+            foreach (routePoint point in route.Points)
+            {
+                var pointString = new String[] { "W", "0", "", "", "", "", "" };
+                pointString[4] = point.Name;
+                pointString[5] = String.Format(xmlFormatProvider, "{0:f6}", point.LatitudeDeg);
+                pointString[6] = String.Format(xmlFormatProvider, "{0:f6}", point.LongitudeDeg);
+                result += Environment.NewLine + String.Join(",", pointString);
+            }
+            return result;
+        }
     }
 }

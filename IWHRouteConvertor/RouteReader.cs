@@ -10,7 +10,7 @@ namespace IWHRouteConvertor
 
         private static IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
 
-        public static Route FromString(String routeString)
+        public static Route FromText(String routeString)
         {
             RouteFormat routeFormat = DetermineRouteFormat(routeString);
             switch (routeFormat)

@@ -28,33 +28,39 @@ namespace IWHRouteConvertor
 
         private void InitializeControls()
         {
+            comboFormatList.DataSource = Enum.GetValues(typeof(RouteFormat));
             FillControls();
         }
 
         private void FillControls()
         {
-            if (Clipboard.ContainsText())
-            {
-                clipboardText.Text = Clipboard.GetText();
-            }
-            else
-            {
-                clipboardText.Text = "<Тест недоступен>";
-            }
             FillRouteText();
+            FillClipboadText();
         }
 
         private void MainForm_Activated(object sender, EventArgs e)
         {
-            FillControls();
+            FillClipboadText();
+        }
+
+        private void FillClipboadText()
+        {
+            if (Clipboard.ContainsText())
+            {
+                textClipboard.Text = Clipboard.GetText();
+            }
+            else
+            {
+                textClipboard.Text = "<Тест недоступен>";
+            }
         }
 
         private void FillRouteText()
         {
-            routeText.Clear();
+            textRoute.Clear();
             foreach (routePoint point in _route.Points)
             {
-                routeText.Text = _route.ToText();
+                textRoute.Text = _route.ToText();
             }
         }
 
@@ -67,7 +73,7 @@ namespace IWHRouteConvertor
         {
             if (Clipboard.ContainsText())
             {
-                Route route = RouteReader.FromString(Clipboard.GetText());
+                Route route = RouteReader.FromText(Clipboard.GetText());
                 if (route == null)
                 {
                     SetStatusText("Текст не распознан");
@@ -88,7 +94,7 @@ namespace IWHRouteConvertor
         private void ButtonReverse_Click(object sender, EventArgs e)
         {
             // Считывает текст маршрута
-            Route newRoute = RouteReader.FromNative(routeText.Text);
+            Route newRoute = RouteReader.FromNative(textRoute.Text);
             if (newRoute == null)
             {
                 SetStatusText("Ошибка в маршруте");
@@ -104,7 +110,7 @@ namespace IWHRouteConvertor
         private void ButtonWrite_Click(object sender, EventArgs e)
         {
             // Считывает текст маршрута
-            Route newRoute = RouteReader.FromNative(routeText.Text);
+            Route newRoute = RouteReader.FromNative(textRoute.Text);
             if (newRoute == null)
             {
                 SetStatusText("Ошибка в маршруте");
@@ -112,7 +118,13 @@ namespace IWHRouteConvertor
             }
             _route = newRoute;
             //
-            Clipboard.SetText(RouteWriter.ToYandexURL(_route));
+            String routeText = RouteWriter.ToText(_route, (RouteFormat) comboFormatList.SelectedItem);
+            if (String.IsNullOrEmpty(routeText))
+            {
+                SetStatusText("Не получилось");
+                return;
+            }
+            Clipboard.SetText(routeText);
             FillControls();
             SetStatusText("Маршрут выгружен");
         }
