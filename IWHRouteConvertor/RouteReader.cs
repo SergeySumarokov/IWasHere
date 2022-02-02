@@ -5,84 +5,108 @@ using System.Text;
 
 namespace IWHRouteConvertor
 {
-    class RouteReader
+    /// <summary>
+    /// Предоставляет методы для получения маршрута из текстового представления.
+    /// </summary>
+    static class RouteReader
     {
 
-        private static IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
+        private static readonly IFormatProvider TextFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
 
-        public static Route FromText(string routeString)
+        /// <summary>
+        /// Получает маршрут из текста, самостоятельно определяя формат по содержимому.
+        /// </summary>
+        /// <returns>Возвращает null при ошибке.</returns>
+        public static Route FromText(string routeText)
         {
-            RouteFormat routeFormat = DetermineRouteFormat(routeString);
+            RouteFormat routeFormat = DetermineRouteFormat(routeText);
             switch (routeFormat)
             {
-                case RouteFormat.Native: return FromNative(routeString);
-                case RouteFormat.YandexURL: return FromYandexURL(routeString);
-                default: return null;
+                case RouteFormat.Native:
+                    return FromNative(routeText);
+                case RouteFormat.YandexURL:
+                    return FromYandexURL(routeText);
+                default:
+                    return null;
             }
         }
 
         private static RouteFormat DetermineRouteFormat(string routeString)
         {
-            if (routeString.ToLower().StartsWith("https://yandex.ru/maps/")) return RouteFormat.YandexURL;
-            else return RouteFormat.Unknown;
+            if (routeString.ToLower().StartsWith("https://yandex.ru/maps/"))
+                return RouteFormat.YandexURL;
+            else
+                return RouteFormat.Unknown;
         }
 
-        public static Route FromNative(string routeString)
+        /// <summary>
+        /// Получает маршрут из текста в собственном формате.
+        /// </summary>
+        /// <returns>Возвращает null при ошибке.</returns>
+        public static Route FromNative(string routeText)
         {
-            Route result = new Route();
-            string[] routeLines = routeString.Split(new string[] { System.Environment.NewLine },StringSplitOptions.RemoveEmptyEntries);
-            if (routeLines.Length == 0)
+            var result = new Route();
+            string[] textLines = routeText.Split(new string[] { System.Environment.NewLine },StringSplitOptions.RemoveEmptyEntries);
+            if (textLines.Length == 0)
                 return null;
-            foreach (string routeLine in routeLines)
+            // В каждой строке должно быть 4 значение с разделителем запятая
+            foreach (string textLine in textLines)
             {
-                string[] pointParams = routeLine.Split(',');
-                if (pointParams.Length == 4)
-                    result.AddPoint(
-                        double.Parse(pointParams[0], xmlFormatProvider),
-                        double.Parse(pointParams[1], xmlFormatProvider),
-                        int.Parse(pointParams[2]) == 1,
-                        pointParams[3].Trim()
-                        );
+                string[] pointProps = textLine.Split(',');
+                if (pointProps.Length == 4)
+                    result.AddPoint(double.Parse(pointProps[0], TextFormatProvider),
+                                    double.Parse(pointProps[1], TextFormatProvider),
+                                    int.Parse(pointProps[2]) == 1,
+                                    pointProps[3].Trim());
                 else
                     return null;
             }
             return result;
         }
 
+        /// <summary>
+        /// Получает маршрут из текста URL карт Яндекса.
+        /// </summary>
+        /// <returns>Возвращает null при ошибке.</returns>
         public static Route FromYandexURL(string yandexURL)
         {
+            
             // Проверяем начало строки на правильный URL
             yandexURL = yandexURL.ToLower();
-            if (!yandexURL.StartsWith("https://yandex.ru/maps/")) return null;
+            if (!yandexURL.StartsWith("https://yandex.ru/maps/"))
+                return null;
 
             //Разбираем строку параметров и получаем словарь
-            string paramString = yandexURL.Substring(yandexURL.IndexOf('?')+1);
+            string paramString = yandexURL.Substring(yandexURL.IndexOf('?') + 1);
             Dictionary<string, string> paramDict = Helper.GetDictFromString(paramString, '&', '=');
 
-            // Разбираем строку координат точек
-            string pointString = paramDict["rtext"].Replace("%2c", ",");
-            List<string> pointList = pointString.Split('~').ToList();
-            
             // Наполняем маршрут
-            Route route = new Route();
-            foreach (string listVal in pointList)
+            Route result = new Route();
+            string[] pointTexts = paramDict["rtext"].Replace("%2c", ",").Split('~');
+            foreach (string pointText in pointTexts)
             {
-                string[] pointVal = listVal.Split(',');
-                route.AddPoint(double.Parse(pointVal[0],xmlFormatProvider), double.Parse(pointVal[1],xmlFormatProvider),false,"");
+                string[] pointProps = pointText.Split(',');
+                if (pointProps.Length == 2)
+                    result.AddPoint(double.Parse(pointProps[0], TextFormatProvider),
+                                    double.Parse(pointProps[1], TextFormatProvider),
+                                    false,
+                                    "");
+                else
+                    return null;
             }
 
             // Обозначаем промежуточные точки
             if (paramDict.ContainsKey("via"))
             {
-                string viaString = paramDict["via"];
-                List<string> viaList = viaString.Split('~').ToList();
-                foreach (string viaVal in viaList)
+                string[] pointIndexes = paramDict["via"].Split('~');
+                foreach (string pointIndex in pointIndexes)
                 {
-                    route.Points[int.Parse(viaVal)].Intermediate = true;
+                    result.Points[int.Parse(pointIndex)].Intermediate = true;
                 }
             }
 
-            return route;
+            return result;
+        
         }
 
     }

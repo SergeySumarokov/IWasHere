@@ -58,9 +58,9 @@ namespace IWHRouteConvertor
         private void FillRouteText()
         {
             textRoute.Clear();
-            foreach (routePoint point in _route.Points)
+            foreach (RoutePoint point in _route.Points)
             {
-                textRoute.Text = _route.ToText();
+                textRoute.Text = RouteWriter.ToNative(_route);
             }
         }
 

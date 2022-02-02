@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Primitives;
+﻿using System.Collections.Generic;
 using Geography;
 
 namespace IWHRouteConvertor
 {
+ 
+    /// <summary>
+    /// Указывает формат представления маршрута.
+    /// </summary>
     public enum RouteFormat : int
     {
         Unknown = 0,
@@ -18,57 +18,47 @@ namespace IWHRouteConvertor
     }
     
     /// <summary>
-    /// Представляет точку маршрута/
+    /// Представляет точку маршрута.
     /// </summary>
-    public class routePoint : GeoPoint
+    public class RoutePoint : GeoPoint
     {
+        
         /// <summary>
-        /// Имя точки маршрута.
+        /// Наименование точки маршрута.
         /// </summary>
         public string Name;
+        
         /// <summary>
-        /// Значение Истина указывает на промежуточную точку маршрута
+        /// Значение true указывает на промежуточную точку маршрута.
         /// </summary>
         public bool Intermediate;
+    
     }
 
     /// <summary>
-    /// Представляет маршрут, заданный набором промежуточных точек.
+    /// Представляет маршрут, определённый упорядоченным списком точек.
     /// </summary>
     public class Route
     {
-
-        /// <summary>
-        /// Упорядоченный список точек, описывающий маршрут.
-        /// </summary>
-        public List<routePoint> Points { get; private set; } = new List<routePoint>();
         
         /// <summary>
-        /// Загружает маршрут из текстового представления заданного формата
+        /// Представляет упорядоченный список точек, определяющих маршрут.
         /// </summary>
-        public void Read(RouteFormat routeFormat)
-        {
-            
-        }
-        
-        public void Write()
-        {
+        public List<RoutePoint> Points { get; private set; } = new List<RoutePoint>();
 
-        }
-
-        public void AddPoint (double latitudeDeg, double longitudeDeg, bool intermediate, string name)
+        /// <summary>
+        /// Добавляет точку в конец списка.
+        /// </summary>
+        public void AddPoint(double latitudeDeg, double longitudeDeg, bool intermediate, string name)
         {
-            routePoint point = new routePoint();
-            point.LatitudeDeg = latitudeDeg;
-            point.LongitudeDeg = longitudeDeg;
-            point.Intermediate = intermediate;
-            point.Name = name;
+            var point = new RoutePoint
+            {
+                LatitudeDeg = latitudeDeg,
+                LongitudeDeg = longitudeDeg,
+                Intermediate = intermediate,
+                Name = name
+            };
             Points.Add(point);
-        }
-
-        public string ToText()
-        {
-            return RouteWriter.ToNative(this);
         }
 
     }
