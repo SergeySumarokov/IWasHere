@@ -56,7 +56,7 @@ namespace IWH
         /// 64-bit integer number.
         /// Node ids are unique between nodes.
         /// </remarks>
-        public Int64 OsmId;
+        public long OsmId;
         
         /// <summary>
         /// Тип точки.
@@ -75,7 +75,7 @@ namespace IWH
         /// <remarks>
         /// Не используется для узлов типа Waypoint.
         /// </remarks>
-        public String Name;
+        public string Name;
 
         /// <summary>
         /// Население населенного пункта.
@@ -83,7 +83,7 @@ namespace IWH
         /// <remarks>
         /// Используется только для узлов типа City, Town, Village.
         /// </remarks>
-        public Int32 Population;
+        public int Population;
 
         #endregion
 
@@ -95,7 +95,7 @@ namespace IWH
         public Node()
         {
             Legs = new List<Leg>();
-            Name = String.Empty;
+            Name = string.Empty;
         }
 
         #endregion
@@ -111,7 +111,7 @@ namespace IWH
 
         public void ReadXml(XmlReader reader)
         {
-            OsmId = Int64.Parse(reader.GetAttribute("id"), xmlFormatProvider);
+            OsmId = long.Parse(reader.GetAttribute("id"), xmlFormatProvider);
             Coordinates.Latitude.Degrees = double.Parse(reader.GetAttribute("lat"), xmlFormatProvider);
             Coordinates.Longitude.Degrees = double.Parse(reader.GetAttribute("lon"), xmlFormatProvider);
             string typeString = reader.GetAttribute("type");
@@ -119,7 +119,7 @@ namespace IWH
             {
                 Type = (NodeType)Enum.Parse(typeof(NodeType), typeString);
                 Name = reader.GetAttribute("name");
-                Population = Int32.Parse(reader.GetAttribute("pop"), xmlFormatProvider);
+                Population = int.Parse(reader.GetAttribute("pop"), xmlFormatProvider);
             }
         }
 

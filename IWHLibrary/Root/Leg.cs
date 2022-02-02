@@ -42,12 +42,12 @@ namespace IWH
         /// <summary>
         /// Истина, исли участок был посещён.
         /// </summary>
-        public Boolean IsVisited;
+        public bool IsVisited;
 
         /// <summary>
         /// Количество посещений участка
         /// </summary>
-        public Int32 VisitedCount;
+        public int VisitedCount;
 
         /// <summary>
         /// Время последнего посещения участка.

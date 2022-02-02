@@ -64,7 +64,7 @@ namespace IWHRouteConvertor
             }
         }
 
-         private void SetStatusText(String StatusText)
+         private void SetStatusText(string StatusText)
         {
             toolStripStatusLabel.Text = StatusText;
         }
@@ -118,8 +118,8 @@ namespace IWHRouteConvertor
             }
             _route = newRoute;
             //
-            String routeText = RouteWriter.ToText(_route, (RouteFormat) comboFormatList.SelectedItem);
-            if (String.IsNullOrEmpty(routeText))
+            string routeText = RouteWriter.ToText(_route, (RouteFormat) comboFormatList.SelectedItem);
+            if (string.IsNullOrEmpty(routeText))
             {
                 SetStatusText("Не получилось");
                 return;

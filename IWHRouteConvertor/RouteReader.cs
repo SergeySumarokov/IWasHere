@@ -10,7 +10,7 @@ namespace IWHRouteConvertor
 
         private static IFormatProvider xmlFormatProvider = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
 
-        public static Route FromText(String routeString)
+        public static Route FromText(string routeString)
         {
             RouteFormat routeFormat = DetermineRouteFormat(routeString);
             switch (routeFormat)
@@ -21,26 +21,26 @@ namespace IWHRouteConvertor
             }
         }
 
-        private static RouteFormat DetermineRouteFormat(String routeString)
+        private static RouteFormat DetermineRouteFormat(string routeString)
         {
             if (routeString.ToLower().StartsWith("https://yandex.ru/maps/")) return RouteFormat.YandexURL;
             else return RouteFormat.Unknown;
         }
 
-        public static Route FromNative(String routeString)
+        public static Route FromNative(string routeString)
         {
             Route result = new Route();
-            String[] routeLines = routeString.Split(new string[] { System.Environment.NewLine },StringSplitOptions.RemoveEmptyEntries);
+            string[] routeLines = routeString.Split(new string[] { System.Environment.NewLine },StringSplitOptions.RemoveEmptyEntries);
             if (routeLines.Length == 0)
                 return null;
-            foreach (String routeLine in routeLines)
+            foreach (string routeLine in routeLines)
             {
-                String[] pointParams = routeLine.Split(',');
+                string[] pointParams = routeLine.Split(',');
                 if (pointParams.Length == 4)
                     result.AddPoint(
-                        Double.Parse(pointParams[0], xmlFormatProvider),
-                        Double.Parse(pointParams[1], xmlFormatProvider),
-                        Int32.Parse(pointParams[2]) == 1,
+                        double.Parse(pointParams[0], xmlFormatProvider),
+                        double.Parse(pointParams[1], xmlFormatProvider),
+                        int.Parse(pointParams[2]) == 1,
                         pointParams[3].Trim()
                         );
                 else
@@ -49,36 +49,36 @@ namespace IWHRouteConvertor
             return result;
         }
 
-        public static Route FromYandexURL(String yandexURL)
+        public static Route FromYandexURL(string yandexURL)
         {
             // Проверяем начало строки на правильный URL
             yandexURL = yandexURL.ToLower();
             if (!yandexURL.StartsWith("https://yandex.ru/maps/")) return null;
 
             //Разбираем строку параметров и получаем словарь
-            String paramString = yandexURL.Substring(yandexURL.IndexOf('?')+1);
-            Dictionary<String, String> paramDict = Helper.GetDictFromString(paramString, '&', '=');
-            
+            string paramString = yandexURL.Substring(yandexURL.IndexOf('?')+1);
+            Dictionary<string, string> paramDict = Helper.GetDictFromString(paramString, '&', '=');
+
             // Разбираем строку координат точек
-            String pointString = paramDict["rtext"].Replace("%2c", ",");
-            List<String> pointList = pointString.Split('~').ToList();
+            string pointString = paramDict["rtext"].Replace("%2c", ",");
+            List<string> pointList = pointString.Split('~').ToList();
             
             // Наполняем маршрут
             Route route = new Route();
-            foreach (String listVal in pointList)
+            foreach (string listVal in pointList)
             {
-                String[] pointVal = listVal.Split(',');
-                route.AddPoint(Double.Parse(pointVal[0],xmlFormatProvider),Double.Parse(pointVal[1],xmlFormatProvider),false,"");
+                string[] pointVal = listVal.Split(',');
+                route.AddPoint(double.Parse(pointVal[0],xmlFormatProvider), double.Parse(pointVal[1],xmlFormatProvider),false,"");
             }
 
             // Обозначаем промежуточные точки
             if (paramDict.ContainsKey("via"))
             {
-                String viaString = paramDict["via"];
-                List<String> viaList = viaString.Split('~').ToList();
-                foreach (String viaVal in viaList)
+                string viaString = paramDict["via"];
+                List<string> viaList = viaString.Split('~').ToList();
+                foreach (string viaVal in viaList)
                 {
-                    route.Points[Int32.Parse(viaVal)].Intermediate = true;
+                    route.Points[int.Parse(viaVal)].Intermediate = true;
                 }
             }
 

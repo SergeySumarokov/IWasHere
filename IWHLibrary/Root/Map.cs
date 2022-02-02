@@ -24,7 +24,7 @@ namespace IWH
         /// <summary>
         /// Индексированный список узлов.
         /// </summary>
-        public Dictionary<Int64, Node> Nodes { get; private set; }
+        public Dictionary<long, Node> Nodes { get; private set; }
 
         /// <summary>
         /// Cписок линий.
@@ -60,7 +60,7 @@ namespace IWH
         /// </summary>
         public Map()
         {
-            Nodes = new Dictionary<Int64, Node>();
+            Nodes = new Dictionary<long, Node>();
             Ways = new List<Way>();
         }
 
@@ -340,16 +340,16 @@ namespace IWH
                     XmlNode xmlWay = xmlDoc.SelectSingleNode("way");
                     var way = new Way();
                     // Аттрибуты
-                    way.OsmId = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
+                    way.OsmId = long.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
                     way.Name = xmlWay.Attributes["name"].Value;
                     way.Type = (HighwayType)Enum.Parse(typeof(HighwayType), xmlWay.Attributes["type"].Value);
-                    way.IsLink = Boolean.Parse(xmlWay.Attributes["link"].Value);
+                    way.IsLink = bool.Parse(xmlWay.Attributes["link"].Value);
                     way.Surface = (HighwaySurface)Enum.Parse(typeof(HighwaySurface), xmlWay.Attributes["surface"].Value);
                     way.Smoothness = (HighwaySmoothness)Enum.Parse(typeof(HighwaySmoothness), xmlWay.Attributes["smoothness"].Value);
-                    way.Lighting = Boolean.Parse(xmlWay.Attributes["lighting"].Value);
-                    way.Lanes = Byte.Parse(xmlWay.Attributes["lanes"].Value);
-                    way.OneWay = Boolean.Parse(xmlWay.Attributes["oneway"].Value);
-                    way.IsVisited = Boolean.Parse(xmlWay.Attributes["visited"].Value);
+                    way.Lighting = bool.Parse(xmlWay.Attributes["lighting"].Value);
+                    way.Lanes = byte.Parse(xmlWay.Attributes["lanes"].Value);
+                    way.OneWay = bool.Parse(xmlWay.Attributes["oneway"].Value);
+                    way.IsVisited = bool.Parse(xmlWay.Attributes["visited"].Value);
                     way.LastVisitedTime = DateTime.Parse(xmlWay.Attributes["last"].Value, xmlFormatProvider);
                     // Точки
                     Node point;
@@ -358,7 +358,7 @@ namespace IWH
                     for (int i = 0; i < xmlRefs.Count; i++)
                     {
                         XmlNode xmlRef = xmlRefs[i];
-                        point = Nodes[Int64.Parse(xmlRef.Attributes["id"].Value, xmlFormatProvider)];
+                        point = Nodes[long.Parse(xmlRef.Attributes["id"].Value, xmlFormatProvider)];
                         // Для всех точек кроме последней создаём новые участки
                         if (i < xmlRefs.Count-1)
                         {
@@ -366,8 +366,8 @@ namespace IWH
                             newLeg.Way = way;
                             newLeg.StartPoint = point;
                             newLeg.StartPoint.Legs.Add(newLeg);
-                            newLeg.IsVisited = Boolean.Parse(xmlRef.Attributes["visited"].Value);
-                            newLeg.VisitedCount = Int32.Parse(xmlRef.Attributes["count"].Value, xmlFormatProvider);
+                            newLeg.IsVisited = bool.Parse(xmlRef.Attributes["visited"].Value);
+                            newLeg.VisitedCount = int.Parse(xmlRef.Attributes["count"].Value, xmlFormatProvider);
                             newLeg.LastVisitedTime = DateTime.Parse(xmlRef.Attributes["last"].Value, xmlFormatProvider);
                             way.Legs.Add(newLeg);
                         }
@@ -451,7 +451,7 @@ namespace IWH
         private void LoadWaysFromOsm(XmlReader xml, IFormatProvider xmlFormatProvider)
         {
             // Формируем список идентификаторов существующих линий
-            var waysDict = new Dictionary<Int64, Way>();
+            var waysDict = new Dictionary<long, Way>();
             foreach (Way way in Ways)
             {
                 waysDict.Add(way.OsmId, way);
@@ -501,13 +501,13 @@ namespace IWH
                                 break;
                         }
                         // Определяем другие реквизиты линии
-                        newWay.OsmId = Int64.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
+                        newWay.OsmId = long.Parse(xmlWay.Attributes["id"].Value, xmlFormatProvider);
                         if (tags.ContainsKey("name"))
                             newWay.Name = tags["name"];
                         if (tags.ContainsKey("lit"))
                             newWay.Lighting = (tags["lit"] == "yes");
                         if (tags.ContainsKey("lanes"))
-                            try { newWay.Lanes = Byte.Parse(tags["lanes"]); } catch { }
+                            try { newWay.Lanes = byte.Parse(tags["lanes"]); } catch { }
                         if (tags.ContainsKey("oneway"))
                             newWay.OneWay = (tags["oneway"] == "yes");
                         if (tags.ContainsKey("surface"))
@@ -554,7 +554,7 @@ namespace IWH
                         List<Node> wayNodes = new List<Node>();
                         foreach (XmlNode xmlNd in xmlDoc.SelectNodes("/way/nd"))
                         {
-                            Int64 id = Int64.Parse(xmlNd.Attributes["ref"].Value, xmlFormatProvider);
+                            long id = long.Parse(xmlNd.Attributes["ref"].Value, xmlFormatProvider);
                             if (Nodes.ContainsKey(id))
                             {
                                 newNode = Nodes[id];
@@ -604,14 +604,14 @@ namespace IWH
                     xmlDoc.LoadXml(xml.ReadOuterXml());
                     XmlNode xmlNode = xmlDoc.SelectSingleNode("node");
                     // Загружаем аттрибуты
-                    Int64 id = Int64.Parse(xmlNode.Attributes["id"].Value, xmlFormatProvider);
+                    long id = long.Parse(xmlNode.Attributes["id"].Value, xmlFormatProvider);
                     // Загружаем тэги
                     var tags = new Dictionary<string, string>();
                     foreach (XmlNode xmlTag in xmlDoc.SelectNodes("/node/tag"))
                         tags.Add(xmlTag.Attributes["k"].Value, xmlTag.Attributes["v"].Value);
                     // Нам нужны только точки, участвующие в сохраненных линиях, или точки заданного типа
                     Node newNode = null;
-                    Boolean goodNode = false;
+                    bool goodNode = false;
                     if (Nodes.ContainsKey(id))
                     {
                         // Эта точка входит в нужную линию
@@ -645,7 +645,7 @@ namespace IWH
                         if (tags.ContainsKey("name"))
                             newNode.Name = tags["name"];
                         if (tags.ContainsKey("population"))
-                            try { newNode.Population = Int32.Parse(tags["population"], xmlFormatProvider); } catch { }
+                            try { newNode.Population = int.Parse(tags["population"], xmlFormatProvider); } catch { }
                     }
                     // Заполняем общие данные для нужных точек
                     if (goodNode)

@@ -8,19 +8,19 @@ namespace IWHRouteConvertor
     class Helper
     {
 
-        public static List<String> GetListFromString(String sourceString, Char itemSeparator)
+        public static List<string> GetListFromString(string sourceString, char itemSeparator)
         {
-            List<String> result = sourceString.Split(itemSeparator).ToList();
+            List<string> result = sourceString.Split(itemSeparator).ToList();
             return result;
         }
 
-        public static Dictionary<String,String> GetDictFromString(String sourceString, Char itemSeparator, Char KeyValueSeparator)
+        public static Dictionary<string, string> GetDictFromString(string sourceString, char itemSeparator, char KeyValueSeparator)
         {
-            List<String> sourceList = GetListFromString(sourceString, itemSeparator);
-            var result = new Dictionary<String, String>();
-            foreach (String listVal in sourceList)
+            List<string> sourceList = GetListFromString(sourceString, itemSeparator);
+            var result = new Dictionary<string, string>();
+            foreach (string listVal in sourceList)
             {
-                String[] dictVal = listVal.Split(KeyValueSeparator);
+                string[] dictVal = listVal.Split(KeyValueSeparator);
                 if (dictVal.Count() == 2)
                 {
                     result.Add(dictVal[0], dictVal[1]);
@@ -37,9 +37,9 @@ namespace IWHRouteConvertor
             return route;
         }
 
-        public static String GetDebugRouteString(RouteFormat routeFormat)
+        public static string GetDebugRouteString(RouteFormat routeFormat)
         {
-            String routeString = String.Empty;
+            string routeString = string.Empty;
             
             switch (routeFormat)
             {

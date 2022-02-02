@@ -29,7 +29,7 @@ namespace IWHRouteConvertor
         /// <summary>
         /// Значение Истина указывает на промежуточную точку маршрута
         /// </summary>
-        public Boolean Intermediate;
+        public bool Intermediate;
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ namespace IWHRouteConvertor
 
         }
 
-        public void AddPoint (Double latitudeDeg, Double longitudeDeg, Boolean intermediate, String name)
+        public void AddPoint (double latitudeDeg, double longitudeDeg, bool intermediate, string name)
         {
             routePoint point = new routePoint();
             point.LatitudeDeg = latitudeDeg;
@@ -66,7 +66,7 @@ namespace IWHRouteConvertor
             Points.Add(point);
         }
 
-        public String ToText()
+        public string ToText()
         {
             return RouteWriter.ToNative(this);
         }

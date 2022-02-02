@@ -277,7 +277,7 @@ namespace IWHTest
                 foreach (var leg in cache1.Legs)
                 {
                     // Проверяем удаление точки трека и начальной точки участка пути
-                    Boolean legIsVisited = false;
+                    bool legIsVisited = false;
                     Distance maxDistance = Distance.FromMeters(Math.Sqrt( Math.Pow(gpsLeg.Lenght.Meters+leg.Lenght.Meters,2)+Math.Pow(MaximumVisitedOffset.Meters,2) )); 
                     Distance factDistance = gpsPoint.Coordinates.MercatorDistance(leg.StartPoint.Coordinates);
                     // Для развязок простые правила
@@ -376,7 +376,7 @@ namespace IWHTest
         /// <param name="wayList"></param>
         /// <param name="visitedOnly">Выгружать только посещенные участки линии</param>
         /// <param name="outputFileName"></param>
-        static void MapToGpx(List<IWH.Way> wayList, Boolean visitedOnly, string outputFileName)
+        static void MapToGpx(List<IWH.Way> wayList, bool visitedOnly, string outputFileName)
         {
             var gpx = new GPS.Gpx();
             var legs = new List<IWH.Leg>();
@@ -423,9 +423,9 @@ namespace IWHTest
                 if (way.LastVisitedTime > DateTime.MinValue)
                     newTrack.Name += " " + way.LastVisitedTime.ToShortDateString();
                 if (way.AverageSpeed > Speed.Zero)
-                    newTrack.Name += " " + String.Format("{0:000}кмч", way.AverageSpeed.KilometersPerHour);
+                    newTrack.Name += " " + string.Format("{0:000}кмч", way.AverageSpeed.KilometersPerHour);
                 if (way.AverageVisitedCount > 0.0)
-                    newTrack.Name += " " + String.Format("{0:0.00}", way.AverageVisitedCount);
+                    newTrack.Name += " " + string.Format("{0:0.00}", way.AverageVisitedCount);
                 // Формируем сегменты
                 GPS.TrackSegment newTrackSegment = new GPS.TrackSegment();
                 for (int i = 0; i < legs.Count; i++)

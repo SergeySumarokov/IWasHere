@@ -57,7 +57,7 @@ namespace IWH
         /// <summary>
         /// Идентификатор OSM.
         /// </summary>
-        public Int64 OsmId;
+        public long OsmId;
 
         /// <summary>
         /// Тип дороги.
@@ -73,7 +73,7 @@ namespace IWH
         /// <remarks>
         /// tag k=highway v="*_link - связующие элементы дорог: съезды, въезды и т.п.
         /// </remarks>
-        public Boolean IsLink;
+        public bool IsLink;
 
         /// <summary>
         /// Покрытие дороги.
@@ -94,22 +94,22 @@ namespace IWH
         /// <summary>
         /// Название дороги.
         /// </summary>
-        public String Name;
+        public string Name;
 
         /// <summary>
         /// Признак наличия искусственного освещения.
         /// </summary>
-        public Boolean Lighting;
+        public bool Lighting;
 
         /// <summary>
         /// Признак одностороннего движения.
         /// </summary>
-        public Boolean OneWay;
+        public bool OneWay;
 
         /// <summary>
         /// Количество полос для движния.
         /// </summary>
-        public Byte Lanes;
+        public byte Lanes;
 
         /// <summary>
         /// Общая протяжённость дороги.
@@ -134,7 +134,7 @@ namespace IWH
         /// <summary>
         /// Истина, исли все сегменты дороги отмечены как посещенные?
         /// </summary>
-        public Boolean IsVisited;
+        public bool IsVisited;
 
         /// <summary>
         /// Время последнего посещения одного из участков дороги.
@@ -196,7 +196,7 @@ namespace IWH
         /// </summary>
         public Way()
         {
-            Name = String.Empty;
+            Name = string.Empty;
             Legs = new List<Leg>();
         }
 
